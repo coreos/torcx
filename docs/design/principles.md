@@ -15,4 +15,40 @@ These are the goals and ideas on which `torcx` is built upon:
 These are the non-goals and past-mistakes that `torcx` wants to avoid:
 
 1. full packaging system: it should not be involved into solving versioned constraints
- 
+
+## User Stories
+A few motivating examples, presented as user stories.
+
+### 1: Docker version
+A user wants to select a docker version by ignition at first boot time.
+
+#### Design:
+In the ignition config, you will have to write a profile manifest and select that
+profile. The vendor packages are available in /usr, and custom packages are written
+to disk already (network share, installed by Ignition, etc...).
+
+### 2: Docker version, redux
+The Kubernetes Version Operator wants to select a docker version at upgrade
+time on an already running machine.
+
+#### Design:
+Torcx binary is available in a container with the necessary host paths bind-mounted in. The KVO executes a sequence of torcx commands to select the desired Docker version.
+
+### 3: Fleet
+A user wants to install fleet at first boot time, but wants automatic docker upgrades.
+
+#### Design:
+Similar to story 1, but with fleet as an additional entry in the archives list,
+with a reserved reference (matchin the one used in OS-vendored packages).
+
+### 4: Up-to-date
+The user wants whatever Container Linux ships, running the latest recommended version of Docker.
+
+#### Design:
+The user specifies 'vendor' profile in Ignition, or nothing at all.
+
+### 5: Barebone OS
+The user doesn't want torcx to run at all, and doesn't want it to potentially prevent machines from booting.
+
+#### Design:
+User masks/disables the unit.
