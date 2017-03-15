@@ -1,0 +1,12 @@
+{
+  "kind": "profile-manifest-v0",
+  "value": {
+    "archives": [
+      {
+        "image": "docker-suite",
+        "reference": "an-oci-reference"
+      }
+    ]
+  }
+}
+
