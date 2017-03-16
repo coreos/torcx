@@ -15,11 +15,15 @@ Derived from configurables (shown with defaults):
 * BinDir: RunDir + `bin/` (`/var/run/torcx/bin/`)
 * UnpackDir: RunDir + `unpack/` (`/var/run/torcx/unpack/`)
 * Profile: ConfDir + `profile` (`/etc/torcx/profile`)
+* StoreDir:
+  * (vendor) VendorDir + `store/` (`/usr/share/torcx/store/`)
+  * (user) BaseDir + `store/` (`/var/lib/torcx/store/`)
+  * (runtime) `$TORCX_STOREPATH`
 * AuthDir: 
-  * (vendor) SharedDir + `auth.d/` (`/usr/share/torcx/auth.d/`)
+  * (vendor) VendorDir + `auth.d/` (`/usr/share/torcx/auth.d/`)
   * (user) ConfDir + `auth.d/` (`/etc/torcx/auth.d/`)
 * ProfileDir:
-  * (vendor) SharedDir + `profile.d/` (`/usr/share/torcx/profile.d/`)
+  * (vendor) VendorDir + `profile.d/` (`/usr/share/torcx/profile.d/`)
   * (user) ConfDir + `profile.d/` (`/etc/torcx/profile.d/`)
 
 # Paths from environmental flags
@@ -27,9 +31,9 @@ Derived from configurables (shown with defaults):
 ## apply
 
 * `$TORCX_STOREPATH`: additional store paths where to look for OCI archives (absolute, colon-separated)
-* `$TORCX_SKIP`: if set to `true`, short-circuit `apply` into exiting early without applying any profile
 
 # Fuse content
 
 * `TORCX_PROFILE`: current running profile (default `vendor`)
 * `TORCX_BINDIR`: current overlay with binaries, for `$PATH` usage (default `/var/run/torcx/bin/`)
+* `TORCX_UNPACKDIR`: current root of the unpacked tree (default `/var/run/torcx/unpack/`)
