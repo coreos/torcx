@@ -13,45 +13,92 @@
 
 ## Subcommands
 
+### Profile commands
 ```
-torcx new --base=[vendor|empty|<pbase>] --name=<pname>
+torcx profile new [--from=<FNAME>] <NAME>
 ```
 
-`new` creates a new custom staging profile "pname". It must not already exist as a profile.
+Creates a new custom staging profile NAME. It must not already exist as a profile. If 
+`--from` is specified, the new profile is a duplicate of profile FNAME.
+
+The profile is created in `$TORCX_CONFDIR/profile.d/NAME`.
 
 ```
-torcx fetch coreos/flannel@hash:deadbeef
+torcx profile rm <NAME>
+```
+
+Deletes profile NAME. The specified profile must not be the active one, and must
+be user-created.
+
+```
+torcx profile select <NAME>
+```
+
+Switches to profile NAME on next boot.
+
+```
+torcx profile list
+```
+
+Lists the available profiles, indicating the currently-booted and profile selected
+for next boot.
+
+```
+torcx profile use <PNAME> NAME[:TAG|@DIGEST]
+```
+
+Adds package refered by NAME (and other possible references) to profile PNAME.
+
+OPEN QUESTION: can `use` act on the current profile?
+
+```
+torcx profile check <PNAME>
+```
+
+Check that the profile named by PNAME is apply-able - that all packages and references
+exist in the stores. Report any packages that are missing.
+
+### Package commands
+```
+torcx package fetch NAME[:TAG|@DIGEST]
 ```
 
 `fetch` fetches a package into the user store.
 
 ```
-torcx add/remove coreos/flannel@hash:deadbeef
+torcx package cp <PATH>
 ```
 
-A pair of commands to add/remove a local package to the staging area
+`package cp` copies a package at a given path in to the user store. If <PATH>
+is `-`, then the package contents are received over stdin.
 
 ```
-torcx commit
+torcx package rm NAME
 ```
 
-Finalize current staging area, will become “user” on next boot
+`package rm` removes a package from the user store.
 
 ```
-torcx select --type=[vendor|user] --name=<pname>
+torcx package list [NAME]
 ```
 
-`select` switches to profile "pname" for next boot.
+List all packages and the available references.
+
+If NAME is specified, only list the references for that package.
 
 ```
-torcx gc
+torcx package gc
 ```
 
 `gc` cleans up unreferenced OCI archives from user store.
 
+### Other commands
 ```
 torcx apply
 ```
 
-`apply` applies current profile.
+`apply` applies current profile to the machine.
+
+
 This is meant to be used exactly once-per-boot, and blows a fuse after successful setup.
+
