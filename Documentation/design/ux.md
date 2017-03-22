@@ -14,6 +14,7 @@
 ## Subcommands
 
 ### Profile commands
+
 ```
 torcx profile new [--from=<FNAME>] <NAME>
 ```
@@ -58,47 +59,48 @@ torcx profile check <PNAME>
 Check that the profile named by PNAME is apply-able - that all packages and references
 exist in the stores. Report any packages that are missing.
 
-### Package commands
-```
-torcx package fetch NAME[:TAG|@DIGEST]
-```
-
-`fetch` fetches a package into the user store.
+### Bundle commands
 
 ```
-torcx package cp <PATH>
+torcx bundle fetch NAME[:TAG|@DIGEST]
 ```
 
-`package cp` copies a package at a given path in to the user store. If <PATH>
-is `-`, then the package contents are received over stdin.
+`fetch` fetches a bundle into the user store.
 
 ```
-torcx package rm NAME
+torcx bundle cp <PATH>
 ```
 
-`package rm` removes a package from the user store.
+`bundle cp` copies a bundle at a given path in to the user store. If <PATH>
+is `-`, then the bundle contents are received over stdin.
 
 ```
-torcx package list [NAME]
+torcx bundle rm NAME
 ```
 
-List all packages and the available references.
-
-If NAME is specified, only list the references for that package.
+`bundle rm` removes a bundle from the user store.
 
 ```
-torcx package gc
+torcx bundle list [NAME]
+```
+
+List all bundles and the available references.
+
+If NAME is specified, only list the references for that bundle.
+
+```
+torcx bundle gc
 ```
 
 `gc` cleans up unreferenced OCI archives from user store.
 
 ### Other commands
+
 ```
 torcx apply
 ```
 
 `apply` applies current profile to the machine.
-
 
 This is meant to be used exactly once-per-boot, and blows a fuse after successful setup.
 
