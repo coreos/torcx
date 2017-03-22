@@ -17,8 +17,10 @@ package torcx
 const (
 	// FUSE_PATH is the hardcoded fuse location
 	FUSE_PATH = "/run/metadata/torcx"
-	// FUSE_PROFILE is the key label for fuse profile
-	FUSE_PROFILE = "TORCX_PROFILE"
+	// FUSE_PROFILE_NAME is the key label for fuse profile name
+	FUSE_PROFILE_NAME = "TORCX_PROFILE_NAME"
+	// FUSE_PROFILE_PATH is the key label for fuse profile path
+	FUSE_PROFILE_PATH = "TORCX_PROFILE_PATH"
 	// FUSE_BINDIR is the key label for fuse bindir
 	FUSE_BINDIR = "TORCX_BINDIR"
 	// VENDOR_DIR
@@ -39,6 +41,14 @@ type ApplyConfig struct {
 	CommonConfig
 	Profile   string
 	StorePath []string
+}
+
+// ProfileConfig contains runtime configuration items specific to
+// the `profile` subcommand
+type ProfileConfig struct {
+	CommonConfig
+	CurrentProfile string
+	NextProfile    string
 }
 
 // ProfileSchema holds the type/version of a profile manifest

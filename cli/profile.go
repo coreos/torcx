@@ -14,7 +14,16 @@
 
 package cli
 
-import "github.com/spf13/cobra"
+import (
+	"io/ioutil"
+	"path/filepath"
+
+	"github.com/Sirupsen/logrus"
+	"github.com/pkg/errors"
+	"github.com/spf13/cobra"
+
+	"github.com/coreos/torcx/pkg/torcx"
+)
 
 var (
 	cmdProfile = &cobra.Command{
@@ -26,4 +35,42 @@ var (
 
 func init() {
 	TorcxCmd.AddCommand(cmdProfile)
+}
+
+// fillProfileRuntime generates the runtime config for profile subcommands,
+// starting from system-wide state and config
+func fillProfileRuntime(commonCfg *torcx.CommonConfig) (*torcx.ProfileConfig, error) {
+	var (
+		curProfile  string
+		nextProfile string
+	)
+
+	if commonCfg == nil {
+		return nil, errors.New("missing common configuration")
+	}
+
+	cp, err := torcx.CurrentProfileName()
+	if err == nil {
+		curProfile = cp
+	}
+
+	fc, err := ioutil.ReadFile(filepath.Join(commonCfg.ConfDir, "profile"))
+	if err == nil {
+		nextProfile = string(fc)
+	}
+	if nextProfile == "" {
+		nextProfile = "vendor"
+		logrus.Debug("no next profile configured, assuming default")
+	}
+
+	logrus.WithFields(logrus.Fields{
+		"current profile": curProfile,
+		"next profile":    nextProfile,
+	}).Debug("apply configuration parsed")
+
+	return &torcx.ProfileConfig{
+		CommonConfig:   *commonCfg,
+		CurrentProfile: curProfile,
+		NextProfile:    nextProfile,
+	}, nil
 }
