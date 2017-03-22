@@ -46,15 +46,6 @@ func ApplyProfile(applyCfg *ApplyConfig) error {
 	return nil
 }
 
-// IsFuseBlown checks whether the runtime fuse is already blown
-func IsFuseBlown() bool {
-	_, err := os.Lstat(FUSE_PATH)
-	if err != nil && os.IsNotExist(err) {
-		return false
-	}
-	return true
-}
-
 // BlowFuse blows the system-wide torcx fuse
 func BlowFuse(applyCfg *ApplyConfig) error {
 	if applyCfg == nil {
@@ -75,7 +66,8 @@ func BlowFuse(applyCfg *ApplyConfig) error {
 	defer fp.Close()
 
 	content := []string{
-		fmt.Sprintf("%s=%s", FUSE_PROFILE, applyCfg.Profile),
+		fmt.Sprintf("%s=%s", FUSE_PROFILE_NAME, applyCfg.Profile),
+		fmt.Sprintf("%s=%s", FUSE_PROFILE_PATH, filepath.Join(applyCfg.RunDir, "profile")),
 		fmt.Sprintf("%s=%s", FUSE_BINDIR, filepath.Join(applyCfg.RunDir, "bin")),
 	}
 

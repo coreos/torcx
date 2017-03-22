@@ -50,7 +50,7 @@ func runApply(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "apply configuration failed")
 	}
 
-	if torcx.IsFuseBlown() {
+	if torcx.IsFuseBlown(torcx.FUSE_PATH) {
 		return errors.New("fuse already blown")
 	}
 

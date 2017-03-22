@@ -15,50 +15,71 @@
 package torcx
 
 import (
-	"bufio"
-	"os"
-
 	"github.com/pkg/errors"
-	"strings"
 )
 
+// archive is a single entry in the archives list. It contains
+// an (image, version) tuple
 type archive struct {
 	Image string `json:"image"`
-	Ref   string `json:"ref"`
+	Ref   string `json:"reference"`
 }
 
-// RunningProfile return the currently running profile
-func RunningProfile() (string, error) {
+// Archives contains a list of archives, part of a profile manifest
+type Archives []archive
+
+// CurrentProfileName returns the name of the currently running profile
+func CurrentProfileName() (string, error) {
 	var profile string
 
-	if !IsFuseBlown() {
-		return "", errors.New("no active profile")
-	}
-
-	fp, err := os.Open(FUSE_PATH)
+	meta, err := ReadMetadata(FUSE_PATH)
 	if err != nil {
 		return "", err
 	}
 
-	sc := bufio.NewScanner(fp)
-	for sc.Scan() {
-		line := sc.Text()
-		tokens := strings.SplitN(line, "", 2)
-		if len(tokens) == 2 && tokens[0] == FUSE_PROFILE {
-			profile = tokens[1]
-			break
-		}
+	profile, ok := meta[FUSE_PROFILE_NAME]
+	if !ok {
+		return "", errors.New("unable to determine current profile name")
 	}
 
 	if profile == "" {
-		return "", errors.New("unable to read profile")
+		return "", errors.New("invalid profile name")
 	}
 
 	return profile, nil
 }
 
-func ReadProfile() ([]archive, error) {
-	pkglist := []archive{}
+// CurrentProfilePath returns the path of the currently running profile
+func CurrentProfilePath() (string, error) {
+	var path string
+
+	meta, err := ReadMetadata(FUSE_PATH)
+	if err != nil {
+		return "", err
+	}
+
+	path, ok := meta[FUSE_PROFILE_PATH]
+	if !ok {
+		return "", errors.New("unable to determine current profile path")
+	}
+
+	if path == "" {
+		return "", errors.New("invalid profile path")
+	}
+
+	return path, nil
+}
+
+// ReadCurrentProfile returns the content of the currently running profile
+func ReadCurrentProfile() (Archives, error) {
+	pkglist := Archives{}
+
+	_, err := CurrentProfilePath()
+	if err != nil {
+		return pkglist, err
+	}
+
+	// TODO(lucab): deserialize profile manifest from path
 
 	return pkglist, nil
 }
