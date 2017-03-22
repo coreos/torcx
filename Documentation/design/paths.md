@@ -14,7 +14,8 @@ Configurable:
 Derived from configurables (shown with defaults):
 * BinDir: RunDir + `bin/` (`/var/run/torcx/bin/`)
 * UnpackDir: RunDir + `unpack/` (`/var/run/torcx/unpack/`)
-* Profile: ConfDir + `profile` (`/etc/torcx/profile`)
+* CurrentProfile: RunDir + `profile` (`/var/run/torcx/profile`)
+* NextProfile: ConfDir + `profile` (`/etc/torcx/profile`)
 * StoreDir:
   * (vendor) VendorDir + `store/` (`/usr/share/torcx/store/`)
   * (user) BaseDir + `store/` (`/var/lib/torcx/store/`)
@@ -34,6 +35,7 @@ Derived from configurables (shown with defaults):
 
 # Fuse content
 
-* `TORCX_PROFILE`: current running profile (default `vendor`)
+* `TORCX_PROFILE_NAME`: name of current running profile (default `vendor`)
+* `TORCX_PROFILE_PATH`: path of current running profile (default `/var/run/torcx/profile`)
 * `TORCX_BINDIR`: current overlay with binaries, for `$PATH` usage (default `/var/run/torcx/bin/`)
 * `TORCX_UNPACKDIR`: current root of the unpacked tree (default `/var/run/torcx/unpack/`)
