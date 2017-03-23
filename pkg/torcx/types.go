@@ -25,6 +25,8 @@ const (
 	FUSE_BINDIR = "TORCX_BINDIR"
 	// VENDOR_DIR
 	VENDOR_DIR = "/usr/share/torcx"
+	// ProfileManifestV0K - profile manifest kind, v0
+	ProfileManifestV0K = "profile-manifest-v0"
 )
 
 // CommonConfig contains runtime configuration items common to all
@@ -50,16 +52,11 @@ type ProfileConfig struct {
 	CurrentProfileName string
 	CurrentProfilePath string
 	NextProfile        string
+	StorePaths         []string
 }
 
-// ProfileSchema holds the type/version of a profile manifest
-type ProfileSchema string
-
-const (
-	// ProfileSchemaV0 - profile manifest schema, v0
-	ProfileSchemaV0 ProfileSchema = "profile-manifest-v0"
-)
-
+// ProfileManifestV0 holds JSON profile manifest
 type ProfileManifestV0 struct {
-	Kind string `json:"kind"`
+	Kind  string   `json:"kind"`
+	Value Archives `json:"value"`
 }

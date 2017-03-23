@@ -18,6 +18,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"bufio"
+	"encoding/json"
 	"github.com/Sirupsen/logrus"
 	"github.com/pkg/errors"
 )
@@ -25,12 +27,14 @@ import (
 // archive is a single entry in the archives list. It contains
 // an (image, version) tuple
 type archive struct {
-	Image string `json:"image"`
-	Ref   string `json:"reference"`
+	Image     string `json:"image"`
+	Reference string `json:"reference"`
 }
 
 // Archives contains a list of archives, part of a profile manifest
-type Archives []archive
+type Archives struct {
+	Archives []archive `json:"archives"`
+}
 
 // CurrentProfileName returns the name of the currently running profile
 func CurrentProfileName() (string, error) {
@@ -76,16 +80,32 @@ func CurrentProfilePath() (string, error) {
 
 // ReadCurrentProfile returns the content of the currently running profile
 func ReadCurrentProfile() (Archives, error) {
-	pkglist := Archives{}
-
-	_, err := CurrentProfilePath()
+	path, err := CurrentProfilePath()
 	if err != nil {
-		return pkglist, err
+		return Archives{}, err
 	}
 
-	// TODO(lucab): deserialize profile manifest from path
+	return ReadProfile(path)
+}
 
-	return pkglist, nil
+// ReadProfile returns the content of a specific profile
+func ReadProfile(path string) (Archives, error) {
+	fp, err := os.Open(path)
+	if err != nil {
+		return Archives{}, err
+	}
+	defer fp.Close()
+
+	var manifest ProfileManifestV0
+	jsonIn := json.NewDecoder(bufio.NewReader(fp))
+	err = jsonIn.Decode(&manifest)
+	if err != nil {
+		return Archives{}, err
+	}
+
+	// TODO(lucab): perform semantic validation
+
+	return manifest.Value, nil
 }
 
 // ListProfiles returns a list of all available profiles
@@ -108,6 +128,8 @@ func ListProfiles(profileDirs []string) (map[string]string, error) {
 			if parentDir != "profiles.d" {
 				return filepath.SkipDir
 			}
+
+			// TODO(lucab): perhaps require .json file suffix?
 
 			profiles[name] = path
 			logrus.WithFields(logrus.Fields{
