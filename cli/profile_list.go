@@ -15,11 +15,14 @@
 package cli
 
 import (
-	"fmt"
-
 	"encoding/json"
+	"os"
+	"path/filepath"
+
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+
+	"github.com/coreos/torcx/pkg/torcx"
 )
 
 var (
@@ -43,24 +46,43 @@ func runProfileList(cmd *cobra.Command, args []string) error {
 	}
 	profileCfg, err := fillProfileRuntime(commonCfg)
 	if err != nil {
-		return errors.Wrap(err, "apply configuration failed")
+		return errors.Wrap(err, "profile configuration failed")
 	}
 
-	var cp *string
-	if profileCfg.CurrentProfile != "" {
-		cp = &profileCfg.CurrentProfile
+	profileDirs := []string{
+		filepath.Join(torcx.VENDOR_DIR, "profiles.d"),
+		filepath.Join(commonCfg.ConfDir, "profiles.d"),
+	}
+	localProfiles, err := torcx.ListProfiles(profileDirs)
+	if err != nil {
+		return errors.Wrap(err, "profiles listing failed")
+	}
+	profNames := make([]string, 0, len(localProfiles))
+	for k := range localProfiles {
+		profNames = append(profNames, k)
+	}
+
+	var curName, curPath *string
+	if profileCfg.CurrentProfileName != "" {
+		curName = &profileCfg.CurrentProfileName
+	}
+	if profileCfg.CurrentProfilePath != "" {
+		curPath = &profileCfg.CurrentProfilePath
 	}
 
 	profListOut := ProfileList{
-		Kind: TorcxCliV0,
+		Kind: TorcxProfileListV0,
 		Value: profileList{
-			CurrentProfileName: cp,
+			CurrentProfileName: curName,
+			CurrentProfilePath: curPath,
 			NextProfileName:    profileCfg.NextProfile,
+			Profiles:           profNames,
 		},
 	}
 
-	out, _ := json.MarshalIndent(profListOut, "", "    ")
-	fmt.Print(string(out))
+	jsonOut := json.NewEncoder(os.Stdout)
+	jsonOut.SetIndent("", "  ")
+	err = jsonOut.Encode(profListOut)
 
-	return nil
+	return err
 }

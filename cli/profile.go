@@ -41,17 +41,22 @@ func init() {
 // starting from system-wide state and config
 func fillProfileRuntime(commonCfg *torcx.CommonConfig) (*torcx.ProfileConfig, error) {
 	var (
-		curProfile  string
-		nextProfile string
+		curProfileName string
+		curProfilePath string
+		nextProfile    string
 	)
 
 	if commonCfg == nil {
 		return nil, errors.New("missing common configuration")
 	}
 
-	cp, err := torcx.CurrentProfileName()
+	cpn, err := torcx.CurrentProfileName()
 	if err == nil {
-		curProfile = cp
+		curProfileName = cpn
+	}
+	cpp, err := torcx.CurrentProfilePath()
+	if err == nil {
+		curProfilePath = cpp
 	}
 
 	fc, err := ioutil.ReadFile(filepath.Join(commonCfg.ConfDir, "profile"))
@@ -64,13 +69,14 @@ func fillProfileRuntime(commonCfg *torcx.CommonConfig) (*torcx.ProfileConfig, er
 	}
 
 	logrus.WithFields(logrus.Fields{
-		"current profile": curProfile,
+		"current profile": curProfileName,
 		"next profile":    nextProfile,
-	}).Debug("apply configuration parsed")
+	}).Debug("profile configuration parsed")
 
 	return &torcx.ProfileConfig{
-		CommonConfig:   *commonCfg,
-		CurrentProfile: curProfile,
-		NextProfile:    nextProfile,
+		CommonConfig:       *commonCfg,
+		CurrentProfileName: curProfileName,
+		CurrentProfilePath: curProfilePath,
+		NextProfile:        nextProfile,
 	}, nil
 }

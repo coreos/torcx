@@ -15,6 +15,10 @@
 package torcx
 
 import (
+	"os"
+	"path/filepath"
+
+	"github.com/Sirupsen/logrus"
 	"github.com/pkg/errors"
 )
 
@@ -82,4 +86,44 @@ func ReadCurrentProfile() (Archives, error) {
 	// TODO(lucab): deserialize profile manifest from path
 
 	return pkglist, nil
+}
+
+// ListProfiles returns a list of all available profiles
+func ListProfiles(profileDirs []string) (map[string]string, error) {
+	profiles := map[string]string{}
+
+	walkFn := func(inPath string, inInfo os.FileInfo, inErr error) error {
+		if inErr != nil {
+			return nil
+		}
+		path := filepath.Clean(inPath)
+		name := filepath.Base(path)
+		parentDir := filepath.Base(filepath.Dir(path))
+
+		if inInfo.IsDir() && name != "profiles.d" {
+			return filepath.SkipDir
+		}
+
+		if inInfo.Mode().IsRegular() {
+			if parentDir != "profiles.d" {
+				return filepath.SkipDir
+			}
+
+			profiles[name] = path
+			logrus.WithFields(logrus.Fields{
+				"name": name,
+				"path": path,
+			}).Debug("profile found")
+		}
+
+		return nil
+	}
+
+	for _, root := range profileDirs {
+		if err := filepath.Walk(root, walkFn); err != nil {
+			return profiles, err
+		}
+	}
+
+	return profiles, nil
 }

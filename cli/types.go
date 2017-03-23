@@ -15,15 +15,19 @@
 package cli
 
 const (
-	TorcxCliV0 = "torcx-profile-list-v0"
+	// TorcxProfileListV0 is the JSON kind identifier for a profile list
+	TorcxProfileListV0 = "torcx-profile-list-v0"
 )
 
+// ProfileList is the JSON container for profile list output
 type ProfileList struct {
 	Kind  string      `json:"kind"`
 	Value profileList `json:"value"`
 }
 
 type profileList struct {
-	CurrentProfileName *string `json:"current_profile_name"`
-	NextProfileName    string  `json:"next_profile_name"`
+	CurrentProfileName *string  `json:"current_profile_name"`
+	CurrentProfilePath *string  `json:"current_profile_path"`
+	NextProfileName    string   `json:"next_profile_name"`
+	Profiles           []string `json:"profiles"`
 }

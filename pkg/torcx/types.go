@@ -47,8 +47,9 @@ type ApplyConfig struct {
 // the `profile` subcommand
 type ProfileConfig struct {
 	CommonConfig
-	CurrentProfile string
-	NextProfile    string
+	CurrentProfileName string
+	CurrentProfilePath string
+	NextProfile        string
 }
 
 // ProfileSchema holds the type/version of a profile manifest
