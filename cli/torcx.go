@@ -23,7 +23,9 @@ import (
 var (
 	// TorcxCmd is the top-level cobra command for torcx
 	TorcxCmd = &cobra.Command{
-		Use: "torcx",
+		Use:           "torcx",
+		SilenceUsage:  true,
+		SilenceErrors: true,
 	}
 )
 
