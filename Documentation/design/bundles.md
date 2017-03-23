@@ -36,7 +36,7 @@ Static binaries, should not be affected by any specific caveats.
 
 torcx will scan bundles to identify artifacts that need to be integrated with the system.
 It currently looks for:
-* binaries: files in `/bin:/usr/bin:/sbin:/usr/sbin" are symlinked into `$TORCX_BINDIR` and exposed system-wide that way
+* binaries: files in `/bin:/usr/bin:/sbin:/usr/sbin` are symlinked into `$TORCX_BINDIR` and exposed system-wide that way
 * systemd units: files in `/usr/lib/systemd/system` are extracted/symlinked into systemd-specific path as transient units (typically `/run/systemd/system/`)
 
 TODO(lucab): sysctl - tmpfile - sysusers units, the latter ones have some GC concerns to be explored.

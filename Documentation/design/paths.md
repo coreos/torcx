@@ -24,8 +24,8 @@ Derived from configurables (shown with defaults):
   * (vendor) VendorDir + `auth.d/` (`/usr/share/torcx/auth.d/`)
   * (user) ConfDir + `auth.d/` (`/etc/torcx/auth.d/`)
 * ProfileDir:
-  * (vendor) VendorDir + `profile.d/` (`/usr/share/torcx/profile.d/`)
-  * (user) ConfDir + `profile.d/` (`/etc/torcx/profile.d/`)
+  * (vendor) VendorDir + `profiles.d/` (`/usr/share/torcx/profiles.d/`)
+  * (user) ConfDir + `profiles.d/` (`/etc/torcx/profiles.d/`)
 
 # Paths from environmental flags
 
