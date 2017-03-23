@@ -22,13 +22,13 @@ torcx profile new [--from=<FNAME>] <NAME>
 Creates a new custom staging profile NAME. It must not already exist as a profile. If 
 `--from` is specified, the new profile is a duplicate of profile FNAME.
 
-The profile is created in `$TORCX_CONFDIR/profile.d/NAME`.
+The profile is created in `$TORCX_CONFDIR/profiles.d/NAME`.
 
 ```
 torcx profile rm <NAME>
 ```
 
-Deletes profile NAME. The specified profile must not be the active one, and must
+Deletes profile NAME. The specified profile must not be the one selected for next boot, and must
 be user-created.
 
 ```
