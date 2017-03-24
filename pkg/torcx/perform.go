@@ -36,7 +36,47 @@ func ApplyProfile(applyCfg *ApplyConfig) error {
 		return errors.Wrap(err, "profile setup")
 	}
 
-	// TODO(lucab): apply profile
+	profileDirs := []string{
+		filepath.Join(VENDOR_DIR, "profiles.d"),
+		filepath.Join(applyCfg.ConfDir, "profiles.d"),
+	}
+	localProfiles, err := ListProfiles(profileDirs)
+	if err != nil {
+		return errors.Wrap(err, "profiles listing failed")
+	}
+
+	path, ok := localProfiles[applyCfg.Profile]
+	if !ok {
+		return fmt.Errorf("profile %q not found", applyCfg.Profile)
+	}
+
+	bundles, err := ReadProfile(path)
+	if err != nil {
+		return err
+	}
+	if len(bundles.Archives) == 0 {
+		return nil
+	}
+
+	storeCache, err := NewStoreCache(applyCfg.StorePaths)
+	if err != nil {
+		return err
+	}
+
+	for _, pkg := range bundles.Archives {
+		path, err := storeCache.LookupReference(pkg)
+		if err != nil {
+			return err
+		}
+
+		// TODO(lucab): render bundle refs
+
+		logrus.WithFields(logrus.Fields{
+			"bundle name": pkg.Image,
+			"reference":   pkg.Reference,
+			"path":        path,
+		}).Debug("bundle/reference unpacked")
+	}
 
 	logrus.WithFields(logrus.Fields{
 		"fuse path": FUSE_PATH,
