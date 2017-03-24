@@ -39,8 +39,8 @@ func ApplyProfile(applyCfg *ApplyConfig) error {
 	// TODO(lucab): apply profile
 
 	logrus.WithFields(logrus.Fields{
-		"path":    FUSE_PATH,
-		"profile": applyCfg.Profile,
+		"fuse path": FUSE_PATH,
+		"profile":   applyCfg.Profile,
 	}).Debug("profile applied")
 
 	return nil
@@ -69,6 +69,7 @@ func BlowFuse(applyCfg *ApplyConfig) error {
 		fmt.Sprintf("%s=%s", FUSE_PROFILE_NAME, applyCfg.Profile),
 		fmt.Sprintf("%s=%s", FUSE_PROFILE_PATH, filepath.Join(applyCfg.RunDir, "profile")),
 		fmt.Sprintf("%s=%s", FUSE_BINDIR, filepath.Join(applyCfg.RunDir, "bin")),
+		fmt.Sprintf("%s=%s", FUSE_UNPACKDIR, filepath.Join(applyCfg.RunDir, "unpack")),
 	}
 
 	for _, line := range content {

@@ -23,6 +23,8 @@ const (
 	FUSE_PROFILE_PATH = "TORCX_PROFILE_PATH"
 	// FUSE_BINDIR is the key label for fuse bindir
 	FUSE_BINDIR = "TORCX_BINDIR"
+	// FUSE_UNPACKDIR is the key label for fuse unpackdir
+	FUSE_UNPACKDIR = "TORCX_UNPACKDIR"
 	// VENDOR_DIR
 	VENDOR_DIR = "/usr/share/torcx"
 	// ProfileManifestV0K - profile manifest kind, v0
