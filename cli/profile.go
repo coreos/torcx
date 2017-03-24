@@ -68,15 +68,9 @@ func fillProfileRuntime(commonCfg *torcx.CommonConfig) (*torcx.ProfileConfig, er
 		logrus.Debug("no next profile configured, assuming default")
 	}
 
-	storePaths := []string{
-		filepath.Join(torcx.VENDOR_DIR, "store"),
-		filepath.Join(commonCfg.BaseDir, "store"),
-	}
-
 	logrus.WithFields(logrus.Fields{
-		"current profile":    curProfileName,
-		"next profile":       nextProfile,
-		"bundles load paths": storePaths,
+		"current profile": curProfileName,
+		"next profile":    nextProfile,
 	}).Debug("profile configuration parsed")
 
 	return &torcx.ProfileConfig{
@@ -84,6 +78,5 @@ func fillProfileRuntime(commonCfg *torcx.CommonConfig) (*torcx.ProfileConfig, er
 		CurrentProfileName: curProfileName,
 		CurrentProfilePath: curProfilePath,
 		NextProfile:        nextProfile,
-		StorePaths:         storePaths,
 	}, nil
 }

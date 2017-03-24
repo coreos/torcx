@@ -21,7 +21,6 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	"github.com/coreos/torcx/pkg/torcx"
 )
@@ -70,8 +69,7 @@ func runApply(cmd *cobra.Command, args []string) error {
 // system-wide configuration
 func fillApplyRuntime(commonCfg *torcx.CommonConfig) (*torcx.ApplyConfig, error) {
 	var (
-		profile   string
-		storePath []string
+		profile string
 	)
 
 	if commonCfg == nil {
@@ -87,20 +85,12 @@ func fillApplyRuntime(commonCfg *torcx.CommonConfig) (*torcx.ApplyConfig, error)
 		logrus.Debug("no profile configured, using default")
 	}
 
-	storePath = []string{filepath.Join(commonCfg.BaseDir, "packs")}
-	extraStorePath := viper.GetStringSlice("storepath")
-	if extraStorePath != nil {
-		storePath = append(storePath, extraStorePath...)
-	}
-
 	logrus.WithFields(logrus.Fields{
-		"profile":   profile,
-		"storepath": storePath,
+		"profile": profile,
 	}).Debug("apply configuration parsed")
 
 	return &torcx.ApplyConfig{
 		CommonConfig: *commonCfg,
 		Profile:      profile,
-		StorePath:    storePath,
 	}, nil
 }

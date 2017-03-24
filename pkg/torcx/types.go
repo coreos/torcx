@@ -32,17 +32,17 @@ const (
 // CommonConfig contains runtime configuration items common to all
 // torcx subcommands
 type CommonConfig struct {
-	BaseDir string
-	RunDir  string
-	ConfDir string
+	BaseDir    string
+	RunDir     string
+	ConfDir    string
+	StorePaths []string
 }
 
 // ApplyConfig contains runtime configuration items specific to
 // the `apply` subcommand
 type ApplyConfig struct {
 	CommonConfig
-	Profile   string
-	StorePath []string
+	Profile string
 }
 
 // ProfileConfig contains runtime configuration items specific to
@@ -52,7 +52,6 @@ type ProfileConfig struct {
 	CurrentProfileName string
 	CurrentProfilePath string
 	NextProfile        string
-	StorePaths         []string
 }
 
 // ProfileManifestV0 holds JSON profile manifest

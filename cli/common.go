@@ -25,11 +25,11 @@ import (
 )
 
 func fillCommonRuntime() (*torcx.CommonConfig, error) {
-	basedir := viper.GetString("basedir")
-	if basedir == "" {
-		basedir = "/var/lib/torcx"
+	baseDir := viper.GetString("basedir")
+	if baseDir == "" {
+		baseDir = "/var/lib/torcx"
 	}
-	if !filepath.IsAbs(basedir) {
+	if !filepath.IsAbs(baseDir) {
 		return nil, errors.New("non-absolute basedir")
 	}
 
@@ -49,15 +49,26 @@ func fillCommonRuntime() (*torcx.CommonConfig, error) {
 		return nil, errors.New("non-absolute confdir")
 	}
 
+	storePaths := []string{
+		filepath.Join(torcx.VENDOR_DIR, "store"),
+		filepath.Join(baseDir, "store"),
+	}
+	extraStorePaths := viper.GetStringSlice("storepath")
+	if extraStorePaths != nil {
+		storePaths = append(storePaths, extraStorePaths...)
+	}
+
 	logrus.WithFields(logrus.Fields{
-		"basedir": basedir,
-		"rundir":  rundir,
-		"confdir": confdir,
+		"basedir":            baseDir,
+		"rundir":             rundir,
+		"confdir":            confdir,
+		"bundles load paths": storePaths,
 	}).Debug("common configuration parsed")
 
 	return &torcx.CommonConfig{
-		BaseDir: basedir,
-		RunDir:  rundir,
-		ConfDir: confdir,
+		BaseDir:    baseDir,
+		RunDir:     rundir,
+		ConfDir:    confdir,
+		StorePaths: storePaths,
 	}, nil
 }
