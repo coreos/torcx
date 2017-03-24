@@ -15,13 +15,14 @@
 package torcx
 
 import (
+	"archive/tar"
+	"compress/gzip"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
 
-	"archive/tar"
-	"compress/gzip"
 	"github.com/Sirupsen/logrus"
 )
 
@@ -64,11 +65,25 @@ func NewStoreCache(paths []string) (StoreCache, error) {
 				return nil
 			}
 
-			_ = tar.NewReader(zrd)
-			// TODO(lucab): unpack/extract refs out OCI archive
-			// (via oci-spec - c/image - umoci)
-			dummy := []string{"TODO-dummy-ref"}
-			for _, ref := range dummy {
+			trd := tar.NewReader(zrd)
+			for {
+				hdr, err := trd.Next()
+				if err == io.EOF {
+					break
+				}
+				if err != nil {
+					continue
+				}
+				if hdr.Typeflag != tar.TypeReg && hdr.Typeflag != tar.TypeRegA {
+					continue
+				}
+				// TODO(lucab): this needs a complete overhaul for OCI -rc5
+				if !strings.HasPrefix(hdr.Name, "refs/") {
+					continue
+				}
+				// TODO(lucab): add manifest validation
+
+				ref := strings.TrimPrefix(hdr.Name, "refs/")
 				pkg := archive{
 					Image:     bundleName,
 					Reference: ref,

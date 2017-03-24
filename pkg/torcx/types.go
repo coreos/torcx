@@ -23,6 +23,8 @@ const (
 	FUSE_PROFILE_PATH = "TORCX_PROFILE_PATH"
 	// FUSE_BINDIR is the key label for fuse bindir
 	FUSE_BINDIR = "TORCX_BINDIR"
+	// FUSE_UNPACKDIR is the key label for fuse unpackdir
+	FUSE_UNPACKDIR = "TORCX_UNPACKDIR"
 	// VENDOR_DIR
 	VENDOR_DIR = "/usr/share/torcx"
 	// ProfileManifestV0K - profile manifest kind, v0
@@ -32,17 +34,17 @@ const (
 // CommonConfig contains runtime configuration items common to all
 // torcx subcommands
 type CommonConfig struct {
-	BaseDir string
-	RunDir  string
-	ConfDir string
+	BaseDir    string
+	RunDir     string
+	ConfDir    string
+	StorePaths []string
 }
 
 // ApplyConfig contains runtime configuration items specific to
 // the `apply` subcommand
 type ApplyConfig struct {
 	CommonConfig
-	Profile   string
-	StorePath []string
+	Profile string
 }
 
 // ProfileConfig contains runtime configuration items specific to
@@ -52,7 +54,6 @@ type ProfileConfig struct {
 	CurrentProfileName string
 	CurrentProfilePath string
 	NextProfile        string
-	StorePaths         []string
 }
 
 // ProfileManifestV0 holds JSON profile manifest
