@@ -66,10 +66,10 @@ func BlowFuse(applyCfg *ApplyConfig) error {
 	defer fp.Close()
 
 	content := []string{
-		fmt.Sprintf("%s=%s", FUSE_PROFILE_NAME, applyCfg.Profile),
-		fmt.Sprintf("%s=%s", FUSE_PROFILE_PATH, filepath.Join(applyCfg.RunDir, "profile")),
-		fmt.Sprintf("%s=%s", FUSE_BINDIR, filepath.Join(applyCfg.RunDir, "bin")),
-		fmt.Sprintf("%s=%s", FUSE_UNPACKDIR, filepath.Join(applyCfg.RunDir, "unpack")),
+		fmt.Sprintf("%s=%q", FUSE_PROFILE_NAME, applyCfg.Profile),
+		fmt.Sprintf("%s=%q", FUSE_PROFILE_PATH, filepath.Join(applyCfg.RunDir, "profile")),
+		fmt.Sprintf("%s=%q", FUSE_BINDIR, filepath.Join(applyCfg.RunDir, "bin")),
+		fmt.Sprintf("%s=%q", FUSE_UNPACKDIR, filepath.Join(applyCfg.RunDir, "unpack")),
 	}
 
 	for _, line := range content {
