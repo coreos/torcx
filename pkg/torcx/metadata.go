@@ -25,9 +25,7 @@ import (
 // ReadMetadata returns metadata regarding the currently running profile,
 // as read from the fuse file
 func ReadMetadata(fusePath string) (map[string]string, error) {
-	var (
-		meta map[string]string
-	)
+	meta := make(map[string]string)
 
 	if !IsFuseBlown(fusePath) {
 		return meta, errors.New("no active profile")
