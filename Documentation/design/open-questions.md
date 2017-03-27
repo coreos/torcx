@@ -1,9 +1,9 @@
-* are hashes, tags, and references interchangeable? How so?
+* Are hashes, tags, and references interchangeable? How so?
 	* where are they not?
 	* What is the store layout on disk? Will it need to be frozen for Ignition?
 	* What if there is a conflicting tag?
 * How does one specify that a single package should diverge from vendor (including through updates)
-	* motivating example: I want fleet, but auto-updating everything else
+	* motivating example: I want a pinned version of fleet, but auto-updating everything else
 	* possible solutions:
 		* add some kind of `from` directive to the profile
 		* Use a reserved vendor reference name (tag, b/c mutable)
