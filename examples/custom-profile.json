@@ -1,9 +1,9 @@
 {
   "kind": "profile-manifest-v0",
   "value": {
-    "archives": [
+    "images": [
       {
-        "image": "docker-suite",
+        "name": "docker-suite",
         "reference": "an-oci-reference"
       }
     ]

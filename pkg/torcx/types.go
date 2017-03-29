@@ -58,6 +58,22 @@ type ProfileConfig struct {
 
 // ProfileManifestV0 holds JSON profile manifest
 type ProfileManifestV0 struct {
-	Kind  string   `json:"kind"`
-	Value Archives `json:"value"`
+	Kind  string `json:"kind"`
+	Value Images `json:"value"`
+}
+
+// Archive represents a .oci.tgz on disk
+type Archive struct {
+	Name     string
+	Filepath string
+}
+
+// Image is an archive name + Reference
+type Image struct {
+	Name      string `json:"name"`
+	Reference string `json:"reference"`
+}
+
+type Images struct {
+	Images []Image `json:"images"`
 }
