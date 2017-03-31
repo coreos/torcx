@@ -9,14 +9,14 @@ torcx's goals include:
 
 ## Overview
 
-This project provides a very lightweight addons manager for otherwise immutable distributions, such as CCL.
-It handles collection of packages (here calledi respectively "profiles" and "bundles") at boot-time, overlaying them on top of the base OS image.
+This project provides a very lightweight add-ons manager for otherwise immutable distributions, such as CCL.
+It handles collection of packages (here called respectively "profiles" and "bundles") at boot-time, overlaying them on top of the base OS image.
 
 As such, torcx fulfill two main roles:
 * at boot-time, it activates a specific profile by unpacking all requested bundles and making them available system-wide
 * at runtime, it provides a human- and machine-friendly interface to work with bundles and profiles
 
-Contrarily to traditional packaging systems and addon managers, torcx scope is quite limited and explicitely does not support:
+Contrary to traditional packaging systems and add-on managers, torcx scope is quite limited and explicitly does not support:
 * upgrading and downgrading packages at runtime. Profile activation is a single atomic operation performed once, at boot-time
 * pre-removal and post-installation custom logic. Changes performed by torcx are volatile and are meant to only last for a single boot
 * defining a custom package format. torcx just handles OCI image-layout archives
