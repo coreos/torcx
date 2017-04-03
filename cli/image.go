@@ -17,13 +17,13 @@ package cli
 import "github.com/spf13/cobra"
 
 var (
-	cmdBundle = &cobra.Command{
-		Use:   "bundle [command]",
-		Short: "Operate on bundle(s) in the local store",
-		Long:  `This subcommand operates on bundle(s) in the local store.`,
+	cmdImage = &cobra.Command{
+		Use:   "image [command]",
+		Short: "Operate on images(s) in the local store",
+		Long:  `This subcommand operates on image(s) in the local store.`,
 	}
 )
 
 func init() {
-	TorcxCmd.AddCommand(cmdBundle)
+	TorcxCmd.AddCommand(cmdImage)
 }

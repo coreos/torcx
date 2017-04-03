@@ -45,54 +45,40 @@ Lists the available profiles, indicating the currently-booted and profile select
 for next boot.
 
 ```
-torcx profile use <PNAME> NAME[:TAG|@DIGEST]
+torcx profile use <PNAME> NAME(:TAG|@DIGEST)
 ```
 
-Adds package refered by NAME (and other possible references) to profile PNAME.
-
-OPEN QUESTION: can `use` act on the current profile?
+Adds image refered by NAME and TAG or DIGEST to profile PNAME. One of TAG or
+DIGEST are required.
 
 ```
 torcx profile check <PNAME>
 ```
 
-Check that the profile named by PNAME is apply-able - that all packages and references
+Check that the profile named by PNAME is apply-able - that all images
 exist in the stores. Report any packages that are missing.
 
 ### Bundle commands
 
 ```
-torcx bundle fetch NAME[:TAG|@DIGEST]
+torcx image fetch NAME[:TAG|@DIGEST]
 ```
 
-`fetch` fetches a bundle into the user store.
+`fetch` fetches an image into the user store.
 
 ```
-torcx bundle cp <PATH>
+torcx image list [NAME]
 ```
 
-`bundle cp` copies a bundle at a given path in to the user store. If <PATH>
-is `-`, then the bundle contents are received over stdin.
+List all images in the store.
+
+If NAME is specified, only list the references for that image name.
 
 ```
-torcx bundle rm NAME
+torcx image list-unused
 ```
 
-`bundle rm` removes a bundle from the user store.
-
-```
-torcx bundle list [NAME]
-```
-
-List all bundles and the available references.
-
-If NAME is specified, only list the references for that bundle.
-
-```
-torcx bundle gc
-```
-
-`gc` cleans up unreferenced OCI archives from user store.
+Lists the unused archives in the user store.
 
 ### Other commands
 

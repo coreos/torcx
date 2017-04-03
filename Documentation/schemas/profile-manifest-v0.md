@@ -38,12 +38,12 @@
     "value": {
       "type": "object",
       "properties": {
-        "archives": {
+        "images": {
           "type": "array",
           "items": {
             "type": "object",
             "properties": {
-              "image": {
+              "name": {
                 "type": "string"
               },
               "reference": {
@@ -51,14 +51,14 @@
               }
             },
             "required": [
-              "image",
+              "name",
               "reference"
             ]
           }
         }
       },
       "required": [
-        "archives"
+        "images"
       ]
     }
   },

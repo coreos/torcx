@@ -28,8 +28,8 @@ import (
 var (
 	cmdProfileCheck = &cobra.Command{
 		Use:   "check <PNAME>",
-		Short: "check the manifest content and bundles for a profile",
-		Long:  "check the manifest content and bundles for profile named <PNAME>",
+		Short: "check the manifest content and images for a profile",
+		Long:  "Checks that the profile given by name PNAME is valid. Ensures that the schema is correct, and that all referenced images exist in the store",
 		RunE:  runProfileCheck,
 	}
 )
@@ -69,11 +69,11 @@ func runProfileCheck(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("profile %q not found", args[0])
 	}
 
-	bundles, err := torcx.ReadProfile(path)
+	profile, err := torcx.ReadProfile(path)
 	if err != nil {
 		return err
 	}
-	if len(bundles.Archives) == 0 {
+	if len(profile.Images) == 0 {
 		return nil
 	}
 
@@ -83,14 +83,20 @@ func runProfileCheck(cmd *cobra.Command, args []string) error {
 	}
 
 	incomplete := false
-	for _, pkg := range bundles.Archives {
-		_, err := storeCache.LookupReference(pkg)
+	for _, im := range profile.Images {
+		ar, err := storeCache.ArchiveFor(im)
 		if err != nil {
 			incomplete = true
 			logrus.WithFields(logrus.Fields{
-				"bundle name": pkg.Image,
-				"reference":   pkg.Reference,
-			}).Error("bundle/reference not found")
+				"name":      im.Name,
+				"reference": im.Reference,
+			}).Error("image/reference not found")
+		} else {
+			logrus.WithFields(logrus.Fields{
+				"name":         im.Name,
+				"references":   im.Reference,
+				"archive path": ar.Filepath,
+			}).Debug("image/reference found")
 		}
 	}
 	if incomplete {

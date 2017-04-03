@@ -20,21 +20,10 @@ import (
 
 	"bufio"
 	"encoding/json"
+
 	"github.com/Sirupsen/logrus"
 	"github.com/pkg/errors"
 )
-
-// archive is a single entry in the archives list. It contains
-// an (image, version) tuple
-type archive struct {
-	Image     string `json:"image"`
-	Reference string `json:"reference"`
-}
-
-// Archives contains a list of archives, part of a profile manifest
-type Archives struct {
-	Archives []archive `json:"archives"`
-}
 
 // CurrentProfileName returns the name of the currently running profile
 func CurrentProfileName() (string, error) {
@@ -79,20 +68,20 @@ func CurrentProfilePath() (string, error) {
 }
 
 // ReadCurrentProfile returns the content of the currently running profile
-func ReadCurrentProfile() (Archives, error) {
+func ReadCurrentProfile() (Images, error) {
 	path, err := CurrentProfilePath()
 	if err != nil {
-		return Archives{}, err
+		return Images{}, err
 	}
 
 	return ReadProfile(path)
 }
 
 // ReadProfile returns the content of a specific profile
-func ReadProfile(path string) (Archives, error) {
+func ReadProfile(path string) (Images, error) {
 	fp, err := os.Open(path)
 	if err != nil {
-		return Archives{}, err
+		return Images{}, err
 	}
 	defer fp.Close()
 
@@ -100,7 +89,7 @@ func ReadProfile(path string) (Archives, error) {
 	jsonIn := json.NewDecoder(bufio.NewReader(fp))
 	err = jsonIn.Decode(&manifest)
 	if err != nil {
-		return Archives{}, err
+		return Images{}, err
 	}
 
 	// TODO(lucab): perform semantic validation

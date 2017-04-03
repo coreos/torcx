@@ -59,10 +59,10 @@ func fillCommonRuntime() (*torcx.CommonConfig, error) {
 	}
 
 	logrus.WithFields(logrus.Fields{
-		"basedir":            baseDir,
-		"rundir":             rundir,
-		"confdir":            confdir,
-		"bundles load paths": storePaths,
+		"basedir":     baseDir,
+		"rundir":      rundir,
+		"confdir":     confdir,
+		"store paths": storePaths,
 	}).Debug("common configuration parsed")
 
 	return &torcx.CommonConfig{

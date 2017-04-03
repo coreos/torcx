@@ -18,9 +18,10 @@ import (
 	"fmt"
 	"os"
 
+	"path/filepath"
+
 	"github.com/Sirupsen/logrus"
 	"github.com/pkg/errors"
-	"path/filepath"
 )
 
 // ApplyProfile is called at boot-time to apply the configured profile
@@ -50,11 +51,11 @@ func ApplyProfile(applyCfg *ApplyConfig) error {
 		return fmt.Errorf("profile %q not found", applyCfg.Profile)
 	}
 
-	bundles, err := ReadProfile(path)
+	images, err := ReadProfile(path)
 	if err != nil {
 		return err
 	}
-	if len(bundles.Archives) == 0 {
+	if len(images.Images) == 0 {
 		return nil
 	}
 
@@ -63,19 +64,19 @@ func ApplyProfile(applyCfg *ApplyConfig) error {
 		return err
 	}
 
-	for _, pkg := range bundles.Archives {
-		path, err := storeCache.LookupReference(pkg)
+	for _, im := range images.Images {
+		_, err := storeCache.ArchiveFor(im)
 		if err != nil {
 			return err
 		}
 
-		// TODO(lucab): render bundle refs
+		// TODO: actually apply
 
 		logrus.WithFields(logrus.Fields{
-			"bundle name": pkg.Image,
-			"reference":   pkg.Reference,
-			"path":        path,
-		}).Debug("bundle/reference unpacked")
+			"name":      im.Name,
+			"reference": im.Reference,
+			"path":      path,
+		}).Debug("image unpacked")
 	}
 
 	logrus.WithFields(logrus.Fields{

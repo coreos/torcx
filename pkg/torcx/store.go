@@ -29,13 +29,16 @@ import (
 // StoreCache holds a temporary cache for images/references in the store
 type StoreCache struct {
 	Paths []string
-	Refs  map[archive]string
+
+	// The mapping of name + reference to .tgz file
+	Images map[Image]Archive
 }
 
 // NewStoreCache constructs a new StoreCache using `paths` as lookup directories
 func NewStoreCache(paths []string) (StoreCache, error) {
-	var cache StoreCache
-	cachedRefs := make(map[archive]string, 0)
+	sc := StoreCache{
+		Paths: paths,
+	}
 
 	walkFn := func(inPath string, inInfo os.FileInfo, inErr error) error {
 		if inErr != nil {
@@ -52,7 +55,10 @@ func NewStoreCache(paths []string) (StoreCache, error) {
 		}
 
 		if inInfo.Mode().IsRegular() {
-			bundleName := strings.TrimSuffix(name, ".oci.tgz")
+			archive := Archive{
+				Name:     strings.TrimSuffix(name, ".oci.tgz"),
+				Filepath: path,
+			}
 
 			fp, err := os.Open(path)
 			if err != nil {
@@ -83,18 +89,28 @@ func NewStoreCache(paths []string) (StoreCache, error) {
 				}
 				// TODO(lucab): add manifest validation
 
-				ref := strings.TrimPrefix(hdr.Name, "refs/")
-				pkg := archive{
-					Image:     bundleName,
-					Reference: ref,
+				image := Image{
+					Name:      archive.Name,
+					Reference: strings.TrimPrefix(hdr.Name, "refs/"),
 				}
-				cachedRefs[pkg] = path
 
-				logrus.WithFields(logrus.Fields{
-					"name":      bundleName,
-					"reference": ref,
-					"path":      path,
-				}).Debug("new bundle/reference added to cache")
+				// The first archive to define a reference always wins,
+				// warn on collision
+				if _, ok := sc.Images[image]; ok {
+					logrus.WithFields(logrus.Fields{
+						"name":      image.Name,
+						"reference": image.Reference,
+						"path":      path,
+					}).Warn("Duplicate name + reference ignored!")
+				} else {
+					logrus.WithFields(logrus.Fields{
+						"name":      image.Name,
+						"reference": image.Reference,
+						"path":      path,
+					}).Debug("new archive/reference added to cache")
+
+					sc.Images[image] = archive
+				}
 			}
 		}
 
@@ -105,21 +121,17 @@ func NewStoreCache(paths []string) (StoreCache, error) {
 		_ = filepath.Walk(root, walkFn)
 	}
 
-	cache = StoreCache{
-		Paths: paths,
-		Refs:  cachedRefs,
-	}
-	return cache, nil
+	return sc, nil
 }
 
 // LookupReference looks for a reference in the store, returning the path
-// to the bundle containing it
-func (sc *StoreCache) LookupReference(pkg archive) (string, error) {
+// to the archive containing it
+func (sc *StoreCache) ArchiveFor(im Image) (Archive, error) {
 
-	path, ok := sc.Refs[pkg]
+	arch, ok := sc.Images[im]
 	if ok {
-		return path, nil
+		return arch, nil
 	}
 
-	return "", fmt.Errorf("reference %q not found", pkg)
+	return Archive{}, fmt.Errorf("image %s:%s not found", im.Name, im.Reference)
 }
