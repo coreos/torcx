@@ -1,8 +1,63 @@
-hash: bcd4d750747b9457eff9f93def300ee90f1227dae76aec0422fd7ff60a921f4c
-updated: 2017-03-13T10:44:15.150177087Z
+hash: 5afa4a12fb5e3e0ce8e1f8f4de23d67873e45ec045076093fdb9453233b01cc5
+updated: 2017-04-03T16:21:54.220781456Z
 imports:
+- name: github.com/containers/image
+  version: cb1908f14e99f5f26bf30d8786bbae71bbd4bd4a
+  subpackages:
+  - copy
+  - directory/explicitfilepath
+  - docker
+  - docker/policyconfiguration
+  - docker/reference
+  - image
+  - image/copy
+  - image/docker
+  - image/docker/reference
+  - image/oci/layout
+  - image/signature
+  - manifest
+  - oci/layout
+  - pkg/compression
+  - signature
+  - transports
+  - types
+  - version
+- name: github.com/containers/storage
+  version: ff48947baaf205756dd67a00ac688d694a778ef6
+  subpackages:
+  - pkg/homedir
+- name: github.com/docker/distribution
+  version: 099622876197e3b24d627a72053d1bcc8968076a
+  subpackages:
+  - context
+  - digest
+  - reference
+  - registry/api/errcode
+  - registry/api/v2
+  - registry/client
+  - registry/client/transport
+  - registry/storage/cache
+  - registry/storage/cache/memory
+  - uuid
+- name: github.com/docker/docker
+  version: 9518a71ceff0f1aa9abada5b51cbac40f8e8c80e
+  subpackages:
+  - api/types/strslice
+- name: github.com/docker/go-connections
+  version: e15c02316c12de00874640cd76311849de2aeed5
+  subpackages:
+  - sockets
+  - tlsconfig
+- name: github.com/docker/libtrust
+  version: aabc10ec26b754e797f9028f4589c5b7bd90dc20
 - name: github.com/fsnotify/fsnotify
-  version: 7d7316ed6e1ed2de075aab8dfc76de5d158d66e1
+  version: 4da3e2cfbabc9f751898f250b49f2439785783a1
+- name: github.com/ghodss/yaml
+  version: 0ca9ea5df5451ffdf184b4428c902747c2c11cd7
+- name: github.com/gorilla/context
+  version: 14f550f51af52180c2eefed15e5fd18d63c0a64a
+- name: github.com/gorilla/mux
+  version: e444e69cbd2e2e3e0749a2f3c717cec491552bbf
 - name: github.com/hashicorp/hcl
   version: 630949a3c5fa3c613328e1b8256052cbc2327c9b
   subpackages:
@@ -17,13 +72,30 @@ imports:
 - name: github.com/inconshreveable/mousetrap
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/magiconair/properties
-  version: b3b15ef068fd0b17ddf408a23669f20811d194d2
+  version: 51463bfca2576e06c62a8504b5c0f06d61312647
+- name: github.com/mattn/go-runewidth
+  version: 14207d285c6c197daabb5c9793d63e7af9ab2d50
+- name: github.com/Microsoft/go-winio
+  version: fff283ad5116362ca252298cfc9b95828956d85d
 - name: github.com/mitchellh/mapstructure
   version: 53818660ed4955e899c0bcafa97299a388bd7c8e
+- name: github.com/mtrmac/gpgme
+  version: b2432428689ca58c2b8e8dea9449d3295cf96fc9
+- name: github.com/opencontainers/go-digest
+  version: 21dfd564fd89c944783d00d069f33e3e7123c448
+- name: github.com/opencontainers/image-spec
+  version: 86308139a22b005bfda7b2e49c02fade937b4180
+  subpackages:
+  - specs-go
+  - specs-go/v1
+- name: github.com/opencontainers/runc
+  version: 653207bc29a6d2d62b5d4f55b596467cb715a128
+  subpackages:
+  - libcontainer/user
 - name: github.com/pelletier/go-buffruneio
   version: c37440a7cf42ac63b919c752ca73a85067e05992
 - name: github.com/pelletier/go-toml
-  version: 13d49d4606eb801b8f01ae542b4afc4c6ee3d84a
+  version: e32a2e04744250647a72bf17da1b09befc03b6b1
 - name: github.com/pkg/errors
   version: 645ef00459ed84a119197bfb8d8205042c6df63d
 - name: github.com/Sirupsen/logrus
@@ -42,15 +114,34 @@ imports:
   version: 9ff6c6923cfffbcd502984b8e0c80539a94968b7
 - name: github.com/spf13/viper
   version: 7538d73b4eb9511d85a9f1dfef202eeb8ac260f4
+- name: golang.org/x/crypto
+  version: c10c31b5e94b6f7a0283272dc2bb27163dcea24b
+  subpackages:
+  - cast5
+  - openpgp
+  - openpgp/armor
+  - openpgp/elgamal
+  - openpgp/errors
+  - openpgp/packet
+  - openpgp/s2k
+- name: golang.org/x/net
+  version: 2cba614e8ff920c60240d2677bc019af32ee04e5
+  subpackages:
+  - context
+  - proxy
+  - trace
 - name: golang.org/x/sys
   version: b44883b474ffefa37335017174e397412b633a4f
   subpackages:
   - unix
+  - windows
 - name: golang.org/x/text
-  version: f28f36722d5ef2f9655ad3de1f248e3e52ad5ebd
+  version: f4b4367115ec2de254587813edaa901bc1c723a8
   subpackages:
   - transform
   - unicode/norm
+- name: gopkg.in/cheggaaa/pb.v1
+  version: 0817e3a1f8de9e3c78b159699b3c07d53e24a963
 - name: gopkg.in/yaml.v2
   version: a3f3340b5840cee44f372bddb5880fcbc419b46a
 testImports: []
