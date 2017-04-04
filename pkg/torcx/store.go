@@ -37,7 +37,8 @@ type StoreCache struct {
 // NewStoreCache constructs a new StoreCache using `paths` as lookup directories
 func NewStoreCache(paths []string) (StoreCache, error) {
 	sc := StoreCache{
-		Paths: paths,
+		Paths:  paths,
+		Images: map[Image]Archive{},
 	}
 
 	walkFn := func(inPath string, inInfo os.FileInfo, inErr error) error {
