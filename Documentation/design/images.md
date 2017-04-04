@@ -1,7 +1,7 @@
 # Archive and Image technical details
 
-torcx profiles specify images and references. Torcx operates on a store of 
-image archives.
+torcx profiles specify images and references.
+torcx operates on a store of image archives.
 
 An archive is a gzip-compressed tar file, containing an OCI image-archive layout as specified by [OCI image-spec][image-layout].
 
