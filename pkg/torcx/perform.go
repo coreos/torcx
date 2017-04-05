@@ -87,8 +87,9 @@ func ApplyProfile(applyCfg *ApplyConfig) error {
 	return nil
 }
 
-// BlowFuse blows the system-wide torcx fuse
-func BlowFuse(applyCfg *ApplyConfig) error {
+// SealSystemState is a one-time-op which seals the current state of the system,
+// after a torcx profile has been applied to it.
+func SealSystemState(applyCfg *ApplyConfig) error {
 	if applyCfg == nil {
 		return errors.New("missing apply configuration")
 	}
@@ -116,14 +117,14 @@ func BlowFuse(applyCfg *ApplyConfig) error {
 	for _, line := range content {
 		_, err = fp.WriteString(line + "\n")
 		if err != nil {
-			return errors.Wrap(err, "writing fuse content")
+			return errors.Wrap(err, "writing seal content")
 		}
 	}
 
 	logrus.WithFields(logrus.Fields{
 		"path":    FUSE_PATH,
 		"content": content,
-	}).Debug("fuse blown")
+	}).Debug("system state sealed")
 
 	return nil
 }
