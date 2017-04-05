@@ -29,6 +29,8 @@ const (
 	VENDOR_DIR = "/usr/share/torcx"
 	// ProfileManifestV0K - profile manifest kind, v0
 	ProfileManifestV0K = "profile-manifest-v0"
+	// DefaultTagRef is the default image reference looked up in archives
+	DefaultTagRef = "com.coreos.cl"
 )
 
 // CommonConfig contains runtime configuration items common to all

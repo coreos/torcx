@@ -15,10 +15,7 @@
 package torcx
 
 import (
-	"archive/tar"
-	"compress/gzip"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -51,68 +48,43 @@ func NewStoreCache(paths []string) (StoreCache, error) {
 		if !inInfo.Mode().IsRegular() {
 			return nil
 		}
-		if !strings.HasSuffix(name, ".oci.tgz") {
+		if !strings.HasSuffix(name, ".torcx.tgz") {
 			return nil
 		}
+		baseName := strings.TrimSuffix(name, ".torcx.tgz")
+		imageName := baseName
+		imageRef := DefaultTagRef
+		if strings.ContainsRune(baseName, ':') {
+			subs := strings.Split(baseName, ":")
+			imageRef = subs[len(subs)-1]
+			imageName = strings.Join(subs[:len(subs)-1], "")
+		}
+		archive := Archive{
+			Name:     imageName,
+			Filepath: path,
+		}
 
-		if inInfo.Mode().IsRegular() {
-			archive := Archive{
-				Name:     strings.TrimSuffix(name, ".oci.tgz"),
-				Filepath: path,
-			}
+		image := Image{
+			Name:      imageName,
+			Reference: imageRef,
+		}
 
-			fp, err := os.Open(path)
-			if err != nil {
-				return nil
-			}
-			defer fp.Close()
+		// The first archive to define a reference always wins,
+		// warn on collision
+		if _, ok := sc.Images[image]; ok {
+			logrus.WithFields(logrus.Fields{
+				"name":      image.Name,
+				"reference": image.Reference,
+				"path":      path,
+			}).Warn("Duplicate name + reference ignored!")
+		} else {
+			logrus.WithFields(logrus.Fields{
+				"name":      image.Name,
+				"reference": image.Reference,
+				"path":      path,
+			}).Debug("new archive/reference added to cache")
 
-			zrd, err := gzip.NewReader(fp)
-			if err != nil {
-				return nil
-			}
-
-			trd := tar.NewReader(zrd)
-			for {
-				hdr, err := trd.Next()
-				if err == io.EOF {
-					break
-				}
-				if err != nil {
-					continue
-				}
-				if hdr.Typeflag != tar.TypeReg && hdr.Typeflag != tar.TypeRegA {
-					continue
-				}
-				// TODO(lucab): this needs a complete overhaul for OCI -rc5
-				if !strings.HasPrefix(hdr.Name, "refs/") {
-					continue
-				}
-				// TODO(lucab): add manifest validation
-
-				image := Image{
-					Name:      archive.Name,
-					Reference: strings.TrimPrefix(hdr.Name, "refs/"),
-				}
-
-				// The first archive to define a reference always wins,
-				// warn on collision
-				if _, ok := sc.Images[image]; ok {
-					logrus.WithFields(logrus.Fields{
-						"name":      image.Name,
-						"reference": image.Reference,
-						"path":      path,
-					}).Warn("Duplicate name + reference ignored!")
-				} else {
-					logrus.WithFields(logrus.Fields{
-						"name":      image.Name,
-						"reference": image.Reference,
-						"path":      path,
-					}).Debug("new archive/reference added to cache")
-
-					sc.Images[image] = archive
-				}
-			}
+			sc.Images[image] = archive
 		}
 
 		return nil
