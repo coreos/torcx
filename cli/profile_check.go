@@ -69,7 +69,7 @@ func runProfileCheck(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("profile %q not found", args[0])
 	}
 
-	profile, err := torcx.ReadProfile(path)
+	profile, err := torcx.ReadProfilePath(path)
 	if err != nil {
 		return err
 	}

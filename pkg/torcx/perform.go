@@ -15,9 +15,10 @@
 package torcx
 
 import (
+	"bufio"
 	"fmt"
+	"io"
 	"os"
-
 	"path/filepath"
 
 	"github.com/Sirupsen/logrus"
@@ -46,12 +47,18 @@ func ApplyProfile(applyCfg *ApplyConfig) error {
 		return errors.Wrap(err, "profiles listing failed")
 	}
 
-	path, ok := localProfiles[applyCfg.Profile]
+	originPath, ok := localProfiles[applyCfg.Profile]
 	if !ok {
 		return fmt.Errorf("profile %q not found", applyCfg.Profile)
 	}
 
-	images, err := ReadProfile(path)
+	opp, err := os.Open(originPath)
+	if err != nil {
+		return err
+	}
+	defer opp.Close()
+
+	images, err := readProfileReader(bufio.NewReader(opp))
 	if err != nil {
 		return err
 	}
@@ -75,13 +82,34 @@ func ApplyProfile(applyCfg *ApplyConfig) error {
 		logrus.WithFields(logrus.Fields{
 			"name":      im.Name,
 			"reference": im.Reference,
-			"path":      path,
+			"path":      originPath,
 		}).Debug("image unpacked")
 	}
 
+	runProfilePath := filepath.Join(applyCfg.RunDir, "profile")
+	rpp, err := os.Create(runProfilePath)
+	if err != nil {
+		return err
+	}
+	defer rpp.Close()
+
+	if n, err := opp.Seek(0, io.SeekStart); err != nil || n != 0 {
+		return fmt.Errorf("seek failed")
+	}
+
+	_, err = io.Copy(rpp, opp)
+	if err != nil {
+		return err
+	}
+	err = os.Chmod(runProfilePath, 0444)
+	if err != nil {
+		return err
+	}
+
 	logrus.WithFields(logrus.Fields{
-		"fuse path": FUSE_PATH,
-		"profile":   applyCfg.Profile,
+		"name":             applyCfg.Profile,
+		"original profile": originPath,
+		"sealed profile":   runProfilePath,
 	}).Debug("profile applied")
 
 	return nil
@@ -110,8 +138,8 @@ func SealSystemState(applyCfg *ApplyConfig) error {
 	content := []string{
 		fmt.Sprintf("%s=%q", FUSE_PROFILE_NAME, applyCfg.Profile),
 		fmt.Sprintf("%s=%q", FUSE_PROFILE_PATH, filepath.Join(applyCfg.RunDir, "profile")),
-		fmt.Sprintf("%s=%q", FUSE_BINDIR, filepath.Join(applyCfg.RunDir, "bin")),
-		fmt.Sprintf("%s=%q", FUSE_UNPACKDIR, filepath.Join(applyCfg.RunDir, "unpack")),
+		fmt.Sprintf("%s=%q", FUSE_BINDIR, filepath.Join(applyCfg.RunDir, "bin/")),
+		fmt.Sprintf("%s=%q", FUSE_UNPACKDIR, filepath.Join(applyCfg.RunDir, "unpack/")),
 	}
 
 	for _, line := range content {

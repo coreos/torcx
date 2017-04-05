@@ -15,11 +15,11 @@
 package torcx
 
 import (
-	"os"
-	"path/filepath"
-
 	"bufio"
 	"encoding/json"
+	"io"
+	"os"
+	"path/filepath"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/pkg/errors"
@@ -74,20 +74,25 @@ func ReadCurrentProfile() (Images, error) {
 		return Images{}, err
 	}
 
-	return ReadProfile(path)
+	return ReadProfilePath(path)
 }
 
-// ReadProfile returns the content of a specific profile
-func ReadProfile(path string) (Images, error) {
+// ReadProfilePath returns the content of a specific profile, specified via path.
+func ReadProfilePath(path string) (Images, error) {
 	fp, err := os.Open(path)
 	if err != nil {
 		return Images{}, err
 	}
 	defer fp.Close()
 
+	return readProfileReader(bufio.NewReader(fp))
+}
+
+// readProfileReader returns the content of a specific profile, specified via a reader.
+func readProfileReader(in io.Reader) (Images, error) {
 	var manifest ProfileManifestV0
-	jsonIn := json.NewDecoder(bufio.NewReader(fp))
-	err = jsonIn.Decode(&manifest)
+	jsonIn := json.NewDecoder(in)
+	err := jsonIn.Decode(&manifest)
 	if err != nil {
 		return Images{}, err
 	}
