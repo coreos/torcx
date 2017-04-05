@@ -20,6 +20,11 @@ import (
 	"github.com/spf13/viper"
 )
 
+// GlobalCfg is for global CLI state
+type GlobalCfg struct {
+	// logrus has its own global state for verbosity level
+}
+
 var (
 	// TorcxCmd is the top-level cobra command for torcx
 	TorcxCmd = &cobra.Command{
@@ -27,12 +32,40 @@ var (
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}
+	// TorcxCliCfg holds global CLI status available to all subcommands
+	TorcxCliCfg GlobalCfg
 )
 
 // Init initializes the CLI environment for torcx
 func Init() error {
 	viper.SetEnvPrefix("TORCX")
 	viper.AutomaticEnv()
-	logrus.SetLevel(logrus.DebugLevel)
+
+	logrus.SetLevel(logrus.WarnLevel)
+
+	verboseFlag := TorcxCmd.PersistentFlags().VarPF((*cliCfgVerbose)(&TorcxCliCfg), "verbose", "v", "verbosity level")
+	verboseFlag.NoOptDefVal = "info"
+
 	return nil
+}
+
+// cliCfgVerbose is for `--verbose` flag
+type cliCfgVerbose GlobalCfg
+
+func (ccv *cliCfgVerbose) Set(s string) error {
+	lvl, err := logrus.ParseLevel(s)
+	if err != nil {
+		return err
+	}
+
+	logrus.SetLevel(lvl)
+	return nil
+}
+
+func (ccv *cliCfgVerbose) String() string {
+	return logrus.GetLevel().String()
+}
+
+func (ccv *cliCfgVerbose) Type() string {
+	return "level"
 }
