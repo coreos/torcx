@@ -33,13 +33,13 @@ import (
 )
 
 // DockerFetch fetches a DockerV2 image and stores it as a tgz
-// containing the rendered rootfs, returning image details.
-func DockerFetch(storeCache StoreCache, storePath, refIn string) (string, error) {
+// containing the rendered rootfs, returning image details and path.
+func DockerFetch(storeCache StoreCache, storePath, refIn string) (Image, string, error) {
 	imageTgz := ""
 
 	remoteRef, err := imgdocker.ParseReference(strings.TrimPrefix(refIn, "docker:"))
 	if err != nil {
-		return "", err
+		return Image{}, "", err
 	}
 
 	// TODO(lucab): update this to take care of digest refs
@@ -49,11 +49,11 @@ func DockerFetch(storeCache StoreCache, storePath, refIn string) (string, error)
 	if !ok || remoteTagged.Tag() == "latest" {
 		remoteTagged, err = imgdockerref.WithTag(remoteRef.DockerReference(), DefaultTagRef)
 		if err != nil {
-			return "", err
+			return Image{}, "", err
 		}
 		remoteRef, err = imgdocker.NewReference(remoteTagged)
 		if err != nil {
-			return "", err
+			return Image{}, "", err
 		}
 	}
 	tag := remoteTagged.Tag()
@@ -68,41 +68,41 @@ func DockerFetch(storeCache StoreCache, storePath, refIn string) (string, error)
 			"reference": im.Reference,
 			"path":      path,
 		}).Warn("Duplicate name/reference found")
-		return "", fmt.Errorf(`Skipping "%s:%s", already found at %q`, im.Name, im.Reference, path.Filepath)
+		return Image{}, "", fmt.Errorf(`Skipping "%s:%s", already found at %q`, im.Name, im.Reference, path.Filepath)
 	}
 
 	tmpDir, err := ioutil.TempDir("", "torcx_fetch_")
 	if err != nil {
-		return "", err
+		return Image{}, "", err
 	}
 	defer os.RemoveAll(tmpDir)
 
 	localRef, err := imgoci.NewReference(tmpDir, remoteTagged.Tag())
 	if err != nil {
-		return "", err
+		return Image{}, "", err
 	}
 
 	// TODO(lucab): update this for DTC / OCI-signatures
 	policy, err := imgsig.DefaultPolicy(nil)
 	if err != nil {
-		return "", err
+		return Image{}, "", err
 	}
 	policyCtx, err := imgsig.NewPolicyContext(policy)
 	if err != nil {
-		return "", err
+		return Image{}, "", err
 	}
 	defer policyCtx.Destroy()
 
 	err = imgcopy.Image(policyCtx, localRef, remoteRef, nil)
 	if err != nil {
-		return "", err
+		return Image{}, "", err
 	}
 
 	imageTgz = filepath.Join(storePath, name+":"+remoteTagged.Tag()+".torcx.tgz")
 
 	fp, err := os.Create(imageTgz)
 	if err != nil {
-		return "", err
+		return Image{}, "", err
 	}
 	defer fp.Close()
 
@@ -151,10 +151,10 @@ func DockerFetch(storeCache StoreCache, storePath, refIn string) (string, error)
 
 	err = filepath.Walk(tmpDir, addTar)
 	if err != nil {
-		return "", err
+		return Image{}, "", err
 	}
 
 	// TODO(lucab): store metadata in xattr
 
-	return imageTgz, nil
+	return im, imageTgz, nil
 }
