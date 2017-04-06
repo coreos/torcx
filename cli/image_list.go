@@ -17,7 +17,6 @@ package cli
 import (
 	"encoding/json"
 	"os"
-	"path/filepath"
 
 	"github.com/coreos/torcx/pkg/torcx"
 	"github.com/pkg/errors"
@@ -25,34 +24,33 @@ import (
 )
 
 var (
-	cmdImageFetch = &cobra.Command{
-		Use:   "fetch",
-		Short: "Locally fetch a remote torcx image",
-		RunE:  runImageFetch,
+	cmdImageList = &cobra.Command{
+		Use:   "list [INAME]",
+		Short: "list available images and references",
+		Long: `List all images in the stores, as well as available references.
+If "INAME" is specified, only list the references for that image name.`,
+		RunE: runImageList,
 	}
 )
 
 func init() {
-	cmdImage.AddCommand(cmdImageFetch)
+	cmdImage.AddCommand(cmdImageList)
 }
 
-func runImageFetch(cmd *cobra.Command, args []string) error {
+func runImageList(cmd *cobra.Command, args []string) error {
 	var err error
 
-	if len(args) != 1 {
-		return errors.New("missing image/reference")
+	imageName := ""
+	if len(args) > 1 {
+		return errors.New("too many arguments")
 	}
-	refIn := args[0]
+	if len(args) == 1 {
+		imageName = args[0]
+	}
 
 	commonCfg, err := fillCommonRuntime()
 	if err != nil {
 		return errors.Wrap(err, "common configuration failed")
-	}
-
-	userStorePath := filepath.Join(commonCfg.BaseDir, "store")
-	err = os.MkdirAll(userStorePath, 0755)
-	if err != nil {
-		return err
 	}
 
 	storeCache, err := torcx.NewStoreCache(commonCfg.StorePaths)
@@ -60,21 +58,24 @@ func runImageFetch(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	image, path, err := torcx.DockerFetch(storeCache, userStorePath, refIn)
-	if err != nil {
-		return err
+	imgList := imageList{
+		Images: []imageEntry{},
+	}
+	for im, path := range storeCache.Images {
+		if imageName != "" && im.Name != imageName {
+			continue
+		}
+		entry := imageEntry{
+			Name:      im.Name,
+			Reference: im.Reference,
+			Path:      path.Filepath,
+		}
+		imgList.Images = append(imgList.Images, entry)
 	}
 
-	entry := imageEntry{
-		Name:      image.Name,
-		Reference: image.Reference,
-		Path:      path,
-	}
 	imageListOut := ImageList{
-		Kind: TorcxImageListV0,
-		Value: imageList{
-			Images: []imageEntry{entry},
-		},
+		Kind:  TorcxImageListV0,
+		Value: imgList,
 	}
 
 	jsonOut := json.NewEncoder(os.Stdout)

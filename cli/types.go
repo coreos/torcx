@@ -15,7 +15,7 @@
 package cli
 
 const (
-	// TorcxProfileListV0 is the JSON kind identifier for a profile list
+	// TorcxProfileListV0 is the JSON kind identifier for a list of profiles
 	TorcxProfileListV0 = "torcx-profile-list-v0"
 )
 
@@ -30,4 +30,25 @@ type profileList struct {
 	CurrentProfilePath *string  `json:"current_profile_path"`
 	NextProfileName    string   `json:"next_profile_name"`
 	Profiles           []string `json:"profiles"`
+}
+
+const (
+	// TorcxImageListV0 is the JSON kind identifier for a list of images
+	TorcxImageListV0 = "torcx-image-list-v0"
+)
+
+// ImageList is the JSON container for profile list output
+type ImageList struct {
+	Kind  string    `json:"kind"`
+	Value imageList `json:"value"`
+}
+
+type imageList struct {
+	Images []imageEntry `json:"images"`
+}
+
+type imageEntry struct {
+	Name      string `json:"name"`
+	Reference string `json:"reference"`
+	Path      string `json:"path"`
 }
