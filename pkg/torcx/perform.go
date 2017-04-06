@@ -15,13 +15,16 @@
 package torcx
 
 import (
+	"archive/tar"
 	"bufio"
+	"compress/gzip"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/coreos/torcx/pkg/untar"
 	"github.com/pkg/errors"
 )
 
@@ -72,12 +75,17 @@ func ApplyProfile(applyCfg *ApplyConfig) error {
 	}
 
 	for _, im := range images.Images {
-		_, err := storeCache.ArchiveFor(im)
+		tgzArchive, err := storeCache.ArchiveFor(im)
 		if err != nil {
 			return err
 		}
 
-		// TODO: actually apply
+		err = unpackTgz(applyCfg, tgzArchive.Filepath, im.Name)
+		if err != nil {
+			return err
+		}
+
+		// TODO(lucab): scan/symlink/extract binaries and systemd-units
 
 		logrus.WithFields(logrus.Fields{
 			"name":      im.Name,
@@ -158,6 +166,10 @@ func SealSystemState(applyCfg *ApplyConfig) error {
 }
 
 func ensurePaths(applyCfg *ApplyConfig) error {
+	if applyCfg == nil {
+		return errors.New("missing apply configuration")
+	}
+
 	paths := []string{applyCfg.BaseDir, applyCfg.RunDir, applyCfg.ConfDir}
 	// TODO(lucab): move derived dirs to getters
 	paths = append(paths, filepath.Join(applyCfg.RunDir, "bin"))
@@ -171,6 +183,44 @@ func ensurePaths(applyCfg *ApplyConfig) error {
 				return err
 			}
 		}
+	}
+
+	return nil
+}
+
+func unpackTgz(applyCfg *ApplyConfig, tgzPath, imageName string) error {
+	if applyCfg == nil {
+		return errors.New("missing apply configuration")
+	}
+
+	if tgzPath == "" || imageName == "" {
+		return errors.New("missing unpack source")
+	}
+
+	topDir := filepath.Join(applyCfg.RunDir, "unpack", imageName)
+	if _, err := os.Stat(topDir); err != nil && os.IsNotExist(err) {
+		if err := os.MkdirAll(topDir, 0755); err != nil {
+			return err
+		}
+	}
+
+	fp, err := os.Open(tgzPath)
+	if err != nil {
+		return errors.Wrapf(err, "opening %q", tgzPath)
+	}
+	defer fp.Close()
+
+	gr, err := gzip.NewReader(fp)
+	if err != nil {
+		return err
+	}
+	defer gr.Close()
+
+	tr := tar.NewReader(gr)
+	untarCfg := untar.ExtractCfg{}.Default()
+	err = untar.ChrootUntar(tr, topDir, untarCfg)
+	if err != nil {
+		return errors.Wrapf(err, "unpacking %q", tgzPath)
 	}
 
 	return nil
