@@ -20,3 +20,5 @@ import:
   - image/docker/reference
   - image/oci/layout
   - image/signature
+- package: github.com/squeed/image-tools/image
+  version: back-to-rc4

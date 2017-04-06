@@ -60,14 +60,14 @@ func runImageFetch(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	imageOut, err := torcx.DockerFetch(storeCache, userStorePath, refIn)
+	archive, err := torcx.DockerFetch(storeCache, userStorePath, refIn)
 	if err != nil {
 		return err
 	}
 
 	jsonOut := json.NewEncoder(os.Stdout)
 	jsonOut.SetIndent("", "  ")
-	err = jsonOut.Encode(imageOut)
+	err = jsonOut.Encode(archive)
 
 	return err
 }

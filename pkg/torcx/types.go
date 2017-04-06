@@ -64,10 +64,10 @@ type ProfileManifestV0 struct {
 	Value Images `json:"value"`
 }
 
-// Archive represents a .oci.tgz on disk
+// Archive represents a .torcx.tgz on disk
 type Archive struct {
-	Name     string
-	Filepath string
+	Image
+	Filepath string `json:"filepath"`
 }
 
 // Image is an archive name + Reference

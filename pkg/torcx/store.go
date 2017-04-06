@@ -59,15 +59,12 @@ func NewStoreCache(paths []string) (StoreCache, error) {
 			imageRef = subs[len(subs)-1]
 			imageName = strings.Join(subs[:len(subs)-1], "")
 		}
-		archive := Archive{
-			Name:     imageName,
-			Filepath: path,
-		}
 
 		image := Image{
 			Name:      imageName,
 			Reference: imageRef,
 		}
+		archive := Archive{image, path}
 
 		// The first archive to define a reference always wins,
 		// warn on collision

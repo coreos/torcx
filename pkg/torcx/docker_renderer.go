@@ -15,10 +15,7 @@
 package torcx
 
 import (
-	"archive/tar"
-	"compress/gzip"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -30,16 +27,16 @@ import (
 	imgdockerref "github.com/containers/image/docker/reference"
 	imgoci "github.com/containers/image/oci/layout"
 	imgsig "github.com/containers/image/signature"
+
+	imgtools "github.com/squeed/image-tools/image"
 )
 
 // DockerFetch fetches a DockerV2 image and stores it as a tgz
 // containing the rendered rootfs, returning image details.
-func DockerFetch(storeCache StoreCache, storePath, refIn string) (string, error) {
-	imageTgz := ""
-
+func DockerFetch(storeCache StoreCache, storePath, refIn string) (*Archive, error) {
 	remoteRef, err := imgdocker.ParseReference(strings.TrimPrefix(refIn, "docker:"))
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	// TODO(lucab): update this to take care of digest refs
@@ -49,11 +46,11 @@ func DockerFetch(storeCache StoreCache, storePath, refIn string) (string, error)
 	if !ok || remoteTagged.Tag() == "latest" {
 		remoteTagged, err = imgdockerref.WithTag(remoteRef.DockerReference(), DefaultTagRef)
 		if err != nil {
-			return "", err
+			return nil, err
 		}
 		remoteRef, err = imgdocker.NewReference(remoteTagged)
 		if err != nil {
-			return "", err
+			return nil, err
 		}
 	}
 	tag := remoteTagged.Tag()
@@ -67,94 +64,81 @@ func DockerFetch(storeCache StoreCache, storePath, refIn string) (string, error)
 			"name":      im.Name,
 			"reference": im.Reference,
 			"path":      path,
-		}).Warn("Duplicate name/reference found")
-		return "", fmt.Errorf(`Skipping "%s:%s", already found at %q`, im.Name, im.Reference, path.Filepath)
+		}).Warn("Image already exists")
+		return nil, fmt.Errorf(`Skipping "%s:%s", already found at %q`, im.Name, im.Reference, path.Filepath)
 	}
 
 	tmpDir, err := ioutil.TempDir("", "torcx_fetch_")
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	defer os.RemoveAll(tmpDir)
 
 	localRef, err := imgoci.NewReference(tmpDir, remoteTagged.Tag())
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	// TODO(lucab): update this for DTC / OCI-signatures
 	policy, err := imgsig.DefaultPolicy(nil)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	policyCtx, err := imgsig.NewPolicyContext(policy)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	defer policyCtx.Destroy()
 
+	// Actually fetch the image
 	err = imgcopy.Image(policyCtx, localRef, remoteRef, nil)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	imageTgz = filepath.Join(storePath, name+":"+remoteTagged.Tag()+".torcx.tgz")
-
-	fp, err := os.Create(imageTgz)
-	if err != nil {
-		return "", err
-	}
-	defer fp.Close()
-
-	gw := gzip.NewWriter(fp)
-	defer gw.Close()
-	tw := tar.NewWriter(gw)
-	defer tw.Close()
-
-	// TODO(caseyc): this should be rendered to a rootfs instead
-	addTar := func(path string, fi os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-
-		if path == tmpDir {
-			return nil
-		}
-
-		fiHdr, err := tar.FileInfoHeader(fi, "")
-		if err != nil {
-			return err
-		}
-		fiHdr.Name = strings.TrimPrefix(path, tmpDir)
-		fiHdr.Name = strings.TrimLeft(fiHdr.Name, "/")
-
-		err = tw.WriteHeader(fiHdr)
-		if err != nil {
-			return err
-		}
-
-		fp, err := os.Open(path)
-		if err != nil {
-			return err
-		}
-		defer fp.Close()
-
-		if fi.Mode().IsRegular() {
-			_, err = io.Copy(tw, fp)
-			if err != nil {
-				return err
-			}
-		}
-
-		return nil
-	}
-
-	err = filepath.Walk(tmpDir, addTar)
-	if err != nil {
-		return "", err
+	// Render the image to a rootfs archive
+	archiveTgz := filepath.Join(storePath, name+":"+remoteTagged.Tag()+".torcx.tgz")
+	if err := ExtractImage(tmpDir, im.Reference, archiveTgz); err != nil {
+		return nil, err
 	}
 
 	// TODO(lucab): store metadata in xattr
 
-	return imageTgz, nil
+	return &Archive{im, archiveTgz}, nil
+}
+
+// ExtractImage renders the OCI image to a root filesystem, then creates an Archive.
+func ExtractImage(ociPath, ref, dstFile string) error {
+
+	// First, render to a temporary directory
+	unpackDir, err := ioutil.TempDir("", "torcx_unpack_")
+	if err != nil {
+		return err
+	}
+	defer os.RemoveAll(unpackDir)
+
+	logrus.WithFields(logrus.Fields{
+		"path":      ociPath,
+		"unpackDir": unpackDir,
+		"reference": ref,
+	}).Info("Unpacking oci image")
+
+	imageType, err := imgtools.Autodetect(ociPath)
+	if err != nil {
+		return err
+	}
+
+	switch imageType {
+	case imgtools.TypeImageLayout:
+		err = imgtools.UnpackLayout(ociPath, unpackDir, ref)
+	case imgtools.TypeImage:
+		err = imgtools.UnpackFile(ociPath, unpackDir, ref)
+	default:
+		return fmt.Errorf("Unknown image type %s", imageType)
+	}
+
+	// TODO(cdc): actually tar this up
+	os.Create(dstFile)
+
+	return nil
 }
