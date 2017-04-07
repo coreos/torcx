@@ -15,7 +15,7 @@
 //
 // Simplified from https://github.com/rkt/pkg/tar/
 
-package untar
+package tar
 
 import (
 	"archive/tar"

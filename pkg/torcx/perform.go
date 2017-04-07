@@ -24,7 +24,7 @@ import (
 	"path/filepath"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/coreos/torcx/pkg/untar"
+	pkgtar "github.com/coreos/torcx/pkg/tar"
 	"github.com/pkg/errors"
 )
 
@@ -217,8 +217,8 @@ func unpackTgz(applyCfg *ApplyConfig, tgzPath, imageName string) error {
 	defer gr.Close()
 
 	tr := tar.NewReader(gr)
-	untarCfg := untar.ExtractCfg{}.Default()
-	err = untar.ChrootUntar(tr, topDir, untarCfg)
+	untarCfg := pkgtar.ExtractCfg{}.Default()
+	err = pkgtar.ChrootUntar(tr, topDir, untarCfg)
 	if err != nil {
 		return errors.Wrapf(err, "unpacking %q", tgzPath)
 	}
