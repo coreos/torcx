@@ -23,11 +23,11 @@ import (
 )
 
 // ReadMetadata returns metadata regarding the currently running profile,
-// as read from the fuse file
+// as read from the metadata file
 func ReadMetadata(fusePath string) (map[string]string, error) {
 	meta := make(map[string]string)
 
-	if !IsFuseBlown(fusePath) {
+	if !IsSystemSealed(fusePath) {
 		return meta, errors.New("no active profile")
 	}
 
@@ -49,8 +49,8 @@ func ReadMetadata(fusePath string) (map[string]string, error) {
 	return meta, nil
 }
 
-// IsFuseBlown checks whether the runtime fuse is already blown
-func IsFuseBlown(fusePath string) bool {
+// IsSystemSealed checks whether the runtime seal is already applied
+func IsSystemSealed(fusePath string) bool {
 	_, err := os.Lstat(fusePath)
 	if err != nil && os.IsNotExist(err) {
 		return false

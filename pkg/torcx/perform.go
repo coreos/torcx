@@ -15,12 +15,16 @@
 package torcx
 
 import (
+	"archive/tar"
+	"bufio"
+	"compress/gzip"
 	"fmt"
+	"io"
 	"os"
-
 	"path/filepath"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/coreos/torcx/pkg/untar"
 	"github.com/pkg/errors"
 )
 
@@ -46,12 +50,18 @@ func ApplyProfile(applyCfg *ApplyConfig) error {
 		return errors.Wrap(err, "profiles listing failed")
 	}
 
-	path, ok := localProfiles[applyCfg.Profile]
+	originPath, ok := localProfiles[applyCfg.Profile]
 	if !ok {
 		return fmt.Errorf("profile %q not found", applyCfg.Profile)
 	}
 
-	images, err := ReadProfile(path)
+	opp, err := os.Open(originPath)
+	if err != nil {
+		return err
+	}
+	defer opp.Close()
+
+	images, err := readProfileReader(bufio.NewReader(opp))
 	if err != nil {
 		return err
 	}
@@ -65,30 +75,57 @@ func ApplyProfile(applyCfg *ApplyConfig) error {
 	}
 
 	for _, im := range images.Images {
-		_, err := storeCache.ArchiveFor(im)
+		tgzArchive, err := storeCache.ArchiveFor(im)
 		if err != nil {
 			return err
 		}
 
-		// TODO: actually apply
+		err = unpackTgz(applyCfg, tgzArchive.Filepath, im.Name)
+		if err != nil {
+			return err
+		}
+
+		// TODO(lucab): scan/symlink/extract binaries and systemd-units
 
 		logrus.WithFields(logrus.Fields{
 			"name":      im.Name,
 			"reference": im.Reference,
-			"path":      path,
+			"path":      originPath,
 		}).Debug("image unpacked")
 	}
 
+	runProfilePath := filepath.Join(applyCfg.RunDir, "profile")
+	rpp, err := os.Create(runProfilePath)
+	if err != nil {
+		return err
+	}
+	defer rpp.Close()
+
+	if n, err := opp.Seek(0, io.SeekStart); err != nil || n != 0 {
+		return fmt.Errorf("seek failed")
+	}
+
+	_, err = io.Copy(rpp, opp)
+	if err != nil {
+		return err
+	}
+	err = os.Chmod(runProfilePath, 0444)
+	if err != nil {
+		return err
+	}
+
 	logrus.WithFields(logrus.Fields{
-		"fuse path": FUSE_PATH,
-		"profile":   applyCfg.Profile,
+		"name":             applyCfg.Profile,
+		"original profile": originPath,
+		"sealed profile":   runProfilePath,
 	}).Debug("profile applied")
 
 	return nil
 }
 
-// BlowFuse blows the system-wide torcx fuse
-func BlowFuse(applyCfg *ApplyConfig) error {
+// SealSystemState is a one-time-op which seals the current state of the system,
+// after a torcx profile has been applied to it.
+func SealSystemState(applyCfg *ApplyConfig) error {
 	if applyCfg == nil {
 		return errors.New("missing apply configuration")
 	}
@@ -109,26 +146,30 @@ func BlowFuse(applyCfg *ApplyConfig) error {
 	content := []string{
 		fmt.Sprintf("%s=%q", FUSE_PROFILE_NAME, applyCfg.Profile),
 		fmt.Sprintf("%s=%q", FUSE_PROFILE_PATH, filepath.Join(applyCfg.RunDir, "profile")),
-		fmt.Sprintf("%s=%q", FUSE_BINDIR, filepath.Join(applyCfg.RunDir, "bin")),
-		fmt.Sprintf("%s=%q", FUSE_UNPACKDIR, filepath.Join(applyCfg.RunDir, "unpack")),
+		fmt.Sprintf("%s=%q", FUSE_BINDIR, filepath.Join(applyCfg.RunDir, "bin/")),
+		fmt.Sprintf("%s=%q", FUSE_UNPACKDIR, filepath.Join(applyCfg.RunDir, "unpack/")),
 	}
 
 	for _, line := range content {
 		_, err = fp.WriteString(line + "\n")
 		if err != nil {
-			return errors.Wrap(err, "writing fuse content")
+			return errors.Wrap(err, "writing seal content")
 		}
 	}
 
 	logrus.WithFields(logrus.Fields{
 		"path":    FUSE_PATH,
 		"content": content,
-	}).Debug("fuse blown")
+	}).Debug("system state sealed")
 
 	return nil
 }
 
 func ensurePaths(applyCfg *ApplyConfig) error {
+	if applyCfg == nil {
+		return errors.New("missing apply configuration")
+	}
+
 	paths := []string{applyCfg.BaseDir, applyCfg.RunDir, applyCfg.ConfDir}
 	// TODO(lucab): move derived dirs to getters
 	paths = append(paths, filepath.Join(applyCfg.RunDir, "bin"))
@@ -142,6 +183,44 @@ func ensurePaths(applyCfg *ApplyConfig) error {
 				return err
 			}
 		}
+	}
+
+	return nil
+}
+
+func unpackTgz(applyCfg *ApplyConfig, tgzPath, imageName string) error {
+	if applyCfg == nil {
+		return errors.New("missing apply configuration")
+	}
+
+	if tgzPath == "" || imageName == "" {
+		return errors.New("missing unpack source")
+	}
+
+	topDir := filepath.Join(applyCfg.RunDir, "unpack", imageName)
+	if _, err := os.Stat(topDir); err != nil && os.IsNotExist(err) {
+		if err := os.MkdirAll(topDir, 0755); err != nil {
+			return err
+		}
+	}
+
+	fp, err := os.Open(tgzPath)
+	if err != nil {
+		return errors.Wrapf(err, "opening %q", tgzPath)
+	}
+	defer fp.Close()
+
+	gr, err := gzip.NewReader(fp)
+	if err != nil {
+		return err
+	}
+	defer gr.Close()
+
+	tr := tar.NewReader(gr)
+	untarCfg := untar.ExtractCfg{}.Default()
+	err = untar.ChrootUntar(tr, topDir, untarCfg)
+	if err != nil {
+		return errors.Wrapf(err, "unpacking %q", tgzPath)
 	}
 
 	return nil

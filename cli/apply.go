@@ -17,6 +17,7 @@ package cli
 import (
 	"io/ioutil"
 	"path/filepath"
+	"strings"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/pkg/errors"
@@ -49,8 +50,8 @@ func runApply(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "apply configuration failed")
 	}
 
-	if torcx.IsFuseBlown(torcx.FUSE_PATH) {
-		return errors.New("fuse already blown")
+	if torcx.IsSystemSealed(torcx.FUSE_PATH) {
+		return errors.New("system already sealed")
 	}
 
 	err = torcx.ApplyProfile(applyCfg)
@@ -58,9 +59,9 @@ func runApply(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "apply failed")
 	}
 
-	err = torcx.BlowFuse(applyCfg)
+	err = torcx.SealSystemState(applyCfg)
 	if err != nil {
-		return errors.Wrapf(err, "blowing fuse")
+		return errors.Wrapf(err, "sealing system state failed")
 	}
 	return nil
 }
@@ -76,9 +77,9 @@ func fillApplyRuntime(commonCfg *torcx.CommonConfig) (*torcx.ApplyConfig, error)
 		return nil, errors.New("missing common configuration")
 	}
 
-	fc, err := ioutil.ReadFile(filepath.Join(commonCfg.ConfDir, profile))
-	if err != nil {
-		profile = string(fc)
+	fc, err := ioutil.ReadFile(filepath.Join(commonCfg.ConfDir, "profile"))
+	if err == nil {
+		profile = strings.TrimSpace(string(fc))
 	}
 	if profile == "" {
 		profile = "vendor"
