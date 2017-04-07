@@ -80,7 +80,7 @@ func ApplyProfile(applyCfg *ApplyConfig) error {
 			return err
 		}
 
-		err = unpackTgz(applyCfg, tgzArchive.Filepath, im.Name)
+		_, err = unpackTgz(applyCfg, tgzArchive.Filepath, im.Name)
 		if err != nil {
 			return err
 		}
@@ -188,31 +188,32 @@ func ensurePaths(applyCfg *ApplyConfig) error {
 	return nil
 }
 
-func unpackTgz(applyCfg *ApplyConfig, tgzPath, imageName string) error {
+// unpackTgz renders a tgz rootfs, returning the target top directory.
+func unpackTgz(applyCfg *ApplyConfig, tgzPath, imageName string) (string, error) {
 	if applyCfg == nil {
-		return errors.New("missing apply configuration")
+		return "", errors.New("missing apply configuration")
 	}
 
 	if tgzPath == "" || imageName == "" {
-		return errors.New("missing unpack source")
+		return "", errors.New("missing unpack source")
 	}
 
 	topDir := filepath.Join(applyCfg.RunDir, "unpack", imageName)
 	if _, err := os.Stat(topDir); err != nil && os.IsNotExist(err) {
 		if err := os.MkdirAll(topDir, 0755); err != nil {
-			return err
+			return "", err
 		}
 	}
 
 	fp, err := os.Open(tgzPath)
 	if err != nil {
-		return errors.Wrapf(err, "opening %q", tgzPath)
+		return "", errors.Wrapf(err, "opening %q", tgzPath)
 	}
 	defer fp.Close()
 
 	gr, err := gzip.NewReader(fp)
 	if err != nil {
-		return err
+		return "", err
 	}
 	defer gr.Close()
 
@@ -220,8 +221,8 @@ func unpackTgz(applyCfg *ApplyConfig, tgzPath, imageName string) error {
 	untarCfg := pkgtar.ExtractCfg{}.Default()
 	err = pkgtar.ChrootUntar(tr, topDir, untarCfg)
 	if err != nil {
-		return errors.Wrapf(err, "unpacking %q", tgzPath)
+		return "", errors.Wrapf(err, "unpacking %q", tgzPath)
 	}
 
-	return nil
+	return topDir, nil
 }
