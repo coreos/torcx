@@ -29,7 +29,12 @@ import (
 )
 
 // ApplyProfile is called at boot-time to apply the configured profile
-// system-wide
+// system-wide. Apply operation is split in three phases:
+//  * unpack: all images are unpacked to their own dedicated path under UnpackDir
+//  * propagate: executable assets are propagated into the system;
+//    this includes symlinking binaries into BinDir and installing systemd
+//    transient units.
+//  * seal: system state is frozen, profile and metadata written to RunDir
 func ApplyProfile(applyCfg *ApplyConfig) error {
 	var err error
 	if applyCfg == nil {
@@ -80,17 +85,27 @@ func ApplyProfile(applyCfg *ApplyConfig) error {
 			return err
 		}
 
-		_, err = unpackTgz(applyCfg, tgzArchive.Filepath, im.Name)
+		// phase 1: unpack image
+		imageRoot, err := unpackTgz(applyCfg, tgzArchive.Filepath, im.Name)
 		if err != nil {
 			return err
 		}
 
-		// TODO(lucab): scan/symlink/extract binaries and systemd-units
+		// phase 2: propagate assets
+		bins, err := propagateBins(applyCfg, imageRoot)
+		if err != nil {
+			return err
+		}
+
+		// TODO(lucab): investigate more assets propagate:
+		//  * service units
+		//  * tmpfiles units
 
 		logrus.WithFields(logrus.Fields{
-			"name":      im.Name,
-			"reference": im.Reference,
-			"path":      originPath,
+			"name":              im.Name,
+			"reference":         im.Reference,
+			"path":              imageRoot,
+			"provided binaries": bins,
 		}).Debug("image unpacked")
 	}
 
@@ -120,6 +135,7 @@ func ApplyProfile(applyCfg *ApplyConfig) error {
 		"sealed profile":   runProfilePath,
 	}).Debug("profile applied")
 
+	// phase 3: seal system state
 	return nil
 }
 
@@ -225,4 +241,66 @@ func unpackTgz(applyCfg *ApplyConfig, tgzPath, imageName string) (string, error)
 	}
 
 	return topDir, nil
+}
+
+// propagateBins symlinks available binaries into torcx bindir and returns their
+// paths.
+func propagateBins(applyCfg *ApplyConfig, imageRoot string) ([]string, error) {
+	if applyCfg == nil {
+		return nil, errors.New("missing apply configuration")
+	}
+	if imageRoot == "" {
+		return nil, errors.New("missing image top directory")
+	}
+
+	scanBinDirs := []string{
+		"usr/bin/",
+		"usr/sbin/",
+		"bin/",
+		"sbin/",
+	}
+
+	targetBinDir := filepath.Join(applyCfg.RunDir, "bin/")
+	propBins := map[string]string{}
+	exeScanSymlink := func(path string, fi os.FileInfo, err error) error {
+		if err != nil {
+			if os.IsNotExist(err) {
+				return nil
+			}
+			return err
+		}
+		if !fi.Mode().IsRegular() {
+			return nil
+		}
+		if (fi.Mode().Perm() & 0111) == 0 {
+			return nil
+		}
+
+		baseName := filepath.Base(path)
+		newName := filepath.Join(targetBinDir, baseName)
+
+		err = os.Symlink(path, newName)
+		if err != nil {
+			return err
+		}
+
+		propBins[newName] = path
+		return nil
+	}
+
+	for _, ps := range scanBinDirs {
+		binDir := filepath.Join(imageRoot, ps)
+
+		err := filepath.Walk(binDir, exeScanSymlink)
+		if err != nil {
+			return nil, err
+		}
+
+	}
+
+	symlinks := make([]string, 0, len(propBins))
+	for newName := range propBins {
+		symlinks = append(symlinks, newName)
+	}
+	return symlinks, nil
 }
