@@ -12,8 +12,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-//
-// Simplified from https://github.com/rkt/pkg/tar/
 
 package tar
 
@@ -52,6 +50,9 @@ func Create(w io.Writer, root string) error {
 			tarHeader.Name, err = filepath.Rel(root, path)
 			if err != nil {
 				return err
+			}
+			if tarHeader.Name == "." {
+				return nil
 			}
 
 			if err := tw.WriteHeader(tarHeader); err != nil {
