@@ -100,7 +100,7 @@ func DockerFetch(storeCache StoreCache, storePath, refIn string) (*Archive, erro
 	}
 
 	// Render the image to a rootfs archive
-	archiveTgz := filepath.Join(storePath, name+":"+remoteTagged.Tag()+".torcx.tgz")
+	archiveTgz := filepath.Join(storePath, im.ArchiveFilename())
 	if err := ExtractImage(tmpDir, im.Reference, archiveTgz); err != nil {
 		return nil, err
 	}

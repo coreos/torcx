@@ -16,7 +16,6 @@ package cli
 
 import (
 	"io/ioutil"
-	"path/filepath"
 	"strings"
 
 	"github.com/Sirupsen/logrus"
@@ -60,7 +59,7 @@ func fillProfileRuntime(commonCfg *torcx.CommonConfig) (*torcx.ProfileConfig, er
 		curProfilePath = cpp
 	}
 
-	fc, err := ioutil.ReadFile(filepath.Join(commonCfg.ConfDir, "profile"))
+	fc, err := ioutil.ReadFile(commonCfg.ConfProfile())
 	if err == nil {
 		nextProfile = strings.TrimSpace(string(fc))
 	}

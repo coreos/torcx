@@ -17,7 +17,6 @@ package cli
 import (
 	"encoding/json"
 	"os"
-	"path/filepath"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -49,11 +48,7 @@ func runProfileList(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "profile configuration failed")
 	}
 
-	profileDirs := []string{
-		filepath.Join(torcx.VENDOR_DIR, "profiles.d"),
-		filepath.Join(commonCfg.ConfDir, "profiles.d"),
-	}
-	localProfiles, err := torcx.ListProfiles(profileDirs)
+	localProfiles, err := torcx.ListProfiles(commonCfg.ProfileDirs())
 	if err != nil {
 		return errors.Wrap(err, "profiles listing failed")
 	}

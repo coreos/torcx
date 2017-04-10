@@ -16,7 +16,6 @@ package cli
 
 import (
 	"io/ioutil"
-	"path/filepath"
 	"strings"
 
 	"github.com/Sirupsen/logrus"
@@ -77,7 +76,7 @@ func fillApplyRuntime(commonCfg *torcx.CommonConfig) (*torcx.ApplyConfig, error)
 		return nil, errors.New("missing common configuration")
 	}
 
-	fc, err := ioutil.ReadFile(filepath.Join(commonCfg.ConfDir, "profile"))
+	fc, err := ioutil.ReadFile(commonCfg.ConfProfile())
 	if err == nil {
 		profile = strings.TrimSpace(string(fc))
 	}
