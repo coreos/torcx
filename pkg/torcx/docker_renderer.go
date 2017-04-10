@@ -15,6 +15,7 @@
 package torcx
 
 import (
+	"compress/gzip"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -29,6 +30,8 @@ import (
 	imgsig "github.com/containers/image/signature"
 
 	imgtools "github.com/squeed/image-tools/image"
+
+	pkgtar "github.com/coreos/torcx/pkg/tar"
 )
 
 // DockerFetch fetches a DockerV2 image and stores it as a tgz
@@ -137,8 +140,23 @@ func ExtractImage(ociPath, ref, dstFile string) error {
 		return fmt.Errorf("Unknown image type %s", imageType)
 	}
 
-	// TODO(cdc): actually tar this up
-	os.Create(dstFile)
+	// Then, tar+gz up the rendered image
+	fp, err := os.Create(dstFile)
+	if err != nil {
+		return err
+	}
+	defer fp.Close()
 
-	return nil
+	gw := gzip.NewWriter(fp)
+	defer gw.Close()
+
+	if err := pkgtar.Create(gw, unpackDir); err != nil {
+		return err
+	}
+
+	// Capture failures to close - they are real errors
+	if err := gw.Close(); err != nil {
+		return err
+	}
+	return fp.Close()
 }
