@@ -22,6 +22,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"syscall"
 
 	"github.com/Sirupsen/logrus"
 	pkgtar "github.com/coreos/torcx/pkg/tar"
@@ -168,6 +169,13 @@ func SealSystemState(applyCfg *ApplyConfig) error {
 		}
 	}
 
+	// Remount the unpackdir RO
+	if err := syscall.Mount(applyCfg.RunUnpackDir(), applyCfg.RunUnpackDir(),
+		"", syscall.MS_REMOUNT|syscall.MS_RDONLY, ""); err != nil {
+
+		return errors.Wrap(err, "failed to remount read-only")
+	}
+
 	logrus.WithFields(logrus.Fields{
 		"path":    FUSE_PATH,
 		"content": content,
@@ -194,6 +202,14 @@ func setupPaths(applyCfg *ApplyConfig) error {
 				return err
 			}
 		}
+	}
+
+	logrus.WithField("dest", applyCfg.RunUnpackDir()).Debug("mounting tmpfs to unpack directory")
+
+	// Now, mount a tmpfs directory to the unpack directory
+	// We need to do this because, unsurprisingly, "/run" is noexec
+	if err := syscall.Mount("none", applyCfg.RunUnpackDir(), "tmpfs", 0, ""); err != nil {
+		return errors.Wrap(err, "Failed to mount unpack dir")
 	}
 
 	return nil
