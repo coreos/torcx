@@ -17,6 +17,7 @@ package cli
 import (
 	"io/ioutil"
 	"path/filepath"
+	"strings"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/pkg/errors"
@@ -61,7 +62,7 @@ func fillProfileRuntime(commonCfg *torcx.CommonConfig) (*torcx.ProfileConfig, er
 
 	fc, err := ioutil.ReadFile(filepath.Join(commonCfg.ConfDir, "profile"))
 	if err == nil {
-		nextProfile = string(fc)
+		nextProfile = strings.TrimSpace(string(fc))
 	}
 	if nextProfile == "" {
 		nextProfile = "vendor"

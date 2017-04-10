@@ -42,7 +42,7 @@ func ReadMetadata(fusePath string) (map[string]string, error) {
 		line := sc.Text()
 		tokens := strings.SplitN(line, "=", 2)
 		if len(tokens) == 2 {
-			meta[tokens[0]] = meta[tokens[1]]
+			meta[tokens[0]] = strings.Trim(tokens[1], `"`)
 		}
 	}
 
