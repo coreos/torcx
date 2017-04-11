@@ -92,6 +92,11 @@ func (cc *CommonConfig) NextProfileName() (string, error) {
 	return profileName, nil
 }
 
+// SetNextProfileName writes the given profile name as active for the next boot.
+func (cc *CommonConfig) SetNextProfileName(name string) error {
+	return ioutil.WriteFile(cc.ConfProfile(), []byte(name), 0644)
+}
+
 // ReadCurrentProfile returns the content of the currently running profile
 func ReadCurrentProfile() (Images, error) {
 	path, err := CurrentProfilePath()
@@ -125,6 +130,44 @@ func readProfileReader(in io.Reader) (Images, error) {
 	// TODO(lucab): perform semantic validation
 
 	return manifest.Value, nil
+}
+
+func AddToProfile(profilePath string, im Image) error {
+	st, err := os.Stat(profilePath)
+	if err != nil {
+		return err
+	}
+
+	var manifest ProfileManifestV0
+	b, err := ioutil.ReadFile(profilePath)
+	if err != nil {
+		return err
+	}
+	if err := json.Unmarshal(b, &manifest); err != nil {
+		return err
+	}
+
+	// Update if existing
+	found := false
+	for idx, mim := range manifest.Value.Images {
+		if mim.Name == im.Name {
+			manifest.Value.Images[idx] = im
+			found = true
+			break
+		}
+	}
+
+	// Add otherwise
+	if !found {
+		manifest.Value.Images = append(manifest.Value.Images, im)
+	}
+
+	b, err = json.Marshal(manifest)
+	if err != nil {
+		return err
+	}
+
+	return ioutil.WriteFile(profilePath, b, st.Mode().Perm())
 }
 
 // ListProfiles returns a list of all available profiles
