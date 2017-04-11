@@ -51,7 +51,7 @@ func fillCommonRuntime() (*torcx.CommonConfig, error) {
 
 	storePaths := []string{
 		filepath.Join(torcx.VENDOR_DIR, "store"),
-		filepath.Join(baseDir, "store"),
+		filepath.Join(baseDir, "store"), // the user store path
 	}
 	extraStorePaths := viper.GetStringSlice("storepath")
 	if extraStorePaths != nil {

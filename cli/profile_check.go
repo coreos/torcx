@@ -16,7 +16,6 @@ package cli
 
 import (
 	"fmt"
-	"path/filepath"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/pkg/errors"
@@ -55,11 +54,7 @@ func runProfileCheck(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "profile configuration failed")
 	}
 
-	profileDirs := []string{
-		filepath.Join(torcx.VENDOR_DIR, "profiles.d"),
-		filepath.Join(profileCfg.ConfDir, "profiles.d"),
-	}
-	localProfiles, err := torcx.ListProfiles(profileDirs)
+	localProfiles, err := torcx.ListProfiles(commonCfg.ProfileDirs())
 	if err != nil {
 		return errors.Wrap(err, "profiles listing failed")
 	}

@@ -22,6 +22,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"syscall"
 
 	"github.com/Sirupsen/logrus"
 	pkgtar "github.com/coreos/torcx/pkg/tar"
@@ -41,16 +42,12 @@ func ApplyProfile(applyCfg *ApplyConfig) error {
 		return errors.New("missing apply configuration")
 	}
 
-	err = ensurePaths(applyCfg)
+	err = setupPaths(applyCfg)
 	if err != nil {
 		return errors.Wrap(err, "profile setup")
 	}
 
-	profileDirs := []string{
-		filepath.Join(VENDOR_DIR, "profiles.d"),
-		filepath.Join(applyCfg.ConfDir, "profiles.d"),
-	}
-	localProfiles, err := ListProfiles(profileDirs)
+	localProfiles, err := ListProfiles(applyCfg.ProfileDirs())
 	if err != nil {
 		return errors.Wrap(err, "profiles listing failed")
 	}
@@ -109,8 +106,7 @@ func ApplyProfile(applyCfg *ApplyConfig) error {
 		}).Debug("image unpacked")
 	}
 
-	runProfilePath := filepath.Join(applyCfg.RunDir, "profile")
-	rpp, err := os.Create(runProfilePath)
+	rpp, err := os.Create(applyCfg.RunProfile())
 	if err != nil {
 		return err
 	}
@@ -124,7 +120,7 @@ func ApplyProfile(applyCfg *ApplyConfig) error {
 	if err != nil {
 		return err
 	}
-	err = os.Chmod(runProfilePath, 0444)
+	err = os.Chmod(applyCfg.RunProfile(), 0444)
 	if err != nil {
 		return err
 	}
@@ -132,7 +128,7 @@ func ApplyProfile(applyCfg *ApplyConfig) error {
 	logrus.WithFields(logrus.Fields{
 		"name":             applyCfg.Profile,
 		"original profile": originPath,
-		"sealed profile":   runProfilePath,
+		"sealed profile":   applyCfg.RunProfile(),
 	}).Debug("profile applied")
 
 	// phase 3: seal system state
@@ -161,9 +157,9 @@ func SealSystemState(applyCfg *ApplyConfig) error {
 
 	content := []string{
 		fmt.Sprintf("%s=%q", FUSE_PROFILE_NAME, applyCfg.Profile),
-		fmt.Sprintf("%s=%q", FUSE_PROFILE_PATH, filepath.Join(applyCfg.RunDir, "profile")),
-		fmt.Sprintf("%s=%q", FUSE_BINDIR, filepath.Join(applyCfg.RunDir, "bin/")),
-		fmt.Sprintf("%s=%q", FUSE_UNPACKDIR, filepath.Join(applyCfg.RunDir, "unpack/")),
+		fmt.Sprintf("%s=%q", FUSE_PROFILE_PATH, applyCfg.RunProfile()),
+		fmt.Sprintf("%s=%q/", FUSE_BINDIR, applyCfg.RunBinDir()),
+		fmt.Sprintf("%s=%q/", FUSE_UNPACKDIR, applyCfg.RunUnpackDir()),
 	}
 
 	for _, line := range content {
@@ -171,6 +167,13 @@ func SealSystemState(applyCfg *ApplyConfig) error {
 		if err != nil {
 			return errors.Wrap(err, "writing seal content")
 		}
+	}
+
+	// Remount the unpackdir RO
+	if err := syscall.Mount(applyCfg.RunUnpackDir(), applyCfg.RunUnpackDir(),
+		"", syscall.MS_REMOUNT|syscall.MS_RDONLY, ""); err != nil {
+
+		return errors.Wrap(err, "failed to remount read-only")
 	}
 
 	logrus.WithFields(logrus.Fields{
@@ -181,17 +184,17 @@ func SealSystemState(applyCfg *ApplyConfig) error {
 	return nil
 }
 
-func ensurePaths(applyCfg *ApplyConfig) error {
+func setupPaths(applyCfg *ApplyConfig) error {
 	if applyCfg == nil {
 		return errors.New("missing apply configuration")
 	}
 
 	paths := []string{applyCfg.BaseDir, applyCfg.RunDir, applyCfg.ConfDir}
-	// TODO(lucab): move derived dirs to getters
-	paths = append(paths, filepath.Join(applyCfg.RunDir, "bin"))
-	paths = append(paths, filepath.Join(applyCfg.RunDir, "unpack"))
-	paths = append(paths, filepath.Join(applyCfg.ConfDir, "auth.d"))
-	paths = append(paths, filepath.Join(applyCfg.ConfDir, "profiles.d"))
+	paths = append(paths, applyCfg.RunBinDir())
+	paths = append(paths, applyCfg.RunUnpackDir())
+	paths = append(paths, applyCfg.UserProfileDir())
+	// TODO: implement auth...
+	//paths = append(paths, cc.AuthDir())
 
 	for _, d := range paths {
 		if _, err := os.Stat(d); err != nil && os.IsNotExist(err) {
@@ -199,6 +202,14 @@ func ensurePaths(applyCfg *ApplyConfig) error {
 				return err
 			}
 		}
+	}
+
+	logrus.WithField("dest", applyCfg.RunUnpackDir()).Debug("mounting tmpfs to unpack directory")
+
+	// Now, mount a tmpfs directory to the unpack directory
+	// We need to do this because, unsurprisingly, "/run" is noexec
+	if err := syscall.Mount("none", applyCfg.RunUnpackDir(), "tmpfs", 0, ""); err != nil {
+		return errors.Wrap(err, "Failed to mount unpack dir")
 	}
 
 	return nil
@@ -214,7 +225,7 @@ func unpackTgz(applyCfg *ApplyConfig, tgzPath, imageName string) (string, error)
 		return "", errors.New("missing unpack source")
 	}
 
-	topDir := filepath.Join(applyCfg.RunDir, "unpack", imageName)
+	topDir := filepath.Join(applyCfg.RunUnpackDir(), imageName)
 	if _, err := os.Stat(topDir); err != nil && os.IsNotExist(err) {
 		if err := os.MkdirAll(topDir, 0755); err != nil {
 			return "", err
@@ -260,7 +271,6 @@ func propagateBins(applyCfg *ApplyConfig, imageRoot string) ([]string, error) {
 		"sbin/",
 	}
 
-	targetBinDir := filepath.Join(applyCfg.RunDir, "bin/")
 	propBins := map[string]string{}
 	exeScanSymlink := func(path string, fi os.FileInfo, err error) error {
 		if err != nil {
@@ -277,7 +287,7 @@ func propagateBins(applyCfg *ApplyConfig, imageRoot string) ([]string, error) {
 		}
 
 		baseName := filepath.Base(path)
-		newName := filepath.Join(targetBinDir, baseName)
+		newName := filepath.Join(applyCfg.RunBinDir(), baseName)
 
 		err = os.Symlink(path, newName)
 		if err != nil {

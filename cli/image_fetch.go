@@ -17,7 +17,6 @@ package cli
 import (
 	"encoding/json"
 	"os"
-	"path/filepath"
 
 	"github.com/coreos/torcx/pkg/torcx"
 	"github.com/pkg/errors"
@@ -49,7 +48,7 @@ func runImageFetch(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "common configuration failed")
 	}
 
-	userStorePath := filepath.Join(commonCfg.BaseDir, "store")
+	userStorePath := commonCfg.UserStorePath()
 	err = os.MkdirAll(userStorePath, 0755)
 	if err != nil {
 		return err
