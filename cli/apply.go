@@ -15,9 +15,6 @@
 package cli
 
 import (
-	"io/ioutil"
-	"strings"
-
 	"github.com/Sirupsen/logrus"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -68,29 +65,20 @@ func runApply(cmd *cobra.Command, args []string) error {
 // fillApplyRuntime generate runtime config for apply subcommand starting from
 // system-wide configuration
 func fillApplyRuntime(commonCfg *torcx.CommonConfig) (*torcx.ApplyConfig, error) {
-	var (
-		profile string
-	)
-
-	if commonCfg == nil {
-		return nil, errors.New("missing common configuration")
-	}
-
-	fc, err := ioutil.ReadFile(commonCfg.ConfProfile())
-	if err == nil {
-		profile = strings.TrimSpace(string(fc))
-	}
-	if profile == "" {
-		profile = "vendor"
-		logrus.Debug("no profile configured, using default")
+	// We ignore the error here; NextProfileName will always return something we
+	// can apply, but also returns errors for other uses
+	profileName, err := commonCfg.NextProfileName()
+	if err != nil {
+		logrus.Warn("Falling back to default profile:", err)
+		profileName = torcx.DEFAULT_PROFILE_NAME
 	}
 
 	logrus.WithFields(logrus.Fields{
-		"profile": profile,
+		"profile": profileName,
 	}).Debug("apply configuration parsed")
 
 	return &torcx.ApplyConfig{
 		CommonConfig: *commonCfg,
-		Profile:      profile,
+		Profile:      profileName,
 	}, nil
 }

@@ -17,9 +17,12 @@ package torcx
 import (
 	"bufio"
 	"encoding/json"
+	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/pkg/errors"
@@ -65,6 +68,28 @@ func CurrentProfilePath() (string, error) {
 	}
 
 	return path, nil
+}
+
+// NextProfileName determines which profile will be used for the next apply.
+func (cc *CommonConfig) NextProfileName() (string, error) {
+	fc, err := ioutil.ReadFile(cc.ConfProfile())
+	if err != nil {
+		return "", errors.Wrapf(err, "unable to read profile file")
+	}
+
+	profileName := strings.TrimSpace(string(fc))
+
+	// Check that the profile exists
+	profiles, err := ListProfiles(cc.ProfileDirs())
+	if err != nil {
+		return "", errors.Wrap(err, "could not list profiles")
+	}
+
+	if _, ok := profiles[profileName]; !ok {
+		return "", fmt.Errorf("profile %s not found", profileName)
+	}
+
+	return profileName, nil
 }
 
 // ReadCurrentProfile returns the content of the currently running profile
