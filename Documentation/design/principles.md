@@ -5,18 +5,23 @@ These are the goals and ideas on which `torcx` is built upon:
 1. early-boot integration: it is expected to run early in the boot phase, preparing other components in the system
 1. systemd integration: it is expected to be used in conjunction with systemd units
 1. profile-based: it is expected to handle pre-made profiles provided by user/vendor (as opposed to single packages)
-1. low leve
+1. low level, machine-friendly: it should provide the equivalent of a package system which can be easily driven by external containerized agents
 1. local trust-boundary: authenticity/origin-trust is assumed for assets available on a local path
 1. hard-pinning: it should be responsible of applying a completely-pinned configuration profile
 1. fail hard, fail fast: it should either globally succeed or fail
 1. (primarily) tailored to CL: it should solve the specific immutable-OS problem of decoupling services from base images
 1. (primarily) tailored to docker: it should solve the specific problem of consumers pinning to specific docker versions
 
-These are the non-goals and past-mistakes that `torcx` wants to avoid:
+These are the non-goals and out-of-scope topics that `torcx` wants to avoid:
 
-1. full packaging system: it should not be involved into solving versioned constraints
+1. versioned dependency resolution: a profile is simple collection of images to be applied, without any explicit relationship
+1. full packaging system: it should not be involved into complex upgrade paths
+1. upgrading and downgrading packages at runtime: profile activation is an atomic operation performed at-most-once at boot-time
+1. pre-removal and post-installation custom logic: changes performed by torcx are (mainly) volatile and are meant to only last for a single boot
+1. defining a custom package format: torcx just handles tgz rootfs archives
 
 ## User Stories
+
 A few motivating examples, presented as user stories.
 
 ### 1: Docker version

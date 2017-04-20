@@ -1,25 +1,15 @@
-# Archive and Image technical details
+# Image technical details
 
 torcx profiles specify images and references.
 torcx operates on a store of image archives.
 
-An archive is a gzip-compressed tar file, containing an OCI image-archive layout as specified by [OCI image-spec][image-layout].
+An archive is a gzip-compressed tar file, containing a partial rootfs for a specific binary addon.
+torcx images are shipped as tgz archives, however they are typically custom built and tailored for torcx usages.
 
-[image-layout]: https://github.com/opencontainers/image-spec/blob/master/image-layout.md
-
-# Annotations and references
-
-torcx images are shipped as OCI archives, however they are typically custom built and tailored for torcx usages.
-As such, an OCI image must be annotated with a reserved annotation in order to be used by torcx, as such:
-
-```
-"com.coreos.torcx.v0": "yes"
-```
-
-Image tags (references) may contain custom value as specified by the provider.
+Image references may contain custom values as specified by the provider.
 It is recommend to use semver-compatible tags for normal release and vendor-scoped names for special purpose.
 
-For example, a special tag may be used by vendors to specify the latest current version, such as `com.coreos.cl`.
+For example, a special reference may be used by vendors to specify the latest current version, such as `com.coreos.cl`.
 
 # Dynamic binaries and libraries
 
