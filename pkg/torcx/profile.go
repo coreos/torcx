@@ -17,9 +17,12 @@ package torcx
 import (
 	"bufio"
 	"encoding/json"
+	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/pkg/errors"
@@ -67,6 +70,33 @@ func CurrentProfilePath() (string, error) {
 	return path, nil
 }
 
+// NextProfileName determines which profile will be used for the next apply.
+func (cc *CommonConfig) NextProfileName() (string, error) {
+	fc, err := ioutil.ReadFile(cc.ConfProfile())
+	if err != nil {
+		return "", errors.Wrapf(err, "unable to read profile file")
+	}
+
+	profileName := strings.TrimSpace(string(fc))
+
+	// Check that the profile exists
+	profiles, err := ListProfiles(cc.ProfileDirs())
+	if err != nil {
+		return "", errors.Wrap(err, "could not list profiles")
+	}
+
+	if _, ok := profiles[profileName]; !ok {
+		return "", fmt.Errorf("profile %s not found", profileName)
+	}
+
+	return profileName, nil
+}
+
+// SetNextProfileName writes the given profile name as active for the next boot.
+func (cc *CommonConfig) SetNextProfileName(name string) error {
+	return ioutil.WriteFile(cc.ConfProfile(), []byte(name), 0644)
+}
+
 // ReadCurrentProfile returns the content of the currently running profile
 func ReadCurrentProfile() (Images, error) {
 	path, err := CurrentProfilePath()
@@ -100,6 +130,44 @@ func readProfileReader(in io.Reader) (Images, error) {
 	// TODO(lucab): perform semantic validation
 
 	return manifest.Value, nil
+}
+
+func AddToProfile(profilePath string, im Image) error {
+	st, err := os.Stat(profilePath)
+	if err != nil {
+		return err
+	}
+
+	var manifest ProfileManifestV0
+	b, err := ioutil.ReadFile(profilePath)
+	if err != nil {
+		return err
+	}
+	if err := json.Unmarshal(b, &manifest); err != nil {
+		return err
+	}
+
+	// Update if existing
+	found := false
+	for idx, mim := range manifest.Value.Images {
+		if mim.Name == im.Name {
+			manifest.Value.Images[idx] = im
+			found = true
+			break
+		}
+	}
+
+	// Add otherwise
+	if !found {
+		manifest.Value.Images = append(manifest.Value.Images, im)
+	}
+
+	b, err = json.Marshal(manifest)
+	if err != nil {
+		return err
+	}
+
+	return ioutil.WriteFile(profilePath, b, st.Mode().Perm())
 }
 
 // ListProfiles returns a list of all available profiles

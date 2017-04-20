@@ -15,9 +15,6 @@
 package cli
 
 import (
-	"io/ioutil"
-	"strings"
-
 	"github.com/Sirupsen/logrus"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -59,13 +56,9 @@ func fillProfileRuntime(commonCfg *torcx.CommonConfig) (*torcx.ProfileConfig, er
 		curProfilePath = cpp
 	}
 
-	fc, err := ioutil.ReadFile(commonCfg.ConfProfile())
-	if err == nil {
-		nextProfile = strings.TrimSpace(string(fc))
-	}
-	if nextProfile == "" {
-		nextProfile = "vendor"
-		logrus.Debug("no next profile configured, assuming default")
+	nextProfile, err = commonCfg.NextProfileName()
+	if err != nil {
+		return nil, err
 	}
 
 	logrus.WithFields(logrus.Fields{

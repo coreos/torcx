@@ -31,6 +31,8 @@ const (
 	ProfileManifestV0K = "profile-manifest-v0"
 	// DefaultTagRef is the default image reference looked up in archives
 	DefaultTagRef = "com.coreos.cl"
+	// DEFAULT_PROFILE is the default profile name used
+	DEFAULT_PROFILE_NAME = "vendor"
 )
 
 // CommonConfig contains runtime configuration items common to all

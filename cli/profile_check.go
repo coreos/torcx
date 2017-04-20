@@ -26,62 +26,82 @@ import (
 
 var (
 	cmdProfileCheck = &cobra.Command{
-		Use:   "check <PNAME>",
+		Use:   "check",
 		Short: "check the manifest content and images for a profile",
-		Long:  "Checks that the profile given by name PNAME is valid. Ensures that the schema is correct, and that all referenced images exist in the store",
+		Long:  "Checks that the given profile (or the next profile on boot, if none is specified) is valid. Ensures that the schema is correct, and that all referenced images exist in the store",
 		RunE:  runProfileCheck,
 	}
+
+	flagProfileCheckName string
+	flagProfileCheckPath string
 )
 
 func init() {
 	cmdProfile.AddCommand(cmdProfileCheck)
+	cmdProfileCheck.Flags().StringVar(&flagProfileCheckName, "name", "", "profile name to check")
+	cmdProfileCheck.Flags().StringVar(&flagProfileCheckPath, "file", "", "profile file to check")
 }
 
 func runProfileCheck(cmd *cobra.Command, args []string) error {
 	var err error
 
-	if len(args) != 1 {
-		return errors.New("missing profile name")
-	}
-	profileName := args[0]
-
 	commonCfg, err := fillCommonRuntime()
 	if err != nil {
 		return errors.Wrap(err, "common configuration failed")
 	}
-	profileCfg, err := fillProfileRuntime(commonCfg)
-	if err != nil {
-		return errors.Wrap(err, "profile configuration failed")
+
+	if len(args) != 0 {
+		return cmd.Usage()
 	}
 
-	localProfiles, err := torcx.ListProfiles(commonCfg.ProfileDirs())
-	if err != nil {
-		return errors.Wrap(err, "profiles listing failed")
+	if flagProfileCheckPath == "" {
+		if flagProfileCheckName == "" {
+			flagProfileCheckName, err = commonCfg.NextProfileName()
+			if err != nil {
+				return errors.Wrapf(err, "unable to determine next profile")
+			}
+
+			logrus.Infof("No profile specified, using next profile %s", flagProfileCheckName)
+
+			if flagProfileCheckName == torcx.DEFAULT_PROFILE_NAME {
+				logrus.Warn("Checking default (%s) profile - do you mean to do that?", flagProfileCheckName)
+			}
+		}
+
+		localProfiles, err := torcx.ListProfiles(commonCfg.ProfileDirs())
+		if err != nil {
+			return errors.Wrap(err, "profiles listing failed")
+		}
+
+		var ok bool
+		flagProfileCheckPath, ok = localProfiles[flagProfileCheckName]
+
+		if !ok {
+			return fmt.Errorf("profile %q not found", flagProfileCheckName)
+		}
 	}
 
-	path, ok := localProfiles[profileName]
-	if !ok {
-		return fmt.Errorf("profile %q not found", args[0])
-	}
-
-	profile, err := torcx.ReadProfilePath(path)
+	profile, err := torcx.ReadProfilePath(flagProfileCheckPath)
 	if err != nil {
 		return err
 	}
+
+	// Empty profiles are allowed
 	if len(profile.Images) == 0 {
+		logrus.Warn("Profile specifies no images")
 		return nil
 	}
 
-	storeCache, err := torcx.NewStoreCache(profileCfg.StorePaths)
+	storeCache, err := torcx.NewStoreCache(commonCfg.StorePaths)
 	if err != nil {
 		return err
 	}
 
-	incomplete := false
+	missing := false
 	for _, im := range profile.Images {
 		ar, err := storeCache.ArchiveFor(im)
 		if err != nil {
-			incomplete = true
+			missing = true
 			logrus.WithFields(logrus.Fields{
 				"name":      im.Name,
 				"reference": im.Reference,
@@ -94,7 +114,8 @@ func runProfileCheck(cmd *cobra.Command, args []string) error {
 			}).Debug("image/reference found")
 		}
 	}
-	if incomplete {
+
+	if missing {
 		return fmt.Errorf("incomplete profile")
 	}
 
