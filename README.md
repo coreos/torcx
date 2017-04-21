@@ -1,23 +1,56 @@
-# torcx - 
+<img align="left" width="70px" src="Documentation/torcx.png" />
 
-torcx (pronounced _"torks"_) is a system-wide manager for images and profiles, specific to CoreOS ContainerLinux (CCL).
+# torcx - a boot-time addon manager
 
-torcx's goals include:
-* providing a way for distribution maintainers and users to add additional binaries and services to CCL, without shipping them in the base images
-* allowing users to run specific software versions, in a seamless and system-wide way
-* supply a CLI tool for manipulating images and runtime profiles
+[![Apache](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 
-## Overview
 
-This project provides a very lightweight add-ons manager for otherwise immutable distributions, such as CCL.
-It handles collection of packages (named, respectively, "profiles" and "images") at boot-time, overlaying them on top of the base OS image.
+torcx (pronounced _"torks"_) is a boot-time manager for system-wide ephemeral customization of Linux systems.
+It has been built specifically to work with an immutable OS such as [Container Linux][coreos-cl] by CoreOS.
 
-As such, torcx fulfill two main roles:
-* at boot-time, it activates a specific profile by unpacking all requested images and making them available system-wide
-* at runtime, it provides a human- and machine-friendly interface to work with images and profiles
+[coreos-cl]: https://coreos.com/releases/
 
-Contrary to traditional packaging systems and add-on managers, torcx scope is quite limited and explicitly does not support:
-* upgrading and downgrading packages at runtime. Profile activation is a single atomic operation performed once, at boot-time
-* pre-removal and post-installation custom logic. Changes performed by torcx are volatile and are meant to only last for a single boot
-* defining a custom package format. torcx just handles OCI image-layout archives
-* versioned dependency resolution. A profile is simple collection of images to be applied, without any implicit relationship
+torcx focuses on:
+* providing a way for users to add additional binaries and services, even if not shipped in the base image
+* allowing users to pin specific software versions, in a seamless and system-wide way
+* supplying human- and machine-friendly interfaces to work with images and profiles
+
+## Getting started
+
+This project provides a very lightweight add-ons manager for otherwise immutable distributions.
+It applies collections of addon packages (named, respectively, "profiles" and "images") at boot-time, extracting them on the side of the base OS.
+
+Profiles are simple JSON files, usually stored under `/etc/torcx/profiles.d/`, containing a set of image-references:
+
+```json
+{
+  "kind": "profile-manifest-v0",
+  "value": {
+    "images": [
+      {
+        "name": "foo-binary",
+        "reference": "0.1"
+      }
+    ]
+  }
+}
+
+```
+
+Image archives are looked up in several search paths, called "stores":
+ 1. Vendor store: usually on a read-only partition, it contains addons distributed together with the OS image
+ 1. User store: usually on a writable partition, it contains images provided by the user
+ 1. Runtime store: additional search path specified at runtime
+
+At boot-time, torcx unpacks and propagates the addons defined in the active profile, specified in `/etc/torcx/profile`.
+Once done, torcx seals the system into its new state and records its own metadata under `/run/metadata/torcx`.
+
+## Example
+
+Here is a short demo of torcx applying a profile with a single `socat` addon on top of a fresh Container Linux stable image.
+
+[![asciicast](https://asciinema.org/a/115034.png)](https://asciinema.org/a/115034)
+
+## License
+
+torcx is released under the Apache 2.0 license. See the [LICENSE](LICENSE) file for details.
