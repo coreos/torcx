@@ -1,1 +1,5 @@
-/torcx
+/bin
+/.go
+/.push-*
+/.container-*
+/.dockerfile-*
