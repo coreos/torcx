@@ -126,7 +126,7 @@ func extractOne(hdr *tar.Header, r io.Reader, targetDir string, cfg ExtractCfg) 
 		// Skip adjusting metadata below for hardlinks
 		return os.Link(hdr.Linkname, path)
 	case tar.TypeSymlink:
-		if cfg.Symlink {
+		if !cfg.Symlink {
 			return nil
 		}
 		if err := os.Symlink(hdr.Linkname, path); err != nil {
