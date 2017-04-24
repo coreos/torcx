@@ -1,0 +1,12 @@
+language: go
+
+go:
+  - 1.7
+  - 1.8
+
+env:
+  - ARCH=amd64 PKG=github.com/coreos/torcx VERSION=travis-dev BUILDTAGS="containers_image_openpgp" SRC_DIRS="cli pkg"
+
+script:
+- ./scripts/build.sh
+- ./scripts/test.sh ${SRC_DIRS}
