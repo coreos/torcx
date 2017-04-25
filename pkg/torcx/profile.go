@@ -86,7 +86,7 @@ func (cc *CommonConfig) NextProfileName() (string, error) {
 	}
 
 	if _, ok := profiles[profileName]; !ok {
-		return "", fmt.Errorf("profile %s not found", profileName)
+		return "", fmt.Errorf("profile %q not found", profileName)
 	}
 
 	return profileName, nil
