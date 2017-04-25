@@ -1,0 +1,14 @@
+[Unit]
+Description=torcx addon manager
+Documentation=https://github.com/coreos/torcx
+
+[Service]
+Type=oneshot
+SyslogIdentifier=torcx
+Environment="TORCX_PATH=/opt/bin"
+Environment="TORCX_LOGLEVEL=info"
+ExecStart=/usr/bin/env ${TORCX_PATH}/torcx --verbose=${TORCX_LOGLEVEL} apply
+
+[Install]
+WantedBy=sysinit.target
+RequiredBy=basic.target
