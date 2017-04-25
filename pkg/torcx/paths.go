@@ -39,7 +39,7 @@ func (cc *CommonConfig) ProfileDirs() []string {
 
 // RunProfile is the file where we copy the contents of the applied profile.
 func (cc *CommonConfig) RunProfile() string {
-	return filepath.Join(cc.RunDir, "profile")
+	return filepath.Join(cc.RunDir, "profile.json")
 }
 
 // UserStorePath  is the path where user-fetched archives are written
