@@ -32,7 +32,7 @@ func (cc *CommonConfig) RunBinDir() string {
 // ProfileDirs are the list of directories where we look for profiles.
 func (cc *CommonConfig) ProfileDirs() []string {
 	return []string{
-		filepath.Join(VENDOR_DIR, "profiles.d"),
+		filepath.Join(VENDOR_DIR, "profiles"),
 		cc.UserProfileDir(),
 	}
 }
@@ -54,7 +54,7 @@ func (cc *CommonConfig) AuthDir() string {
 
 // UserProfileDir is where user profiles are written.
 func (cc *CommonConfig) UserProfileDir() string {
-	return filepath.Join(cc.ConfDir, "profiles.d")
+	return filepath.Join(cc.ConfDir, "profiles")
 }
 
 // NextProfile is the path for the `next-profile` selector configuration file.

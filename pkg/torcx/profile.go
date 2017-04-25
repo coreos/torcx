@@ -182,12 +182,12 @@ func ListProfiles(profileDirs []string) (map[string]string, error) {
 		name := filepath.Base(path)
 		parentDir := filepath.Base(filepath.Dir(path))
 
-		if inInfo.IsDir() && name != "profiles.d" {
+		if inInfo.IsDir() && name != "profiles" {
 			return filepath.SkipDir
 		}
 
 		if inInfo.Mode().IsRegular() {
-			if parentDir != "profiles.d" {
+			if parentDir != "profiles" {
 				return filepath.SkipDir
 			}
 
