@@ -78,6 +78,7 @@ func (cc *CommonConfig) NextProfileName() (string, error) {
 	}
 
 	profileName := strings.TrimSpace(string(fc))
+	profileName = strings.TrimSuffix(profileName, ".json")
 
 	// Check that the profile exists
 	profiles, err := ListProfiles(cc.ProfileDirs())
@@ -186,12 +187,15 @@ func ListProfiles(profileDirs []string) (map[string]string, error) {
 			return filepath.SkipDir
 		}
 
+		if !strings.HasSuffix(name, ".json") {
+			return nil
+		}
+		name = strings.TrimSuffix(name, ".json")
+
 		if inInfo.Mode().IsRegular() {
 			if parentDir != "profiles" {
 				return filepath.SkipDir
 			}
-
-			// TODO(lucab): perhaps require .json file suffix?
 
 			profiles[name] = path
 			logrus.WithFields(logrus.Fields{
