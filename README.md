@@ -1,6 +1,3 @@
-# <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Achtung.svg/2000px-Achtung.svg.png" alt="WARNING" width="25" height="25"> Disclaimer <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Achtung.svg/2000px-Achtung.svg.png" alt="NOTICE" width="25" height="25">
-Torcx is currently in an experimental state. The API and CLI have no guarantees of stability, and the design is not yet finalized. Running torcx in production is not recommended.
-
 <img align="left" width="70px" src="Documentation/torcx.png" />
 
 # torcx - a boot-time addon manager
@@ -18,12 +15,17 @@ torcx focuses on:
 * allowing users to pin specific software versions, in a seamless and system-wide way
 * supplying human- and machine-friendly interfaces to work with images and profiles
 
+# <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Achtung.svg/2000px-Achtung.svg.png" alt="WARNING" width="25" height="25"> Disclaimer <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Achtung.svg/2000px-Achtung.svg.png" alt="NOTICE" width="25" height="25">
+
+Torcx is currently in an experimental state. The API and CLI have no guarantees of stability, and the design is not yet finalized. Running torcx in production is not recommended.
+
+
 ## Getting started
 
 This project provides a very lightweight add-ons manager for otherwise immutable distributions.
 It applies collections of addon packages (named, respectively, "profiles" and "images") at boot-time, extracting them on the side of the base OS.
 
-Profiles are simple JSON files, usually stored under `/etc/torcx/profiles.d/`, containing a set of image-references:
+Profiles are simple JSON files, usually stored under `/etc/torcx/profiles/`, containing a set of image-references:
 
 ```json
 {
@@ -45,7 +47,7 @@ Image archives are looked up in several search paths, called "stores":
  1. User store: usually on a writable partition, it contains images provided by the user
  1. Runtime store: additional search path specified at runtime
 
-At boot-time, torcx unpacks and propagates the addons defined in the active profile, specified in `/etc/torcx/profile`.
+At boot-time, torcx unpacks and propagates the addons defined in the active profile, specified in `/etc/torcx/next-profile`.
 Once done, torcx seals the system into its new state and records its own metadata under `/run/metadata/torcx`.
 
 ## Example
