@@ -72,7 +72,7 @@ func CurrentProfilePath() (string, error) {
 
 // NextProfileName determines which profile will be used for the next apply.
 func (cc *CommonConfig) NextProfileName() (string, error) {
-	fc, err := ioutil.ReadFile(cc.ConfProfile())
+	fc, err := ioutil.ReadFile(cc.NextProfile())
 	if err != nil {
 		return "", errors.Wrapf(err, "unable to read profile file")
 	}
@@ -94,7 +94,7 @@ func (cc *CommonConfig) NextProfileName() (string, error) {
 
 // SetNextProfileName writes the given profile name as active for the next boot.
 func (cc *CommonConfig) SetNextProfileName(name string) error {
-	return ioutil.WriteFile(cc.ConfProfile(), []byte(name), 0644)
+	return ioutil.WriteFile(cc.NextProfile(), []byte(name), 0644)
 }
 
 // ReadCurrentProfile returns the content of the currently running profile

@@ -57,8 +57,9 @@ func (cc *CommonConfig) UserProfileDir() string {
 	return filepath.Join(cc.ConfDir, "profiles.d")
 }
 
-func (cc *CommonConfig) ConfProfile() string {
-	return filepath.Join(cc.ConfDir, "profile")
+// NextProfile is the path for the `next-profile` selector configuration file.
+func (cc *CommonConfig) NextProfile() string {
+	return filepath.Join(cc.ConfDir, "next-profile")
 }
 
 // ArchiveFilename is the filename (no directory) for the archive of an image.
