@@ -25,7 +25,7 @@ Torcx is currently in an experimental state. The API and CLI have no guarantees 
 This project provides a very lightweight add-ons manager for otherwise immutable distributions.
 It applies collections of addon packages (named, respectively, "profiles" and "images") at boot-time, extracting them on the side of the base OS.
 
-Profiles are simple JSON files, usually stored under `/etc/torcx/profiles/`, containing a set of image-references:
+Profiles are simple JSON files, usually stored under `/etc/torcx/profiles/` with a `.json` extension, containing a set of image-references:
 
 ```json
 {

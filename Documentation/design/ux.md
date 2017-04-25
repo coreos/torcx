@@ -4,7 +4,7 @@
 
  * *torcx*: a CLI tool organized in subcommand
  * *archive*: an torcx.tgz archive containing addon binaries and assets
- * *profile*: a manifest specifying a set of images to be applied on top of the base OS
+ * *profile*: a JSON manifest specifying a set of images to be applied on top of the base OS
  * *vendor profile*: the default profile, shipped hardcoded inside the OS
  * *custom profile*: a thrid-party profile *not* shipped together with the OS
  * *vendor store*: a set of archives shipped by the OS, possibly residing in a RO area
@@ -24,7 +24,7 @@ torcx profile new [--from=<FNAME> | --from-next] --name=<PNAME>|--file=<PATH>
 
 Creates a new profile PNAME or file PATH. 
 
-If PNAME is specified, it is created in `$TORCX_CONFDIR/profiles/NAME`. It must not already exist as a profile. 
+If PNAME is specified, it is created in `$TORCX_CONFDIR/profiles/NAME.json`. It must not already exist as a profile.
 
 If `--from` is specified, the new profile is a duplicate of profile FNAME.
 
