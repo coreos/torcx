@@ -19,30 +19,30 @@ import (
 	"path/filepath"
 )
 
-// UnpackDir is the directory where root filesystems are unpacked
+// RunUnpackDir is the directory where root filesystems are unpacked.
 func (cc *CommonConfig) RunUnpackDir() string {
 	return filepath.Join(cc.RunDir, "unpack")
 }
 
-// BinDir is the directory where binaries are symlinked
+// RunBinDir is the directory where binaries are symlinked.
 func (cc *CommonConfig) RunBinDir() string {
 	return filepath.Join(cc.RunDir, "bin")
 }
 
-// ProfileDirs are the list of directories where we look for profiles
+// ProfileDirs are the list of directories where we look for profiles.
 func (cc *CommonConfig) ProfileDirs() []string {
 	return []string{
-		filepath.Join(VENDOR_DIR, "profiles.d"),
+		filepath.Join(VENDOR_DIR, "profiles"),
 		cc.UserProfileDir(),
 	}
 }
 
 // RunProfile is the file where we copy the contents of the applied profile.
 func (cc *CommonConfig) RunProfile() string {
-	return filepath.Join(cc.RunDir, "profile")
+	return filepath.Join(cc.RunDir, "profile.json")
 }
 
-// UserStorePath  is the path where user-fetched archives are written
+// UserStorePath  is the path where user-fetched archives are written.
 func (cc *CommonConfig) UserStorePath() string {
 	return filepath.Join(cc.BaseDir, "store")
 }
@@ -52,13 +52,14 @@ func (cc *CommonConfig) AuthDir() string {
 	return filepath.Join(cc.ConfDir, "auth.d")
 }
 
-// UserProfileDir is where user profiles are written
+// UserProfileDir is where user profiles are written.
 func (cc *CommonConfig) UserProfileDir() string {
-	return filepath.Join(cc.ConfDir, "profiles.d")
+	return filepath.Join(cc.ConfDir, "profiles")
 }
 
-func (cc *CommonConfig) ConfProfile() string {
-	return filepath.Join(cc.ConfDir, "profile")
+// NextProfile is the path for the `next-profile` selector configuration file.
+func (cc *CommonConfig) NextProfile() string {
+	return filepath.Join(cc.ConfDir, "next-profile")
 }
 
 // ArchiveFilename is the filename (no directory) for the archive of an image.

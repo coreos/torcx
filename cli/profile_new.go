@@ -20,6 +20,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -69,10 +70,10 @@ func runProfileNew(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("profile %s already exists", flagProfileNewName)
 		}
 
-		flagProfileNewFile = filepath.Join(commonCfg.UserProfileDir(), flagProfileNewName)
+		flagProfileNewFile = filepath.Join(commonCfg.UserProfileDir(), flagProfileNewName+".json")
 	}
 
-	if flagProfileNewFile == "" {
+	if !strings.HasSuffix(flagProfileNewFile, ".json") {
 		return cmd.Usage()
 	}
 

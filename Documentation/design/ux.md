@@ -4,12 +4,15 @@
 
  * *torcx*: a CLI tool organized in subcommand
  * *archive*: an torcx.tgz archive containing addon binaries and assets
- * *profile*: a manifest specifying a set of images to be applied on top of the base OS
+ * *profile*: a JSON manifest specifying a set of images to be applied on top of the base OS
  * *vendor profile*: the default profile, shipped hardcoded inside the OS
  * *custom profile*: a thrid-party profile *not* shipped together with the OS
  * *vendor store*: a set of archives shipped by the OS, possibly residing in a RO area
  * *custom store*: a set of archives provided by third-parties, possibly residing in RW area
- 
+
+## Global options
+
+ * `--verbose=LEVEL`: set torcx logging verbosity to `LEVEL`, default is `info`
 
 ## Subcommands
 
@@ -21,8 +24,7 @@ torcx profile new [--from=<FNAME> | --from-next] --name=<PNAME>|--file=<PATH>
 
 Creates a new profile PNAME or file PATH. 
 
-If PNAME is specified, it is created in `$TORCX_CONFDIR/profiles.d/NAME`. It 
-must not already exist as a profile. 
+If PNAME is specified, it is created in `$TORCX_CONFDIR/profiles/NAME.json`. It must not already exist as a profile.
 
 If `--from` is specified, the new profile is a duplicate of profile FNAME.
 
@@ -90,5 +92,5 @@ torcx apply
 
 `apply` applies current profile to the machine.
 
-This is meant to be used exactly once-per-boot, and blows a fuse after successful setup.
+This is meant to be used exactly once-per-boot, and seals the system into its new state after successful setup.
 
