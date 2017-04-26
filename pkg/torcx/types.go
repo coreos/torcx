@@ -33,6 +33,8 @@ const (
 	DefaultTagRef = "com.coreos.cl"
 	// DEFAULT_PROFILE is the default profile name used
 	DEFAULT_PROFILE_NAME = "vendor"
+	// SYSTEMD_DIR is the directoy where we'll install all systemd files
+	SYSTEMD_DIR = "/run/systemd"
 )
 
 // CommonConfig contains runtime configuration items common to all

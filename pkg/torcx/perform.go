@@ -94,9 +94,11 @@ func ApplyProfile(applyCfg *ApplyConfig) error {
 			return err
 		}
 
-		// TODO(lucab): investigate more assets propagate:
-		//  * service units
-		//  * tmpfiles units
+		// And symlink in systemd unit files
+		err = propagateUnits(applyCfg, imageRoot)
+		if err != nil {
+			return err
+		}
 
 		logrus.WithFields(logrus.Fields{
 			"name":              im.Name,
