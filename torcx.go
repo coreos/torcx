@@ -20,6 +20,7 @@ import (
 	"github.com/Sirupsen/logrus"
 
 	"github.com/coreos/torcx/cli"
+	"github.com/coreos/torcx/pkg/multicall"
 )
 
 func main() {
@@ -34,16 +35,9 @@ func main() {
 }
 
 func run() error {
-	var err error
-
-	err = cli.Init()
-	if err != nil {
-		return err
-	}
-	err = cli.TorcxCmd.Execute()
-	if err != nil {
+	if err := cli.Init(); err != nil {
 		return err
 	}
 
-	return nil
+	return multicall.MultiExecute(false)
 }
