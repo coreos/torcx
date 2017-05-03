@@ -16,6 +16,7 @@ package cli
 
 import (
 	"github.com/Sirupsen/logrus"
+	"github.com/coreos/torcx/pkg/multicall"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -26,12 +27,20 @@ type GlobalCfg struct {
 }
 
 var (
-	// TorcxCmd is the top-level cobra command for torcx
+	// TorcxCmd is the top-level cobra command for `torcx`
 	TorcxCmd = &cobra.Command{
 		Use:           "torcx",
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}
+
+	// TorcxGenCmd is the top-level cobra command for `torcx-generator`
+	TorcxGenCmd = &cobra.Command{
+		Use:          "torcx-generator",
+		RunE:         runApply,
+		SilenceUsage: true,
+	}
+
 	// TorcxCliCfg holds global CLI status available to all subcommands
 	TorcxCliCfg GlobalCfg
 )
@@ -45,6 +54,9 @@ func Init() error {
 
 	verboseFlag := TorcxCmd.PersistentFlags().VarPF((*cliCfgVerbose)(&TorcxCliCfg), "verbose", "v", "verbosity level")
 	verboseFlag.NoOptDefVal = "info"
+
+	multicall.AddCobra(TorcxCmd.Use, TorcxCmd)
+	multicall.AddCobra(TorcxGenCmd.Use, TorcxGenCmd)
 
 	return nil
 }

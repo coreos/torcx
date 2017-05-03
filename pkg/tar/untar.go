@@ -129,9 +129,8 @@ func extractOne(hdr *tar.Header, r io.Reader, targetDir string, cfg ExtractCfg) 
 		if !cfg.Symlink {
 			return nil
 		}
-		if err := os.Symlink(hdr.Linkname, path); err != nil {
-			return err
-		}
+		// Skip adjusting metadata below for symlinks
+		return os.Symlink(hdr.Linkname, path)
 	case tar.TypeDir:
 		if err := os.MkdirAll(path, fi.Mode()); err != nil {
 			return err
