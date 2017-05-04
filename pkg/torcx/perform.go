@@ -160,8 +160,8 @@ func SealSystemState(applyCfg *ApplyConfig) error {
 	content := []string{
 		fmt.Sprintf("%s=%q", FUSE_PROFILE_NAME, applyCfg.Profile),
 		fmt.Sprintf("%s=%q", FUSE_PROFILE_PATH, applyCfg.RunProfile()),
-		fmt.Sprintf("%s=%q/", FUSE_BINDIR, applyCfg.RunBinDir()),
-		fmt.Sprintf("%s=%q/", FUSE_UNPACKDIR, applyCfg.RunUnpackDir()),
+		fmt.Sprintf("%s=%q", FUSE_BINDIR, applyCfg.RunBinDir()),
+		fmt.Sprintf("%s=%q", FUSE_UNPACKDIR, applyCfg.RunUnpackDir()),
 	}
 
 	for _, line := range content {
