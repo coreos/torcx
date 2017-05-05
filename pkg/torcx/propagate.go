@@ -23,8 +23,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-const ()
-
 // propagateUnits installs all systemd unit and unit-like files as transient
 // units in /run/systemd.
 // Units are taken from /usr/lib/systemd
@@ -42,7 +40,7 @@ func propagateUnits(applyCfg *ApplyConfig, imageRoot string) error {
 
 	_, err = os.Stat(SYSTEMD_DIR)
 	if err != nil {
-		return errors.Wrapf(err, "error checking for systemd volatile directory %s", SYSTEMD_DIR)
+		return errors.Wrapf(err, "error checking for systemd runtime directory %s", SYSTEMD_DIR)
 	}
 
 	// Walk the source directory
@@ -105,4 +103,65 @@ func propagateUnits(applyCfg *ApplyConfig, imageRoot string) error {
 	})
 
 	return nil
+}
+
+// propagateBins symlinks available binaries into torcx bindir and returns their
+// paths.
+func propagateBins(applyCfg *ApplyConfig, imageRoot string) ([]string, error) {
+	if applyCfg == nil {
+		return nil, errors.New("missing apply configuration")
+	}
+	if imageRoot == "" {
+		return nil, errors.New("missing image top directory")
+	}
+
+	scanBinDirs := []string{
+		"usr/bin/",
+		"usr/sbin/",
+		"bin/",
+		"sbin/",
+	}
+
+	propBins := map[string]string{}
+	exeScanSymlink := func(path string, fi os.FileInfo, err error) error {
+		if err != nil {
+			if os.IsNotExist(err) {
+				return nil
+			}
+			return err
+		}
+		if !fi.Mode().IsRegular() {
+			return nil
+		}
+		if (fi.Mode().Perm() & 0111) == 0 {
+			return nil
+		}
+
+		baseName := filepath.Base(path)
+		newName := filepath.Join(applyCfg.RunBinDir(), baseName)
+
+		err = os.Symlink(path, newName)
+		if err != nil {
+			return err
+		}
+
+		propBins[newName] = path
+		return nil
+	}
+
+	for _, ps := range scanBinDirs {
+		binDir := filepath.Join(imageRoot, ps)
+
+		err := filepath.Walk(binDir, exeScanSymlink)
+		if err != nil {
+			return nil, err
+		}
+
+	}
+
+	symlinks := make([]string, 0, len(propBins))
+	for newName := range propBins {
+		symlinks = append(symlinks, newName)
+	}
+	return symlinks, nil
 }
