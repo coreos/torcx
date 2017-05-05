@@ -1,0 +1,12 @@
+{
+  "kind": "image-manifest-v0",
+  "value": {
+      "bin": [
+          "/usr/sbin/cupsd"
+      ],
+      "service": [
+          "/lib/systemd/system/cups.service",
+          "/lib/systemd/system/printer.target.wants/"
+      ]
+  }
+}
