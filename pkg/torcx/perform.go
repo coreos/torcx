@@ -87,37 +87,49 @@ func ApplyProfile(applyCfg *ApplyConfig) error {
 		if err != nil {
 			return err
 		}
+		logrus.WithFields(logrus.Fields{
+			"name":      im.Name,
+			"reference": im.Reference,
+			"path":      imageRoot,
+		}).Debug("image unpacked")
 
 		// phase 2: propagate assets
-		bins, err := propagateBins(applyCfg, imageRoot)
+		assets, err := retrieveAssets(applyCfg, imageRoot)
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "retrieving assets from image %q", im.Name)
+		}
+		if len(assets.Binaries) > 0 {
+			if err := propagateBins(applyCfg, imageRoot, assets.Binaries); err != nil {
+				return errors.Wrapf(err, "propagating binaries for image %q", im.Name)
+			}
+			logrus.WithFields(logrus.Fields{
+				"image":  im.Name,
+				"assets": assets.Binaries,
+			}).Debug("binaries propagated")
 		}
 
-		// And symlink in systemd unit files
-		err = propagateUnits(applyCfg, imageRoot)
-		if err != nil {
-			return err
+		if len(assets.Services) > 0 {
+			if err := propagateServiceUnits(applyCfg, imageRoot, assets.Services); err != nil {
+				return errors.Wrapf(err, "propagating services for image %q", im.Name)
+			}
+			logrus.WithFields(logrus.Fields{
+				"image":  im.Name,
+				"assets": assets.Services,
+			}).Debug("services propagated")
 		}
 
-		logrus.WithFields(logrus.Fields{
-			"name":              im.Name,
-			"reference":         im.Reference,
-			"path":              imageRoot,
-			"provided binaries": bins,
-		}).Debug("image unpacked")
+		// TODO(lucab): evaluate and propagate more units types
 	}
 
+	// phase 3: record current profile
 	rpp, err := os.Create(applyCfg.RunProfile())
 	if err != nil {
 		return err
 	}
 	defer rpp.Close()
-
 	if n, err := opp.Seek(0, io.SeekStart); err != nil || n != 0 {
 		return fmt.Errorf("seek failed")
 	}
-
 	_, err = io.Copy(rpp, opp)
 	if err != nil {
 		return err
@@ -132,8 +144,6 @@ func ApplyProfile(applyCfg *ApplyConfig) error {
 		"original profile": originPath,
 		"sealed profile":   applyCfg.RunProfile(),
 	}).Debug("profile applied")
-
-	// phase 3: seal system state
 	return nil
 }
 

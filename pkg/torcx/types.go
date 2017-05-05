@@ -29,12 +29,12 @@ const (
 	VENDOR_DIR = "/usr/share/torcx"
 	// ProfileManifestV0K - profile manifest kind, v0
 	ProfileManifestV0K = "profile-manifest-v0"
+	// ImageManifestV0K - image manifest kind, v0
+	ImageManifestV0K = "image-manifest-v0"
 	// DefaultTagRef is the default image reference looked up in archives
 	DefaultTagRef = "com.coreos.cl"
-	// DEFAULT_PROFILE is the default profile name used
+	// DEFAULT_PROFILE_NAME is the default profile name used
 	DEFAULT_PROFILE_NAME = "vendor"
-	// SYSTEMD_DIR is the directoy where we'll install all systemd files
-	SYSTEMD_DIR = "/run/systemd"
 )
 
 // CommonConfig contains runtime configuration items common to all
@@ -82,4 +82,16 @@ type Image struct {
 
 type Images struct {
 	Images []Image `json:"images"`
+}
+
+// ImageManifestV0 holds JSON image manifest
+type ImageManifestV0 struct {
+	Kind  string `json:"kind"`
+	Value Assets `json:"value"`
+}
+
+// Assets holds lists of assets propagated from an image to the system
+type Assets struct {
+	Binaries []string `json:"bin,omitempty"`
+	Services []string `json:"service,omitempty"`
 }
