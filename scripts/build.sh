@@ -35,6 +35,7 @@ if [ -n "${BUILDTAGS}" ]; then
 fi
 
 export GOARCH="${ARCH}"
+export CGO_ENABLED=0
 
 go install                                                         \
     -installsuffix "static"                                        \
