@@ -10,6 +10,8 @@ import:
   version: 7538d73b4eb9511d85a9f1dfef202eeb8ac260f4 
 - package: github.com/Sirupsen/logrus
   version: 0.11.4
+  subpackages:
+  - hooks/syslog
 - package: github.com/opencontainers/image-spec
   version: 1.0.0-rc4
 - package: github.com/containers/image
