@@ -35,7 +35,7 @@ func fillCommonRuntime() (*torcx.CommonConfig, error) {
 
 	rundir := viper.GetString("rundir")
 	if rundir == "" {
-		rundir = "/var/run/torcx"
+		rundir = torcx.RunDir
 	}
 	if !filepath.IsAbs(rundir) {
 		return nil, errors.New("non-absolute rundir")
