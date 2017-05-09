@@ -8,13 +8,13 @@ Hardcoded:
 
 Configurable via environmental flags:
 * `$TORCX_BASEDIR`: `/var/lib/torcx/`
-* `$TORCX_RUNDIR`: `/var/run/torcx/`
+* `$TORCX_RUNDIR`: `/run/torcx/`
 * `$TORCX_CONFDIR`: `/etc/torcx/`
 
 Derived from configurables (shown with defaults):
-* BinDir: RunDir + `bin/` (`/var/run/torcx/bin/`)
-* UnpackDir: RunDir + `unpack/` (`/var/run/torcx/unpack/`)
-* RunProfile: RunDir + `profile.json` (`/var/run/torcx/profile.json`)
+* BinDir: RunDir + `bin/` (`/run/torcx/bin/`)
+* UnpackDir: RunDir + `unpack/` (`/run/torcx/unpack/`)
+* RunProfile: RunDir + `profile.json` (`/run/torcx/profile.json`)
 * NextProfile: ConfDir + `next-profile` (`/etc/torcx/next-profile`)
 * StoreDir:
   * (vendor) VendorDir + `store/` (`/usr/share/torcx/store/`)
@@ -36,6 +36,6 @@ Derived from configurables (shown with defaults):
 # Seal file content
 
 * `TORCX_PROFILE_NAME`: name of current running profile (default `vendor`)
-* `TORCX_PROFILE_PATH`: path of current running profile (default `/var/run/torcx/profile.json`)
-* `TORCX_BINDIR`: current overlay with binaries, for `$PATH` usage (default `/var/run/torcx/bin/`)
-* `TORCX_UNPACKDIR`: current root of the unpacked tree (default `/var/run/torcx/unpack/`)
+* `TORCX_PROFILE_PATH`: path of current running profile (default `/run/torcx/profile.json`)
+* `TORCX_BINDIR`: current overlay with binaries, for `$PATH` usage (default `/run/torcx/bin/`)
+* `TORCX_UNPACKDIR`: current root of the unpacked tree (default `/run/torcx/unpack/`)

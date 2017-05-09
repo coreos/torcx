@@ -19,6 +19,11 @@ import (
 	"path/filepath"
 )
 
+const (
+	// RunDir is the default path where torcx unpacks/propagates all runtime assets.
+	RunDir = "/run/torcx/"
+)
+
 // RunUnpackDir is the directory where root filesystems are unpacked.
 func (cc *CommonConfig) RunUnpackDir() string {
 	return filepath.Join(cc.RunDir, "unpack")
