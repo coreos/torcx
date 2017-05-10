@@ -54,7 +54,8 @@ func runProfileUse(cmd *cobra.Command, args []string) error {
 		return cmd.Usage()
 	}
 
-	imstr := strings.SplitN(args[0], ":", 2)
+	imgPair := args[0]
+	imstr := strings.SplitN(imgPair, ":", 2)
 	if len(imstr) != 2 {
 		return cmd.Usage()
 	}
@@ -101,7 +102,7 @@ func runProfileUse(cmd *cobra.Command, args []string) error {
 			}).Warn("Image does not exist, continuing")
 		} else {
 			return fmt.Errorf("Image %s does not exist, quitting. "+
-				"(pass --allow=missing to force)", args[1])
+				"(pass --allow=missing to force)", imgPair)
 		}
 	}
 
