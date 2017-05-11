@@ -15,94 +15,207 @@
 package torcx
 
 import (
-	"fmt"
+	"encoding/json"
+	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/pkg/errors"
 )
 
-const ()
+const (
+	// manifestPath is the well-known location for image manifest
+	manifestPath = "/.torcx/manifest.json"
+	// systemdDir is the directoy where service install get installed
+	// TODO(lucab): possibly not constant, group all link-time parameter together
+	systemdDir = "/run/systemd"
+)
 
-// propagateUnits installs all systemd unit and unit-like files as transient
-// units in /run/systemd.
-// Units are taken from /usr/lib/systemd
-func propagateUnits(applyCfg *ApplyConfig, imageRoot string) error {
-	srcDir := filepath.Join(imageRoot, "usr", "lib", "systemd")
-	st, err := os.Stat(srcDir)
-	if os.IsNotExist(err) {
+func retrieveAssets(applyCfg *ApplyConfig, imageRoot string) (*Assets, error) {
+	if applyCfg == nil {
+		return nil, errors.New("missing apply configuration")
+	}
+	if imageRoot == "" {
+		return nil, errors.New("missing image top directory")
+	}
+	assets := &Assets{}
+	path := filepath.Join(imageRoot, manifestPath)
+	_, err := os.Stat(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			// Corner-case: missing manifest, no assets to propagate
+			return assets, nil
+		}
+		return nil, err
+	}
+
+	var manifest ImageManifestV0
+	b, err := ioutil.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	if err := json.Unmarshal(b, &manifest); err != nil {
+		return nil, err
+	}
+
+	return &manifest.Value, nil
+}
+
+// propagateServiceUnits installs systemd service unit and unit-like files as runtime
+// units in /run/systemd/system/.
+func propagateServiceUnits(applyCfg *ApplyConfig, imageRoot string, services []string) error {
+	if len(services) <= 0 {
+		// Corner-case: no services to propagate
 		return nil
-	} else if err != nil {
+	}
+	if applyCfg == nil {
+		return errors.New("missing apply configuration")
+	}
+	if imageRoot == "" {
+		return errors.New("missing image top directory")
+	}
+
+	servicesDir := filepath.Join(systemdDir, "system")
+	if _, err := os.Stat(servicesDir); err != nil {
+		return errors.Wrapf(err, "error checking for systemd runtime directory %s", servicesDir)
+	}
+	for _, servEntry := range services {
+		if servEntry == "" {
+			continue
+		}
+		path := filepath.Join(imageRoot, servEntry)
+		if err := symlinkUnitAsset(applyCfg, servicesDir, path); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// propagateBins symlinks binaries from unpacked image to torcx bindir.
+func propagateBins(applyCfg *ApplyConfig, imageRoot string, binaries []string) error {
+	if len(binaries) <= 0 {
+		// Corner-case: no binaries to propagate
+		return nil
+	}
+	if applyCfg == nil {
+		return errors.New("missing apply configuration")
+	}
+	if imageRoot == "" {
+		return errors.New("missing image top directory")
+	}
+
+	for _, binEntry := range binaries {
+		if binEntry == "" {
+			continue
+		}
+		path := filepath.Join(imageRoot, binEntry)
+		if err := symlinkBinAsset(applyCfg, applyCfg.RunBinDir(), path); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// flattenBinAssets propagates a single binary or a directory of binaries,
+// flattening all intermediate directories.
+func symlinkBinAsset(applyCfg *ApplyConfig, binDir string, asset string) error {
+	if applyCfg == nil {
+		return errors.New("missing apply configuration")
+	}
+	if asset == "" {
+		return errors.New("missing asset path")
+	}
+	if binDir == "" {
+		return errors.New("missing torcx binary directory")
+	}
+
+	walkFn := func(inPath string, inInfo os.FileInfo, inErr error) error {
+		if inErr != nil {
+			return nil
+		}
+		path := filepath.Clean(inPath)
+		baseName := filepath.Base(path)
+		newName := filepath.Join(binDir, baseName)
+
+		if inInfo.Mode().IsRegular() || inInfo.Mode()&os.ModeSymlink == os.ModeSymlink {
+			if _, err := os.Stat(newName); err == nil {
+				// Do not overwrite previous assets
+				return nil
+			}
+			return os.Symlink(path, newName)
+		}
+		return nil
+	}
+
+	return filepath.Walk(asset, walkFn)
+}
+
+// symlinkUnitAsset propagates a single unit or a directory of units,
+// flattening all but the last intermediate directories.
+func symlinkUnitAsset(applyCfg *ApplyConfig, unitsDir string, asset string) error {
+	if applyCfg == nil {
+		return errors.New("missing apply configuration")
+	}
+	if asset == "" {
+		return errors.New("missing asset path")
+	}
+	if unitsDir == "" {
+		return errors.New("missing host units directory")
+	}
+
+	// If asset is a directory, keep everything below it unflattened
+	topDir := ""
+	fi, err := os.Stat(asset)
+	if err != nil {
 		return err
 	}
-	if !st.IsDir() {
-		return nil
+	if fi.IsDir() {
+		topDir = filepath.Dir(asset)
 	}
 
-	_, err = os.Stat(SYSTEMD_DIR)
-	if err != nil {
-		return errors.Wrapf(err, "error checking for systemd volatile directory %s", SYSTEMD_DIR)
-	}
-
-	// Walk the source directory
-	err = filepath.Walk(srcDir, func(srcPath string, srcStat os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-
-		// Skip directories - we'll do a mkdirall later
-		if srcStat.IsDir() {
+	walkFn := func(inPath string, inInfo os.FileInfo, inErr error) error {
+		if inErr != nil {
 			return nil
 		}
 
-		relPath, err := filepath.Rel(srcDir, srcPath)
-		if err != nil {
-			return err
+		path := filepath.Clean(inPath)
+		baseName := filepath.Base(path)
+		if topDir != "" {
+			baseName = strings.TrimPrefix(path, topDir)
 		}
-		if relPath == "." {
-			return nil
-		}
+		hostPath := filepath.Join(unitsDir, baseName)
 
-		dstPath := filepath.Join(SYSTEMD_DIR, relPath)
-		_, dstStatErr := os.Stat(dstPath)
-		if dstStatErr == nil {
-			return fmt.Errorf("Cannot copy unit file %s to %s - destination exists", srcPath, dstPath)
-		} else if !os.IsNotExist(dstStatErr) {
-			return err
-		}
-
-		// Copy src to dest
-		// * If src is symlink, duplicate link contents exactly
-		// * If src is file, symlink
-		if err := os.MkdirAll(filepath.Dir(dstPath), 0755); err != nil {
-			return errors.Wrapf(err, "failed to create dest dir %s", filepath.Dir(dstPath))
-		}
-
-		if srcStat.Mode()&os.ModeSymlink > 0 {
-			// Duplicate symlink value exactly here.
-			// We're not touching the symlink contents because symlinks are sort
-			// of special with systemd. They're most often used to indicate a
-			// particular unit as wanted by a target, by making a link.
-			// While systemd will follow links to unit files and the like,
-			// they're not usually used.
-			linkDest, err := os.Readlink(srcPath)
-			if err != nil {
-				return errors.Wrapf(err, "could not read link %s", srcPath)
+		if inInfo.Mode().IsDir() {
+			if inPath != asset {
+				return filepath.SkipDir
 			}
-			return os.Symlink(linkDest, dstPath)
-		} else if srcStat.Mode().IsRegular() {
-			// Normal files: symlink in to the systemd volatile directory
-			logrus.WithFields(logrus.Fields{
-				"src": srcPath,
-				"dst": dstPath,
-			}).Debug("installing unit file")
-			return os.Symlink(srcPath, dstPath)
-		} else {
-			logrus.Warnf("Skipping systemd non-file %s", srcPath)
+			_, err := os.Stat(hostPath)
+			if err != nil && os.IsNotExist(err) {
+				return os.MkdirAll(hostPath, 0755)
+			}
+			return err
+		}
+
+		if inInfo.Mode()&os.ModeSymlink == os.ModeSymlink {
+			// This mimics `systemctl enable` behavior, expecting dependency
+			// symlinks to be relative and pointing to units in the parent directory.
+			linkDest, err := os.Readlink(path)
+			if err != nil {
+				return errors.Wrapf(err, "could not read link %q", path)
+			}
+			return os.Symlink(linkDest, hostPath)
+		}
+
+		if inInfo.Mode().IsRegular() {
+			if _, err := os.Stat(hostPath); err == nil {
+				// Do not overwrite previous assets
+				return nil
+			}
+			return os.Symlink(path, hostPath)
 		}
 		return nil
-	})
+	}
 
-	return nil
+	return filepath.Walk(asset, walkFn)
 }

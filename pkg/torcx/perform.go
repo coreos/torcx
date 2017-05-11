@@ -87,37 +87,49 @@ func ApplyProfile(applyCfg *ApplyConfig) error {
 		if err != nil {
 			return err
 		}
+		logrus.WithFields(logrus.Fields{
+			"name":      im.Name,
+			"reference": im.Reference,
+			"path":      imageRoot,
+		}).Debug("image unpacked")
 
 		// phase 2: propagate assets
-		bins, err := propagateBins(applyCfg, imageRoot)
+		assets, err := retrieveAssets(applyCfg, imageRoot)
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "retrieving assets from image %q", im.Name)
+		}
+		if len(assets.Binaries) > 0 {
+			if err := propagateBins(applyCfg, imageRoot, assets.Binaries); err != nil {
+				return errors.Wrapf(err, "propagating binaries for image %q", im.Name)
+			}
+			logrus.WithFields(logrus.Fields{
+				"image":  im.Name,
+				"assets": assets.Binaries,
+			}).Debug("binaries propagated")
 		}
 
-		// And symlink in systemd unit files
-		err = propagateUnits(applyCfg, imageRoot)
-		if err != nil {
-			return err
+		if len(assets.Services) > 0 {
+			if err := propagateServiceUnits(applyCfg, imageRoot, assets.Services); err != nil {
+				return errors.Wrapf(err, "propagating services for image %q", im.Name)
+			}
+			logrus.WithFields(logrus.Fields{
+				"image":  im.Name,
+				"assets": assets.Services,
+			}).Debug("services propagated")
 		}
 
-		logrus.WithFields(logrus.Fields{
-			"name":              im.Name,
-			"reference":         im.Reference,
-			"path":              imageRoot,
-			"provided binaries": bins,
-		}).Debug("image unpacked")
+		// TODO(lucab): evaluate and propagate more units types
 	}
 
+	// phase 3: record current profile
 	rpp, err := os.Create(applyCfg.RunProfile())
 	if err != nil {
 		return err
 	}
 	defer rpp.Close()
-
 	if n, err := opp.Seek(0, io.SeekStart); err != nil || n != 0 {
 		return fmt.Errorf("seek failed")
 	}
-
 	_, err = io.Copy(rpp, opp)
 	if err != nil {
 		return err
@@ -132,8 +144,6 @@ func ApplyProfile(applyCfg *ApplyConfig) error {
 		"original profile": originPath,
 		"sealed profile":   applyCfg.RunProfile(),
 	}).Debug("profile applied")
-
-	// phase 3: seal system state
 	return nil
 }
 
@@ -254,65 +264,4 @@ func unpackTgz(applyCfg *ApplyConfig, tgzPath, imageName string) (string, error)
 	}
 
 	return topDir, nil
-}
-
-// propagateBins symlinks available binaries into torcx bindir and returns their
-// paths.
-func propagateBins(applyCfg *ApplyConfig, imageRoot string) ([]string, error) {
-	if applyCfg == nil {
-		return nil, errors.New("missing apply configuration")
-	}
-	if imageRoot == "" {
-		return nil, errors.New("missing image top directory")
-	}
-
-	scanBinDirs := []string{
-		"usr/bin/",
-		"usr/sbin/",
-		"bin/",
-		"sbin/",
-	}
-
-	propBins := map[string]string{}
-	exeScanSymlink := func(path string, fi os.FileInfo, err error) error {
-		if err != nil {
-			if os.IsNotExist(err) {
-				return nil
-			}
-			return err
-		}
-		if !fi.Mode().IsRegular() {
-			return nil
-		}
-		if (fi.Mode().Perm() & 0111) == 0 {
-			return nil
-		}
-
-		baseName := filepath.Base(path)
-		newName := filepath.Join(applyCfg.RunBinDir(), baseName)
-
-		err = os.Symlink(path, newName)
-		if err != nil {
-			return err
-		}
-
-		propBins[newName] = path
-		return nil
-	}
-
-	for _, ps := range scanBinDirs {
-		binDir := filepath.Join(imageRoot, ps)
-
-		err := filepath.Walk(binDir, exeScanSymlink)
-		if err != nil {
-			return nil, err
-		}
-
-	}
-
-	symlinks := make([]string, 0, len(propBins))
-	for newName := range propBins {
-		symlinks = append(symlinks, newName)
-	}
-	return symlinks, nil
 }
