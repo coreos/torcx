@@ -35,15 +35,23 @@ const (
 	DefaultTagRef = "com.coreos.cl"
 	// DEFAULT_PROFILE_NAME is the default profile name used
 	DEFAULT_PROFILE_NAME = "vendor"
+	// CommonConfigV0K - common torcx config kind, v0
+	CommonConfigV0K = "torcx-config-v0"
 )
+
+// ConfigV0 holds common torcx configuration in JSON format
+type ConfigV0 struct {
+	Kind  string       `json:"kind"`
+	Value CommonConfig `json:"value"`
+}
 
 // CommonConfig contains runtime configuration items common to all
 // torcx subcommands
 type CommonConfig struct {
-	BaseDir    string
-	RunDir     string
-	ConfDir    string
-	StorePaths []string
+	BaseDir    string   `json:"base_dir,omitempty"`
+	RunDir     string   `json:"run_dir,omitempty"`
+	ConfDir    string   `json:"conf_dir,omitempty"`
+	StorePaths []string `json:"store_paths,omitempty"`
 }
 
 // ApplyConfig contains runtime configuration items specific to

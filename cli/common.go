@@ -24,51 +24,52 @@ import (
 	"github.com/coreos/torcx/pkg/torcx"
 )
 
+// fillCommonRuntime initializes common configuration settings, from several
+// input sources (in order: defaults, file config, environment overrides).
 func fillCommonRuntime() (*torcx.CommonConfig, error) {
-	baseDir := viper.GetString("basedir")
-	if baseDir == "" {
-		baseDir = "/var/lib/torcx"
-	}
-	if !filepath.IsAbs(baseDir) {
-		return nil, errors.New("non-absolute basedir")
-	}
-
-	rundir := viper.GetString("rundir")
-	if rundir == "" {
-		rundir = torcx.RunDir
-	}
-	if !filepath.IsAbs(rundir) {
-		return nil, errors.New("non-absolute rundir")
+	// Default common config settings
+	commonCfg := torcx.CommonConfig{
+		BaseDir: torcx.DefaultBaseDir,
+		RunDir:  torcx.DefaultRunDir,
+		ConfDir: torcx.DefaultConfDir,
+		StorePaths: []string{
+			torcx.VendorStorePath,
+		},
 	}
 
-	confdir := viper.GetString("confdir")
-	if confdir == "" {
-		confdir = "/etc/torcx"
-	}
-	if !filepath.IsAbs(confdir) {
-		return nil, errors.New("non-absolute confdir")
+	// Read common config from config file, if present
+	cfgPath := torcx.RuntimeConfigPath()
+	if err := torcx.ReadCommonConfig(cfgPath, &commonCfg); err != nil {
+		return nil, errors.Wrapf(err, "reading common config from %q", cfgPath)
 	}
 
-	storePaths := []string{
-		filepath.Join(torcx.VENDOR_DIR, "store"),
-		filepath.Join(baseDir, "store"), // the user store path
+	// Overrides from environment
+	if baseDir := viper.GetString("basedir"); baseDir != "" {
+		commonCfg.BaseDir = baseDir
 	}
+	if rundir := viper.GetString("rundir"); rundir != "" {
+		commonCfg.RunDir = rundir
+	}
+	if confdir := viper.GetString("confdir"); confdir != "" {
+		commonCfg.ConfDir = confdir
+	}
+
+	// Add user and runtime store paths
+	commonCfg.StorePaths = append(commonCfg.StorePaths, filepath.Join(commonCfg.BaseDir, "store"))
 	extraStorePaths := viper.GetStringSlice("storepath")
 	if extraStorePaths != nil {
-		storePaths = append(storePaths, extraStorePaths...)
+		commonCfg.StorePaths = append(commonCfg.StorePaths, extraStorePaths...)
 	}
 
+	if err := torcx.ValidateCommonConfig(&commonCfg); err != nil {
+		return nil, errors.Wrap(err, "invalid common config")
+	}
 	logrus.WithFields(logrus.Fields{
-		"basedir":     baseDir,
-		"rundir":      rundir,
-		"confdir":     confdir,
-		"store paths": storePaths,
+		"base_dir":    commonCfg.BaseDir,
+		"run_dir":     commonCfg.RunDir,
+		"conf_dir":    commonCfg.ConfDir,
+		"store_paths": commonCfg.StorePaths,
 	}).Debug("common configuration parsed")
 
-	return &torcx.CommonConfig{
-		BaseDir:    baseDir,
-		RunDir:     rundir,
-		ConfDir:    confdir,
-		StorePaths: storePaths,
-	}, nil
+	return &commonCfg, nil
 }

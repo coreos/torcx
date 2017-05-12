@@ -20,8 +20,17 @@ import (
 )
 
 const (
-	// RunDir is the default path where torcx unpacks/propagates all runtime assets.
-	RunDir = "/run/torcx/"
+	// DefaultRunDir is the default path where torcx unpacks/propagates all runtime assets.
+	DefaultRunDir = "/run/torcx/"
+	// DefaultBaseDir is the default torcx base directory
+	DefaultBaseDir = "/var/lib/torcx/"
+	// DefaultConfDir is the default torcx config directory
+	DefaultConfDir = "/etc/torcx/"
+	// VendorStorePath is the vendor store path
+	VendorStorePath = VENDOR_DIR + "/store/"
+
+	// defaultCfgPath is the default path for common torcx config
+	defaultCfgPath = "/etc/torcx/config.json"
 )
 
 // RunUnpackDir is the directory where root filesystems are unpacked.
