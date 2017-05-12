@@ -1,5 +1,5 @@
-hash: 1e59c34a9a4d742ef75300f85bf8056abdfdb4d1a4dc286d2286f520ee0cb9e0
-updated: 2017-04-06T16:59:19.384684068+02:00
+hash: d33e1b83491a8acbd6f2a905450dc4df811970d5e4ac9b30f8879fd4b639639b
+updated: 2017-05-08T13:28:05.648718954Z
 imports:
 - name: github.com/containers/image
   version: cb1908f14e99f5f26bf30d8786bbae71bbd4bd4a
@@ -23,11 +23,11 @@ imports:
   - types
   - version
 - name: github.com/containers/storage
-  version: ff48947baaf205756dd67a00ac688d694a778ef6
+  version: d10d8680af74070b362637408a7fe28c4b1f1eff
   subpackages:
   - pkg/homedir
 - name: github.com/docker/distribution
-  version: 0700fa570d7bcc1b3e46ee127c4489fd25f4daa3
+  version: ce936a85915a55418ea62dc32a0a1274f2740104
   subpackages:
   - context
   - digestset
@@ -41,7 +41,7 @@ imports:
   - registry/storage/cache/memory
   - uuid
 - name: github.com/docker/docker
-  version: fa3e2d5ab9b577cecd24201902bbe72b3f1b851c
+  version: afd7e2d2d5ba506205fcc6501d4479c7e2706f50
   subpackages:
   - api/types/strslice
 - name: github.com/docker/go-connections
@@ -58,9 +58,9 @@ imports:
 - name: github.com/gorilla/context
   version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
 - name: github.com/gorilla/mux
-  version: 599cba5e7b6137d46ddf58fb1765f5d928e69604
+  version: 4c1c3952b7d9d0a061a3fa7b36fd373ba0398ebc
 - name: github.com/hashicorp/hcl
-  version: 630949a3c5fa3c613328e1b8256052cbc2327c9b
+  version: a4b07c25de5ff55ad3b8936cea69a79a3d95a855
   subpackages:
   - hcl/ast
   - hcl/parser
@@ -77,9 +77,9 @@ imports:
 - name: github.com/mattn/go-runewidth
   version: 14207d285c6c197daabb5c9793d63e7af9ab2d50
 - name: github.com/Microsoft/go-winio
-  version: fff283ad5116362ca252298cfc9b95828956d85d
+  version: 13736c32520969a64987228c21c138a4cfdb3720
 - name: github.com/mitchellh/mapstructure
-  version: 53818660ed4955e899c0bcafa97299a388bd7c8e
+  version: cc8532a8e9a55ea36402aa21efdf403a60d34096
 - name: github.com/mtrmac/gpgme
   version: b2432428689ca58c2b8e8dea9449d3295cf96fc9
 - name: github.com/opencontainers/go-digest
@@ -91,7 +91,7 @@ imports:
   - specs-go
   - specs-go/v1
 - name: github.com/opencontainers/runc
-  version: f990e58f26ab48367284f4a4e21bb95d641cde19
+  version: 75f8da7c889acc4509a0cf6f0d3a8f9584778375
   subpackages:
   - libcontainer/user
 - name: github.com/opencontainers/runtime-spec
@@ -101,17 +101,19 @@ imports:
 - name: github.com/pelletier/go-buffruneio
   version: c37440a7cf42ac63b919c752ca73a85067e05992
 - name: github.com/pelletier/go-toml
-  version: fe206efb84b2bc8e8cfafe6b4c1826622be969e3
+  version: 23f644976aa7c724adf4aec911dadf4af17840ab
 - name: github.com/pkg/errors
   version: 645ef00459ed84a119197bfb8d8205042c6df63d
 - name: github.com/Sirupsen/logrus
   version: 0208149b40d863d2c1a2f8fe5753096a9cf2cc8b
+  subpackages:
+  - hooks/syslog
 - name: github.com/spf13/afero
   version: 9be650865eab0c12963d8753212f4f9c66cdcf12
   subpackages:
   - mem
 - name: github.com/spf13/cast
-  version: ce135a4ebeee6cfe9a26c93ee0d37825f26113c7
+  version: acbeb36b902d72a7a4c18e8f3241075e7ab763e4
 - name: github.com/spf13/cobra
   version: 16c014f1a19d865b765b420e74508f80eb831ada
 - name: github.com/spf13/jwalterweatherman
@@ -129,13 +131,13 @@ imports:
 - name: github.com/xeipuuv/gojsonreference
   version: e02fc20de94c78484cd5ffb007f8af96be030a45
 - name: github.com/xeipuuv/gojsonschema
-  version: 702b404897d4364af44dc8dcabc9815947942325
+  version: a55c211c418162597a32c74c7230f81adb5ad616
 - name: go4.org
-  version: 169ea6cabe2a4888dba958edaecc9e9751adc711
+  version: 16ace784e4b16df1d51c3435223b1d602cd43bfa
   subpackages:
   - errorutil
 - name: golang.org/x/crypto
-  version: c2303dcbe84172e0c0da4c9f083eeca54c06f298
+  version: 5a033cc77e57eca05bdb50522851d29e03569cbe
   subpackages:
   - cast5
   - openpgp
@@ -145,22 +147,22 @@ imports:
   - openpgp/packet
   - openpgp/s2k
 - name: golang.org/x/net
-  version: ffcf1bedda3b04ebb15a168a59800a73d6dc0f4d
+  version: feeb485667d1fdabe727840fe00adc22431bc86e
   subpackages:
   - context
   - proxy
 - name: golang.org/x/sys
-  version: 39e3dc274464e7d2f663aa606a830611bae5f1db
+  version: 9ccfe848b9db8435a24c424abbc07a921adf1df5
   subpackages:
   - unix
   - windows
 - name: golang.org/x/text
-  version: f4b4367115ec2de254587813edaa901bc1c723a8
+  version: 470f45bf29f4147d6fbd7dfd0a02a848e49f5bf4
   subpackages:
   - transform
   - unicode/norm
 - name: gopkg.in/cheggaaa/pb.v1
-  version: 0817e3a1f8de9e3c78b159699b3c07d53e24a963
+  version: f6ccf2184de4dd34495277e38dc19b6e7fbe0ea2
 - name: gopkg.in/yaml.v2
-  version: a3f3340b5840cee44f372bddb5880fcbc419b46a
+  version: cd8b52f8269e0feb286dfeef29f8fe4d5b397e0b
 testImports: []

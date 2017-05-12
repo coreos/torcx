@@ -34,13 +34,6 @@ var (
 		SilenceErrors: true,
 	}
 
-	// TorcxGenCmd is the top-level cobra command for `torcx-generator`
-	TorcxGenCmd = &cobra.Command{
-		Use:          "torcx-generator",
-		RunE:         runApply,
-		SilenceUsage: true,
-	}
-
 	// TorcxCliCfg holds global CLI status available to all subcommands
 	TorcxCliCfg GlobalCfg
 )
