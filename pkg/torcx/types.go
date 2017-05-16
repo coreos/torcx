@@ -15,14 +15,16 @@
 package torcx
 
 const (
-	// FUSE_PROFILE_NAME is the key label for fuse profile name
-	FUSE_PROFILE_NAME = "TORCX_PROFILE_NAME"
-	// FUSE_PROFILE_PATH is the key label for fuse profile path
-	FUSE_PROFILE_PATH = "TORCX_PROFILE_PATH"
-	// FUSE_BINDIR is the key label for fuse bindir
-	FUSE_BINDIR = "TORCX_BINDIR"
-	// FUSE_UNPACKDIR is the key label for fuse unpackdir
-	FUSE_UNPACKDIR = "TORCX_UNPACKDIR"
+	// SealUserProfile is the key label for user profile name
+	SealUserProfile = "TORCX_USER_PROFILE"
+	// SealVendorProfile is the key label for vendor profile path
+	SealVendorProfile = "TORCX_VENDOR_PROFILE"
+	// SealRunProfilePath is the key label for vendor profile path
+	SealRunProfilePath = "TORCX_PROFILE_PATH"
+	// SealBindir is the key label for seal bindir
+	SealBindir = "TORCX_BINDIR"
+	// SealUnpackdir is the key label for seal unpackdir
+	SealUnpackdir = "TORCX_UNPACKDIR"
 	// ProfileManifestV0K - profile manifest kind, v0
 	ProfileManifestV0K = "profile-manifest-v0"
 	// ImageManifestV0K - image manifest kind, v0
@@ -50,14 +52,16 @@ type CommonConfig struct {
 // the `apply` subcommand
 type ApplyConfig struct {
 	CommonConfig
-	Profile string
+	LowerProfile string
+	UpperProfile string
 }
 
 // ProfileConfig contains runtime configuration items specific to
 // the `profile` subcommand
 type ProfileConfig struct {
 	CommonConfig
-	CurrentProfileName string
+	UserProfileName    string
+	VendorProfileName  string
 	CurrentProfilePath string
 	NextProfile        string
 }

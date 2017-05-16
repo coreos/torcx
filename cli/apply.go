@@ -66,19 +66,24 @@ func runApply(cmd *cobra.Command, args []string) error {
 // fillApplyRuntime generate runtime config for apply subcommand starting from
 // system-wide configuration
 func fillApplyRuntime(commonCfg *torcx.CommonConfig) (*torcx.ApplyConfig, error) {
+	var userProfileName, vendorProfileName string
+
+	vendorProfileName = torcx.VendorProfileName
 	// If we fail to read /etc/torcx/next-profile, report the error and use the default
-	profileName, err := commonCfg.NextProfileName()
+	userProfileName, err := commonCfg.NextProfileName()
 	if err != nil {
-		logrus.Warn("Falling back to default profile:", err)
-		profileName = torcx.DEFAULT_PROFILE_NAME
+		logrus.Warnf("no next profile: %s", err)
+		userProfileName = ""
 	}
 
 	logrus.WithFields(logrus.Fields{
-		"profile": profileName,
+		"vendor profile (lower)": vendorProfileName,
+		"user profile (upper)":   userProfileName,
 	}).Debug("apply configuration parsed")
 
 	return &torcx.ApplyConfig{
 		CommonConfig: *commonCfg,
-		Profile:      profileName,
+		LowerProfile: vendorProfileName,
+		UpperProfile: userProfileName,
 	}, nil
 }

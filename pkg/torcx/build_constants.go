@@ -22,6 +22,6 @@ const (
 	VendorDir = "/usr/share/torcx/"
 	// DefaultTagRef is the default image reference looked up in archives.
 	DefaultTagRef = "com.coreos.cl"
-	// VendorProfileName is the default profile name used
+	// VendorProfileName is the default profile name used.
 	VendorProfileName = "vendor"
 )

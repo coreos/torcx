@@ -27,10 +27,10 @@ const (
 	// DefaultConfDir is the default torcx config directory
 	DefaultConfDir = "/etc/torcx/"
 
-	// VendorStorePath is the vendor store path
-	VendorStorePath = VendorDir + "store/"
-	// VendorProfile is the vendor (lower) profile
-	VendorProfile = VendorDir + VendorProfileName + ".json"
+	// VendorStoreDir is the vendor store path
+	VendorStoreDir = VendorDir + "store/"
+	// VendorProfilesDir is the vendor profiles path
+	VendorProfilesDir = VendorDir + "profiles/"
 
 	// defaultCfgPath is the default path for common torcx config
 	defaultCfgPath = DefaultConfDir + "config.json"

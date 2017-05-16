@@ -35,7 +35,8 @@ Derived from configurables (shown with defaults):
 
 # Seal file content
 
-* `TORCX_PROFILE_NAME`: name of current running profile (default `vendor`)
+* `TORCX_VENDOR_PROFILE`: name of the base vendor profile (default `vendor`)
+* `TORCX_USER_PROFILE`: name of current running user profile (default ``)
 * `TORCX_PROFILE_PATH`: path of current running profile (default `/run/torcx/profile.json`)
 * `TORCX_BINDIR`: current overlay with binaries, for `$PATH` usage (default `/run/torcx/bin/`)
 * `TORCX_UNPACKDIR`: current root of the unpacked tree (default `/run/torcx/unpack/`)

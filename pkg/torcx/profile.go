@@ -17,7 +17,6 @@ package torcx
 import (
 	"bufio"
 	"encoding/json"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -28,25 +27,25 @@ import (
 	"github.com/pkg/errors"
 )
 
-// CurrentProfileName returns the name of the currently running profile
-func CurrentProfileName() (string, error) {
-	var profile string
+// CurrentProfileNames returns the name of the currently running user and vendor profile
+func CurrentProfileNames() (string, string, error) {
+	var userProfile, vendorProfile string
+	var ok bool
 
 	meta, err := ReadMetadata(SealPath)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
-
-	profile, ok := meta[FUSE_PROFILE_NAME]
+	userProfile, ok = meta[SealUserProfile]
 	if !ok {
-		return "", errors.New("unable to determine current profile name")
+		return "", "", errors.New("unable to determine current user profile name")
+	}
+	vendorProfile, ok = meta[SealVendorProfile]
+	if !ok {
+		return "", "", errors.New("unable to determine current vendor profile name")
 	}
 
-	if profile == "" {
-		return "", errors.New("invalid profile name")
-	}
-
-	return profile, nil
+	return userProfile, vendorProfile, nil
 }
 
 // CurrentProfilePath returns the path of the currently running profile
@@ -58,7 +57,7 @@ func CurrentProfilePath() (string, error) {
 		return "", err
 	}
 
-	path, ok := meta[FUSE_PROFILE_PATH]
+	path, ok := meta[SealRunProfilePath]
 	if !ok {
 		return "", errors.New("unable to determine current profile path")
 	}
@@ -85,9 +84,11 @@ func (cc *CommonConfig) NextProfileName() (string, error) {
 	if err != nil {
 		return "", errors.Wrap(err, "could not list profiles")
 	}
-
+	if profileName == "" {
+		return "", errors.New("missing profile name")
+	}
 	if _, ok := profiles[profileName]; !ok {
-		return "", fmt.Errorf("profile %q not found", profileName)
+		return "", errors.Errorf("profile %q not found", profileName)
 	}
 
 	return profileName, nil
@@ -239,4 +240,92 @@ func ListProfiles(profileDirs []string) (map[string]string, error) {
 	}
 
 	return profiles, nil
+}
+
+func mergeProfiles(applyCfg *ApplyConfig) (Images, error) {
+	var upperImages, lowerImages Images
+
+	if applyCfg == nil {
+		return Images{}, errors.New("missing apply configuration")
+	}
+	localProfiles, err := ListProfiles(applyCfg.ProfileDirs())
+	if err != nil {
+		return Images{}, errors.Wrap(err, "profiles listing failed")
+	}
+
+	// Get lower profile (vendor)
+	if applyCfg.LowerProfile != "" {
+		lowerProfilePath, ok := localProfiles[applyCfg.LowerProfile]
+		if !ok {
+			return Images{}, errors.Errorf("profile %q not found", applyCfg.LowerProfile)
+		}
+		fp, err := os.Open(lowerProfilePath)
+		if err != nil {
+			return Images{}, errors.Wrapf(err, "opening lower profile %q", lowerProfilePath)
+		}
+		defer fp.Close()
+		images, err := readProfileReader(bufio.NewReader(fp))
+		if err != nil && err != io.EOF {
+			return Images{}, errors.Wrapf(err, "reading lower profile %q", lowerProfilePath)
+		}
+		lowerImages = images
+	}
+
+	// Get upper profile (user)
+	if applyCfg.UpperProfile != "" {
+		upperProfilePath, ok := localProfiles[applyCfg.UpperProfile]
+		if !ok {
+			return Images{}, errors.Errorf("profile %q not found", applyCfg.UpperProfile)
+		}
+		fp, err := os.Open(upperProfilePath)
+		if err != nil {
+			return Images{}, errors.Wrapf(err, "opening user profile %q", upperProfilePath)
+		}
+		defer fp.Close()
+		images, err := readProfileReader(bufio.NewReader(fp))
+		if err != nil && err != io.EOF {
+			return Images{}, errors.Wrapf(err, "reading user profile %q", upperProfilePath)
+		}
+		upperImages = images
+	}
+
+	return mergeImages(lowerImages, upperImages), nil
+
+}
+
+// mergeImages merges two arrays of images ("lower" and "upper"), keeping their relative order.
+// Images from "upper" are appended at the end, and can override images from "lower".
+// nil references and names are excluded from the final array.
+func mergeImages(lower Images, upper Images) Images {
+	// TODO(lucab): perhaps trade-off time/memory here with a linked-hashmap
+	merged := Images{Images: make([]Image, 0, len(lower.Images)+len(upper.Images))}
+	lowerImages := make(map[string]bool, len(lower.Images))
+	upperImages := make(map[string]bool, len(upper.Images))
+
+	// Compute the set of images to keep
+	for _, image := range lower.Images {
+		if image.Reference != "" {
+			lowerImages[image.Name] = true
+		}
+	}
+	for _, image := range upper.Images {
+		delete(lowerImages, image.Name)
+		if image.Reference != "" {
+			upperImages[image.Name] = true
+		}
+	}
+
+	// Merge in order
+	for _, image := range lower.Images {
+		if image.Name != "" && lowerImages[image.Name] {
+			merged.Images = append(merged.Images, image)
+		}
+	}
+	for _, image := range upper.Images {
+		if image.Name != "" && upperImages[image.Name] {
+			merged.Images = append(merged.Images, image)
+		}
+	}
+
+	return merged
 }

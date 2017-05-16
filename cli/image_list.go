@@ -69,7 +69,7 @@ func runImageList(cmd *cobra.Command, args []string) error {
 	}
 
 	imageListOut := ImageList{
-		Kind:  TorcxImageListV0,
+		Kind:  TorcxImageListV0K,
 		Value: imgList,
 	}
 
