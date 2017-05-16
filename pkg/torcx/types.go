@@ -15,8 +15,6 @@
 package torcx
 
 const (
-	// FUSE_PATH is the hardcoded fuse location
-	FUSE_PATH = "/run/metadata/torcx"
 	// FUSE_PROFILE_NAME is the key label for fuse profile name
 	FUSE_PROFILE_NAME = "TORCX_PROFILE_NAME"
 	// FUSE_PROFILE_PATH is the key label for fuse profile path
@@ -25,16 +23,10 @@ const (
 	FUSE_BINDIR = "TORCX_BINDIR"
 	// FUSE_UNPACKDIR is the key label for fuse unpackdir
 	FUSE_UNPACKDIR = "TORCX_UNPACKDIR"
-	// VENDOR_DIR
-	VENDOR_DIR = "/usr/share/torcx"
 	// ProfileManifestV0K - profile manifest kind, v0
 	ProfileManifestV0K = "profile-manifest-v0"
 	// ImageManifestV0K - image manifest kind, v0
 	ImageManifestV0K = "image-manifest-v0"
-	// DefaultTagRef is the default image reference looked up in archives
-	DefaultTagRef = "com.coreos.cl"
-	// DEFAULT_PROFILE_NAME is the default profile name used
-	DEFAULT_PROFILE_NAME = "vendor"
 	// CommonConfigV0K - common torcx config kind, v0
 	CommonConfigV0K = "torcx-config-v0"
 )

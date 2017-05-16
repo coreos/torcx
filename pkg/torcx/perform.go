@@ -197,14 +197,14 @@ func SealSystemState(applyCfg *ApplyConfig) error {
 		return errors.New("missing apply configuration")
 	}
 
-	dirname := filepath.Dir(FUSE_PATH)
+	dirname := filepath.Dir(SealPath)
 	if _, err := os.Stat(dirname); err != nil && os.IsNotExist(err) {
 		if err := os.MkdirAll(dirname, 0755); err != nil {
 			return err
 		}
 	}
 
-	fp, err := os.Create(FUSE_PATH)
+	fp, err := os.Create(SealPath)
 	if err != nil {
 		return err
 	}
@@ -232,7 +232,7 @@ func SealSystemState(applyCfg *ApplyConfig) error {
 	}
 
 	logrus.WithFields(logrus.Fields{
-		"path":    FUSE_PATH,
+		"path":    SealPath,
 		"content": content,
 	}).Debug("system state sealed")
 

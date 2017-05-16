@@ -32,7 +32,7 @@ import (
 func CurrentProfileName() (string, error) {
 	var profile string
 
-	meta, err := ReadMetadata(FUSE_PATH)
+	meta, err := ReadMetadata(SealPath)
 	if err != nil {
 		return "", err
 	}
@@ -53,7 +53,7 @@ func CurrentProfileName() (string, error) {
 func CurrentProfilePath() (string, error) {
 	var path string
 
-	meta, err := ReadMetadata(FUSE_PATH)
+	meta, err := ReadMetadata(SealPath)
 	if err != nil {
 		return "", err
 	}
