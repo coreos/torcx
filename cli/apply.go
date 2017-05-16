@@ -41,13 +41,14 @@ func runApply(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.Wrap(err, "common configuration failed")
 	}
+	if torcx.IsExistingPath(commonCfg.RunDir) {
+		logrus.Info("torcx already run")
+		return nil
+	}
+
 	applyCfg, err := fillApplyRuntime(commonCfg)
 	if err != nil {
 		return errors.Wrap(err, "apply configuration failed")
-	}
-
-	if torcx.IsSystemSealed(torcx.FUSE_PATH) {
-		return errors.New("system already sealed")
 	}
 
 	err = torcx.ApplyProfile(applyCfg)

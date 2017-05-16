@@ -201,12 +201,16 @@ func setupPaths(applyCfg *ApplyConfig) error {
 		return errors.New("missing apply configuration")
 	}
 
-	paths := []string{applyCfg.BaseDir, applyCfg.RunDir, applyCfg.ConfDir}
-	paths = append(paths, applyCfg.RunBinDir())
-	paths = append(paths, applyCfg.RunUnpackDir())
-	paths = append(paths, applyCfg.UserProfileDir())
-	// TODO: implement auth...
-	//paths = append(paths, cc.AuthDir())
+	// TODO(squeed): implement fetch-auth and add cc.AuthDir() at the bottom
+	paths := []string{
+		// RunDir is the first path created, signaling that torcx run
+		applyCfg.RunDir,
+		applyCfg.BaseDir,
+		applyCfg.ConfDir,
+		applyCfg.RunBinDir(),
+		applyCfg.RunUnpackDir(),
+		applyCfg.UserProfileDir(),
+	}
 
 	for _, d := range paths {
 		if _, err := os.Stat(d); err != nil && os.IsNotExist(err) {
@@ -216,14 +220,13 @@ func setupPaths(applyCfg *ApplyConfig) error {
 		}
 	}
 
-	logrus.WithField("dest", applyCfg.RunUnpackDir()).Debug("mounting tmpfs to unpack directory")
-
 	// Now, mount a tmpfs directory to the unpack directory
 	// We need to do this because, unsurprisingly, "/run" is noexec
 	if err := syscall.Mount("none", applyCfg.RunUnpackDir(), "tmpfs", 0, ""); err != nil {
-		return errors.Wrap(err, "Failed to mount unpack dir")
+		return errors.Wrap(err, "failed to mount unpack dir")
 	}
 
+	logrus.WithField("target", applyCfg.RunUnpackDir()).Debug("mounted tmpfs")
 	return nil
 }
 
