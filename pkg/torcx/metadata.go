@@ -27,7 +27,7 @@ import (
 func ReadMetadata(fusePath string) (map[string]string, error) {
 	meta := make(map[string]string)
 
-	if !IsSystemSealed(fusePath) {
+	if !IsExistingPath(fusePath) {
 		return meta, errors.New("no active profile")
 	}
 
@@ -49,8 +49,8 @@ func ReadMetadata(fusePath string) (map[string]string, error) {
 	return meta, nil
 }
 
-// IsSystemSealed checks whether the runtime seal is already applied
-func IsSystemSealed(fusePath string) bool {
+// IsExistingPath checks whether the given path already exists.
+func IsExistingPath(fusePath string) bool {
 	_, err := os.Lstat(fusePath)
 	if err != nil && os.IsNotExist(err) {
 		return false
