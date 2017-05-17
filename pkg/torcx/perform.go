@@ -227,6 +227,12 @@ func setupPaths(applyCfg *ApplyConfig) error {
 	}
 
 	logrus.WithField("target", applyCfg.RunUnpackDir()).Debug("mounted tmpfs")
+
+	// Default tmpfs permissions are 1777, which can trip up path auditing
+	if err := os.Chmod(applyCfg.RunUnpackDir(), 0755); err != nil {
+		return errors.Wrap(err, "failed to chmod unpack dir")
+	}
+
 	return nil
 }
 
