@@ -45,6 +45,15 @@ func NewStoreCache(paths []string) (StoreCache, error) {
 		path := filepath.Clean(inPath)
 		name := filepath.Base(path)
 
+		// Ensure a symlink points to a regular file
+		if inInfo.Mode()&os.ModeSymlink != 0 {
+			if lpath, err := filepath.EvalSymlinks(path); err != nil {
+				return nil
+			} else if inInfo, err = os.Lstat(lpath); err != nil {
+				return nil
+			}
+		}
+
 		if !inInfo.Mode().IsRegular() {
 			return nil
 		}
