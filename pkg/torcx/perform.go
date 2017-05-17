@@ -108,14 +108,14 @@ func ApplyProfile(applyCfg *ApplyConfig) error {
 			}).Debug("binaries propagated")
 		}
 
-		if len(assets.Services) > 0 {
-			if err := propagateServiceUnits(applyCfg, imageRoot, assets.Services); err != nil {
-				return errors.Wrapf(err, "propagating services for image %q", im.Name)
+		if len(assets.Units) > 0 {
+			if err := propagateSystemdUnits(applyCfg, imageRoot, assets.Units); err != nil {
+				return errors.Wrapf(err, "propagating systemd units for image %q", im.Name)
 			}
 			logrus.WithFields(logrus.Fields{
 				"image":  im.Name,
-				"assets": assets.Services,
-			}).Debug("services propagated")
+				"assets": assets.Units,
+			}).Debug("systemd units propagated")
 		}
 
 		// TODO(lucab): evaluate and propagate more units types

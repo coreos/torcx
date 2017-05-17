@@ -27,7 +27,7 @@ import (
 const (
 	// manifestPath is the well-known location for image manifest
 	manifestPath = "/.torcx/manifest.json"
-	// systemdDir is the directoy where service install get installed
+	// systemdDir is the runtime systemd base path
 	// TODO(lucab): possibly not constant, group all link-time parameter together
 	systemdDir = "/run/systemd"
 )
@@ -62,11 +62,10 @@ func retrieveAssets(applyCfg *ApplyConfig, imageRoot string) (*Assets, error) {
 	return &manifest.Value, nil
 }
 
-// propagateServiceUnits installs systemd service unit and unit-like files as runtime
-// units in /run/systemd/system/.
-func propagateServiceUnits(applyCfg *ApplyConfig, imageRoot string, services []string) error {
-	if len(services) <= 0 {
-		// Corner-case: no services to propagate
+// propagateSystemdUnits installs systemd unit files as runtime units (in /run/systemd/system/).
+func propagateSystemdUnits(applyCfg *ApplyConfig, imageRoot string, units []string) error {
+	if len(units) <= 0 {
+		// Corner-case: no units to propagate
 		return nil
 	}
 	if applyCfg == nil {
@@ -76,16 +75,16 @@ func propagateServiceUnits(applyCfg *ApplyConfig, imageRoot string, services []s
 		return errors.New("missing image top directory")
 	}
 
-	servicesDir := filepath.Join(systemdDir, "system")
-	if _, err := os.Stat(servicesDir); err != nil {
-		return errors.Wrapf(err, "error checking for systemd runtime directory %s", servicesDir)
+	unitsDir := filepath.Join(systemdDir, "system")
+	if _, err := os.Stat(unitsDir); err != nil {
+		return errors.Wrapf(err, "error checking for systemd runtime directory %s", unitsDir)
 	}
-	for _, servEntry := range services {
+	for _, servEntry := range units {
 		if servEntry == "" {
 			continue
 		}
 		path := filepath.Join(imageRoot, servEntry)
-		if err := symlinkUnitAsset(applyCfg, servicesDir, path); err != nil {
+		if err := symlinkUnitAsset(applyCfg, unitsDir, path); err != nil {
 			return err
 		}
 	}
