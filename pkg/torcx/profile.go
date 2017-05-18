@@ -133,18 +133,41 @@ func readProfileReader(in io.Reader) (Images, error) {
 	return manifest.Value, nil
 }
 
+// getProfile reads a profile from the given path, does unmarshal json format,
+// to return the interpreted profile manifest.
+func getProfile(profilePath string) (ProfileManifestV0, error) {
+	var manifest ProfileManifestV0
+
+	b, err := ioutil.ReadFile(profilePath)
+	if err != nil {
+		return ProfileManifestV0{}, err
+	}
+	if err := json.Unmarshal(b, &manifest); err != nil {
+		return ProfileManifestV0{}, err
+	}
+
+	return manifest, nil
+}
+
+// putProfile does marshal the given profile manifest into json format,
+// to write the profile into the given path.
+func putProfile(profilePath string, perm os.FileMode, manifest ProfileManifestV0) error {
+	b, err := json.Marshal(manifest)
+	if err != nil {
+		return err
+	}
+
+	return ioutil.WriteFile(profilePath, b, perm)
+}
+
 func AddToProfile(profilePath string, im Image) error {
 	st, err := os.Stat(profilePath)
 	if err != nil {
 		return err
 	}
 
-	var manifest ProfileManifestV0
-	b, err := ioutil.ReadFile(profilePath)
+	manifest, err := getProfile(profilePath)
 	if err != nil {
-		return err
-	}
-	if err := json.Unmarshal(b, &manifest); err != nil {
 		return err
 	}
 
@@ -163,12 +186,7 @@ func AddToProfile(profilePath string, im Image) error {
 		manifest.Value.Images = append(manifest.Value.Images, im)
 	}
 
-	b, err = json.Marshal(manifest)
-	if err != nil {
-		return err
-	}
-
-	return ioutil.WriteFile(profilePath, b, st.Mode().Perm())
+	return putProfile(profilePath, st.Mode().Perm(), manifest)
 }
 
 // ListProfiles returns a list of all available profiles
