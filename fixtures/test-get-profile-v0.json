@@ -1,0 +1,11 @@
+{
+  "kind": "profile-manifest-v0",
+  "value": {
+    "images": [
+      {
+        "name": "test-name",
+        "reference": "test-reference"
+      }
+    ]
+  }
+}
