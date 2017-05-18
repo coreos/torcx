@@ -101,5 +101,5 @@ type ImageManifestV0 struct {
 // Assets holds lists of assets propagated from an image to the system
 type Assets struct {
 	Binaries []string `json:"bin,omitempty"`
-	Services []string `json:"service,omitempty"`
+	Units    []string `json:"units,omitempty"`
 }

@@ -8,7 +8,7 @@ It contains multiple lists of assets (organized by type) to be propagated on the
 - kind (string, required)
 - value (object, required)
   - bin (array of strings, optional)
-  - service (array of strings, optional)
+  - units (array of strings, optional)
 
 Note: The list of optional assets types will likely grow in the future. This is a non-breaking change, and does not require bumping the `kind` field.
 
@@ -20,8 +20,8 @@ Note: The list of optional assets types will likely grow in the future. This is 
   Manifest content.
 - value/bin: array of string, arbitrary length.
   List of absolute paths for binaries to be propagated under torcx bin directory.
-- value/service: array of string, arbitrary length.
-  List of absolute paths to service units to be propagated under systemd runtime directory. This can reference single unit-files as well as directories (e.g. for ".wants" and ".requires")
+- value/units: array of string, arbitrary length.
+  List of absolute paths of units to be propagated under systemd runtime directory. This can reference single unit-files as well as directories (e.g. for ".wants" and ".requires")
 
 ## JSON schema
 
@@ -43,7 +43,7 @@ Note: The list of optional assets types will likely grow in the future. This is 
             "type": "string"
           }
         },
-        "service": {
+        "units": {
           "type": "array",
           "items": {
             "type": "string"
