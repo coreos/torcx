@@ -20,6 +20,8 @@ Note: The list of optional assets types will likely grow in the future. This is 
   Manifest content.
 - value/bin: array of string, arbitrary length.
   List of absolute paths for binaries to be propagated under torcx bin directory.
+- value/network: array of string, arbitrary length.
+  List of absolute paths of networkd units to be propagated under networkd runtime directory. This can reference single unit-files as well as directories (e.g. for ".conf" dropins)
 - value/units: array of string, arbitrary length.
   List of absolute paths of units to be propagated under systemd runtime directory. This can reference single unit-files as well as directories (e.g. for ".wants" and ".requires")
 
@@ -38,6 +40,12 @@ Note: The list of optional assets types will likely grow in the future. This is 
       "type": "object",
       "properties": {
         "bin": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "network": {
           "type": "array",
           "items": {
             "type": "string"
