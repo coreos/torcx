@@ -62,8 +62,20 @@ func retrieveAssets(applyCfg *ApplyConfig, imageRoot string) (*Assets, error) {
 	return &manifest.Value, nil
 }
 
+// propagateNetworkdUnits installs networkd unit files as runtime units (in /run/systemd/network/).
+func propagateNetworkdUnits(applyCfg *ApplyConfig, imageRoot string, units []string) error {
+	ndUnitsDir := filepath.Join(systemdDir, "network")
+	return propagateUnits(applyCfg, imageRoot, units, ndUnitsDir)
+}
+
 // propagateSystemdUnits installs systemd unit files as runtime units (in /run/systemd/system/).
 func propagateSystemdUnits(applyCfg *ApplyConfig, imageRoot string, units []string) error {
+	sdUnitsDir := filepath.Join(systemdDir, "system")
+	return propagateUnits(applyCfg, imageRoot, units, sdUnitsDir)
+}
+
+// propagateUnits installs unit assets as runtime units for systemd/networkd/etc.
+func propagateUnits(applyCfg *ApplyConfig, imageRoot string, units []string, unitsDir string) error {
 	if len(units) <= 0 {
 		// Corner-case: no units to propagate
 		return nil
@@ -74,11 +86,19 @@ func propagateSystemdUnits(applyCfg *ApplyConfig, imageRoot string, units []stri
 	if imageRoot == "" {
 		return errors.New("missing image top directory")
 	}
-
-	unitsDir := filepath.Join(systemdDir, "system")
-	if _, err := os.Stat(unitsDir); err != nil {
-		return errors.Wrapf(err, "error checking for systemd runtime directory %s", unitsDir)
+	if unitsDir == "" {
+		return errors.New("missing image target directory")
 	}
+
+	if _, err := os.Stat(unitsDir); err != nil {
+		if !os.IsNotExist(err) {
+			return errors.Wrapf(err, "error checking runtime directory %s", unitsDir)
+		}
+		if err := os.MkdirAll(unitsDir, 0755); err != nil {
+			return errors.Wrapf(err, "error creating runtime directory %s", unitsDir)
+		}
+	}
+
 	for _, servEntry := range units {
 		if servEntry == "" {
 			continue
