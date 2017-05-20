@@ -4,6 +4,9 @@
       "bin": [
           "/usr/sbin/cupsd"
       ],
+      "network": [
+          "/lib/systemd/system/cups.network"
+      ],
       "units": [
           "/lib/systemd/system/cups.service",
           "/lib/systemd/system/printer.target.wants/"

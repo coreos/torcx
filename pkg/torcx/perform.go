@@ -108,6 +108,16 @@ func ApplyProfile(applyCfg *ApplyConfig) error {
 			}).Debug("binaries propagated")
 		}
 
+		if len(assets.Network) > 0 {
+			if err := propagateNetworkdUnits(applyCfg, imageRoot, assets.Network); err != nil {
+				return errors.Wrapf(err, "propagating networkd units for image %q", im.Name)
+			}
+			logrus.WithFields(logrus.Fields{
+				"image":  im.Name,
+				"assets": assets.Network,
+			}).Debug("networkd units propagated")
+		}
+
 		if len(assets.Units) > 0 {
 			if err := propagateSystemdUnits(applyCfg, imageRoot, assets.Units); err != nil {
 				return errors.Wrapf(err, "propagating systemd units for image %q", im.Name)
