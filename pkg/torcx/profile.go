@@ -122,8 +122,12 @@ func ReadProfilePath(path string) (Images, error) {
 // readProfileReader returns the content of a specific profile, specified via a reader.
 func readProfileReader(in io.Reader) (Images, error) {
 	var manifest ProfileManifestV0
+
 	jsonIn := json.NewDecoder(in)
 	err := jsonIn.Decode(&manifest)
+	if err == io.EOF {
+		return Images{}, nil
+	}
 	if err != nil {
 		return Images{}, err
 	}
