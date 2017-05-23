@@ -76,59 +76,74 @@ func ApplyProfile(applyCfg *ApplyConfig) error {
 		return err
 	}
 
+	// Unpack all images, continuing on error
+	failedImages := []Image{}
+
 	for _, im := range images.Images {
+		// Some log fields we keep using
+		logFields := logrus.Fields{
+			"image":     im.Name,
+			"reference": im.Reference,
+		}
+
 		tgzArchive, err := storeCache.ArchiveFor(im)
 		if err != nil {
-			return err
+			logrus.WithFields(logFields).Error(err)
+			failedImages = append(failedImages, im)
+			continue
 		}
 
 		// phase 1: unpack image
 		imageRoot, err := unpackTgz(applyCfg, tgzArchive.Filepath, im.Name)
 		if err != nil {
-			return err
+			failedImages = append(failedImages, im)
+			logrus.WithFields(logFields).Error("failed to unpack: ", err)
+			continue
 		}
-		logrus.WithFields(logrus.Fields{
-			"name":      im.Name,
-			"reference": im.Reference,
-			"path":      imageRoot,
-		}).Debug("image unpacked")
+		logFields["path"] = imageRoot
+		logrus.WithFields(logFields).Debug("image unpacked")
 
 		// phase 2: propagate assets
 		assets, err := retrieveAssets(applyCfg, imageRoot)
 		if err != nil {
-			return errors.Wrapf(err, "retrieving assets from image %q", im.Name)
+			failedImages = append(failedImages, im)
+			logrus.WithFields(logFields).Error("failed retrieving assets from image: ", err)
+			continue
 		}
+
 		if len(assets.Binaries) > 0 {
 			if err := propagateBins(applyCfg, imageRoot, assets.Binaries); err != nil {
-				return errors.Wrapf(err, "propagating binaries for image %q", im.Name)
+				failedImages = append(failedImages, im)
+				logrus.WithFields(logFields).WithField("assets", assets.Binaries).Error("failed to propagate binaries: ", err)
+				continue
 			}
-			logrus.WithFields(logrus.Fields{
-				"image":  im.Name,
-				"assets": assets.Binaries,
-			}).Debug("binaries propagated")
+			logrus.WithFields(logFields).WithField("assets", assets.Binaries).Debug("binaries propagated")
 		}
 
 		if len(assets.Network) > 0 {
 			if err := propagateNetworkdUnits(applyCfg, imageRoot, assets.Network); err != nil {
-				return errors.Wrapf(err, "propagating networkd units for image %q", im.Name)
+				failedImages = append(failedImages, im)
+				logrus.WithFields(logFields).WithField("assets", assets.Network).Error("failed to propagate networkd units: ", err)
+				continue
 			}
-			logrus.WithFields(logrus.Fields{
-				"image":  im.Name,
-				"assets": assets.Network,
-			}).Debug("networkd units propagated")
+
+			logrus.WithFields(logFields).WithField("assets", assets.Network).Debug("networkd units propagated")
 		}
 
 		if len(assets.Units) > 0 {
 			if err := propagateSystemdUnits(applyCfg, imageRoot, assets.Units); err != nil {
-				return errors.Wrapf(err, "propagating systemd units for image %q", im.Name)
+				failedImages = append(failedImages, im)
+				logrus.WithFields(logFields).WithField("assets", assets.Units).Error("failed to propagate systemd units: ", err)
+				continue
 			}
-			logrus.WithFields(logrus.Fields{
-				"image":  im.Name,
-				"assets": assets.Units,
-			}).Debug("systemd units propagated")
+			logrus.WithFields(logFields).WithField("assets", assets.Units).Debug("systemd units propagated")
 		}
 
 		// TODO(lucab): evaluate and propagate more units types
+	}
+
+	if len(failedImages) > 0 {
+		return fmt.Errorf("failed to install %d images", len(failedImages))
 	}
 
 	// phase 3: record current profile
