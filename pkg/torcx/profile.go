@@ -95,6 +95,9 @@ func (cc *CommonConfig) NextProfileName() (string, error) {
 
 // SetNextProfileName writes the given profile name as active for the next boot.
 func (cc *CommonConfig) SetNextProfileName(name string) error {
+	if err := os.MkdirAll(cc.UserProfileDir(), 0755); err != nil {
+		return err
+	}
 	return ioutil.WriteFile(cc.NextProfile(), []byte(name), 0644)
 }
 
