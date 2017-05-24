@@ -66,6 +66,11 @@ func runProfileNew(cmd *cobra.Command, args []string) error {
 			return cmd.Usage()
 		}
 
+		// Only if a profile name is specified: make the directory
+		if err := os.MkdirAll(commonCfg.UserProfileDir(), 0755); err != nil {
+			return errors.Wrapf(err, "could not make profile directory %s", commonCfg.UserProfileDir())
+		}
+
 		if _, ok := profiles[flagProfileNewName]; ok {
 			return fmt.Errorf("profile %s already exists", flagProfileNewName)
 		}

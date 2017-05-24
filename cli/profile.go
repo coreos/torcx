@@ -58,7 +58,8 @@ func fillProfileRuntime(commonCfg *torcx.CommonConfig) (*torcx.ProfileConfig, er
 
 	nextProfile, err = commonCfg.NextProfileName()
 	if err != nil {
-		return nil, err
+		logrus.Warnf("cannot read %s: %v - using default", commonCfg.NextProfile(), err)
+		nextProfile = torcx.DEFAULT_PROFILE_NAME
 	}
 
 	logrus.WithFields(logrus.Fields{

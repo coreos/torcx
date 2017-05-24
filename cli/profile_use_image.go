@@ -77,7 +77,7 @@ func runProfileUse(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("profile %s does not exist", flagProfileUseName)
 		}
 
-		flagProfileUseFile = filepath.Join(commonCfg.UserProfileDir(), flagProfileUseName)
+		flagProfileUseFile = filepath.Join(commonCfg.UserProfileDir(), flagProfileUseName+".json")
 	}
 
 	if flagProfileUseFile == "" {
