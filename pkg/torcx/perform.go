@@ -139,6 +139,24 @@ func ApplyProfile(applyCfg *ApplyConfig) error {
 			logrus.WithFields(logFields).WithField("assets", assets.Units).Debug("systemd units propagated")
 		}
 
+		if len(assets.Sysusers) > 0 {
+			if err := propagateSysusersUnits(applyCfg, imageRoot, assets.Sysusers); err != nil {
+				failedImages = append(failedImages, im)
+				logrus.WithFields(logFields).WithField("assets", assets.Sysusers).Error("failed to propagate sysusers: ", err)
+				continue
+			}
+			logrus.WithFields(logFields).WithField("assets", assets.Sysusers).Debug("sysusers propagated")
+		}
+
+		if len(assets.Tmpfiles) > 0 {
+			if err := propagateTmpfilesUnits(applyCfg, imageRoot, assets.Tmpfiles); err != nil {
+				failedImages = append(failedImages, im)
+				logrus.WithFields(logFields).WithField("assets", assets.Units).Error("failed to propagate tmpfiles: ", err)
+				continue
+			}
+			logrus.WithFields(logFields).WithField("assets", assets.Units).Debug("tmpfiles propagated")
+		}
+
 		// TODO(lucab): evaluate and propagate more units types
 	}
 
