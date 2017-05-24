@@ -28,8 +28,8 @@ type ProfileList struct {
 }
 
 type profileList struct {
+	LowerProfileNames  []string `json:"lower_profile_names"`
 	UserProfileName    *string  `json:"user_profile_name"`
-	VendorProfileName  *string  `json:"vendor_profile_name"`
 	CurrentProfilePath *string  `json:"current_profile_path"`
 	NextProfileName    *string  `json:"next_profile_name"`
 	Profiles           []string `json:"profiles"`

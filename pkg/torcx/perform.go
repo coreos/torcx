@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"syscall"
 
 	"github.com/Sirupsen/logrus"
@@ -207,8 +208,8 @@ func SealSystemState(applyCfg *ApplyConfig) error {
 	defer fp.Close()
 
 	content := []string{
-		fmt.Sprintf("%s=%q", SealVendorProfile, VendorProfileName),
-		fmt.Sprintf("%s=%q", SealUserProfile, applyCfg.UpperProfile),
+		fmt.Sprintf("%s=%q", SealLowerProfiles, strings.Join(applyCfg.LowerProfiles, ":")),
+		fmt.Sprintf("%s=%q", SealUpperProfile, applyCfg.UpperProfile),
 		fmt.Sprintf("%s=%q", SealRunProfilePath, applyCfg.RunProfile()),
 		fmt.Sprintf("%s=%q", SealBindir, applyCfg.RunBinDir()),
 		fmt.Sprintf("%s=%q", SealUnpackdir, applyCfg.RunUnpackDir()),

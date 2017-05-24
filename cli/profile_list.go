@@ -57,12 +57,13 @@ func runProfileList(cmd *cobra.Command, args []string) error {
 		profNames = append(profNames, k)
 	}
 
-	var userName, vendorName, nextName, curPath *string
+	var userName, nextName, curPath *string
+	lowerNames := []string{}
+	if len(profileCfg.LowerProfileNames) > 0 {
+		lowerNames = profileCfg.LowerProfileNames
+	}
 	if profileCfg.UserProfileName != "" {
 		userName = &profileCfg.UserProfileName
-	}
-	if profileCfg.VendorProfileName != "" {
-		vendorName = &profileCfg.VendorProfileName
 	}
 	if profileCfg.NextProfile != "" {
 		nextName = &profileCfg.NextProfile
@@ -74,8 +75,8 @@ func runProfileList(cmd *cobra.Command, args []string) error {
 	profListOut := ProfileList{
 		Kind: TorcxProfileListV0K,
 		Value: profileList{
+			LowerProfileNames:  lowerNames,
 			UserProfileName:    userName,
-			VendorProfileName:  vendorName,
 			CurrentProfilePath: curPath,
 			NextProfileName:    nextName,
 			Profiles:           profNames,

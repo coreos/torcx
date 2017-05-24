@@ -38,8 +38,8 @@ func init() {
 // starting from system-wide state and config
 func fillProfileRuntime(commonCfg *torcx.CommonConfig) (*torcx.ProfileConfig, error) {
 	var (
-		userProfileName   string
-		vendorProfileName string
+		lowerProfileNames []string
+		upperProfileName  string
 		curProfilePath    string
 		nextProfile       string
 	)
@@ -48,10 +48,10 @@ func fillProfileRuntime(commonCfg *torcx.CommonConfig) (*torcx.ProfileConfig, er
 		return nil, errors.New("missing common configuration")
 	}
 
-	upn, vpn, err := torcx.CurrentProfileNames()
+	upn, lpn, err := torcx.CurrentProfileNames()
 	if err == nil {
-		userProfileName = upn
-		vendorProfileName = vpn
+		lowerProfileNames = lpn
+		upperProfileName = upn
 	}
 	cpp, err := torcx.CurrentProfilePath()
 	if err == nil {
@@ -64,15 +64,15 @@ func fillProfileRuntime(commonCfg *torcx.CommonConfig) (*torcx.ProfileConfig, er
 	}
 
 	logrus.WithFields(logrus.Fields{
-		"user profile":   userProfileName,
-		"vendor profile": vendorProfileName,
+		"lower profiles": lpn,
+		"upper profile":  upperProfileName,
 		"next profile":   nextProfile,
 	}).Debug("profile configuration parsed")
 
 	return &torcx.ProfileConfig{
 		CommonConfig:       *commonCfg,
-		UserProfileName:    userProfileName,
-		VendorProfileName:  vendorProfileName,
+		LowerProfileNames:  lowerProfileNames,
+		UserProfileName:    upperProfileName,
 		CurrentProfilePath: curProfilePath,
 		NextProfile:        nextProfile,
 	}, nil

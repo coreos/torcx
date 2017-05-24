@@ -20,8 +20,12 @@ const (
 	SealPath = "/run/metadata/torcx"
 	// VendorDir contains (immutable) assets provided by the vendor.
 	VendorDir = "/usr/share/torcx/"
+	// OemDir contains (mutable) assets provided by the oem.
+	OemDir = "/usr/share/oem/torcx/"
 	// DefaultTagRef is the default image reference looked up in archives.
 	DefaultTagRef = "com.coreos.cl"
-	// VendorProfileName is the default profile name used.
+	// VendorProfileName is the default vendor profile used.
 	VendorProfileName = "vendor"
+	// OemProfileName is the default oem profile used.
+	OemProfileName = "oem"
 )

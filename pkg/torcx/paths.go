@@ -32,6 +32,11 @@ const (
 	// VendorProfilesDir is the vendor profiles path
 	VendorProfilesDir = VendorDir + "profiles/"
 
+	// OemStoreDir is the vendor store path
+	OemStoreDir = OemDir + "store/"
+	// OemProfilesDir is the vendor profiles path
+	OemProfilesDir = OemDir + "profiles/"
+
 	// defaultCfgPath is the default path for common torcx config
 	defaultCfgPath = DefaultConfDir + "config.json"
 )
@@ -49,7 +54,8 @@ func (cc *CommonConfig) RunBinDir() string {
 // ProfileDirs are the list of directories where we look for profiles.
 func (cc *CommonConfig) ProfileDirs() []string {
 	return []string{
-		filepath.Join(VendorDir, "profiles"),
+		VendorProfilesDir,
+		OemProfilesDir,
 		cc.UserProfileDir(),
 	}
 }

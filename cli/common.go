@@ -34,6 +34,7 @@ func fillCommonRuntime() (*torcx.CommonConfig, error) {
 		ConfDir: torcx.DefaultConfDir,
 		StorePaths: []string{
 			torcx.VendorStoreDir,
+			torcx.OemStoreDir,
 		},
 	}
 

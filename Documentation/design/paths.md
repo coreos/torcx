@@ -5,6 +5,7 @@ Paths reserved for `torcx` usage.
 Hardcoded:
 * SealFile: `/run/metadata/torcx`
 * VendorDir: `/usr/share/torcx/`
+* OemDir: `/usr/share/oem/torcx/`
 
 Configurable via environmental flags:
 * `$TORCX_BASEDIR`: `/var/lib/torcx/`
@@ -18,6 +19,7 @@ Derived from configurables (shown with defaults):
 * NextProfile: ConfDir + `next-profile` (`/etc/torcx/next-profile`)
 * StoreDir:
   * (vendor) VendorDir + `store/` (`/usr/share/torcx/store/`)
+  * (oem) OemDir + `store/` (`/usr/share/oem/torcx/store`)
   * (user) BaseDir + `store/` (`/var/lib/torcx/store/`)
   * (runtime) `$TORCX_STOREPATH`
 * AuthDir: 
@@ -25,6 +27,7 @@ Derived from configurables (shown with defaults):
   * (user) ConfDir + `auth.d/` (`/etc/torcx/auth.d/`)
 * ProfileDir:
   * (vendor) VendorDir + `profiles/` (`/usr/share/torcx/profiles/`)
+  * (oem) OemDir + `profiles/` (`/usr/share/oem/torcx/profiles/`)
   * (user) ConfDir + `profiles/` (`/etc/torcx/profiles/`)
 
 # Paths from environmental flags
@@ -35,8 +38,8 @@ Derived from configurables (shown with defaults):
 
 # Seal file content
 
-* `TORCX_VENDOR_PROFILE`: name of the base vendor profile (default `vendor`)
-* `TORCX_USER_PROFILE`: name of current running user profile (default ``)
+* `TORCX_LOWER_PROFILES`: array of names of lower vendor/oem profiles, separated by `:` (default `vendor:oem`)
+* `TORCX_UPPER_PROFILE`: name of current running user profile (default ``)
 * `TORCX_PROFILE_PATH`: path of current running profile (default `/run/torcx/profile.json`)
 * `TORCX_BINDIR`: current overlay with binaries, for `$PATH` usage (default `/run/torcx/bin/`)
 * `TORCX_UNPACKDIR`: current root of the unpacked tree (default `/run/torcx/unpack/`)

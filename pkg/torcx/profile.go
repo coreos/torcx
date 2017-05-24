@@ -27,25 +27,26 @@ import (
 	"github.com/pkg/errors"
 )
 
-// CurrentProfileNames returns the name of the currently running user and vendor profile
-func CurrentProfileNames() (string, string, error) {
-	var userProfile, vendorProfile string
-	var ok bool
+// DefaultLowerProfiles are the default lower profiles (for vendor and oem entries)
+var DefaultLowerProfiles = []string{VendorProfileName, OemProfileName}
 
+// CurrentProfileNames returns the name of the currently running user and vendor profiles
+func CurrentProfileNames() (string, []string, error) {
 	meta, err := ReadMetadata(SealPath)
 	if err != nil {
-		return "", "", err
+		return "", nil, err
 	}
-	userProfile, ok = meta[SealUserProfile]
+	upperProfile, ok := meta[SealUpperProfile]
 	if !ok {
-		return "", "", errors.New("unable to determine current user profile name")
+		return "", nil, errors.New("unable to determine current upper profile name")
 	}
-	vendorProfile, ok = meta[SealVendorProfile]
+	lowerString, ok := meta[SealLowerProfiles]
 	if !ok {
-		return "", "", errors.New("unable to determine current vendor profile name")
+		return "", nil, errors.New("unable to determine current lower profile names")
 	}
+	lowerProfiles := strings.Split(lowerString, ":")
 
-	return userProfile, vendorProfile, nil
+	return upperProfile, lowerProfiles, nil
 }
 
 // CurrentProfilePath returns the path of the currently running profile
@@ -243,7 +244,7 @@ func ListProfiles(profileDirs []string) (map[string]string, error) {
 }
 
 func mergeProfiles(applyCfg *ApplyConfig) (Images, error) {
-	var upperImages, lowerImages Images
+	var mergedImages Images
 
 	if applyCfg == nil {
 		return Images{}, errors.New("missing apply configuration")
@@ -253,44 +254,33 @@ func mergeProfiles(applyCfg *ApplyConfig) (Images, error) {
 		return Images{}, errors.Wrap(err, "profiles listing failed")
 	}
 
-	// Get lower profile (vendor)
-	if applyCfg.LowerProfile != "" {
-		lowerProfilePath, ok := localProfiles[applyCfg.LowerProfile]
-		if !ok {
-			return Images{}, errors.Errorf("profile %q not found", applyCfg.LowerProfile)
+	// We first filter out non-existing lower profiles
+	resProfiles := []string{}
+	for _, lowerProfile := range applyCfg.LowerProfiles {
+		profilePath, ok := localProfiles[lowerProfile]
+		if ok && profilePath != "" {
+			resProfiles = append(resProfiles, lowerProfile)
 		}
-		fp, err := os.Open(lowerProfilePath)
+
+	}
+	// Then we do a stable merge of images from all profiles (in-order)
+	for _, lp := range append(resProfiles, applyCfg.UpperProfile) {
+		profilePath, ok := localProfiles[lp]
+		if !ok || profilePath == "" {
+			return Images{}, errors.Wrapf(err, "profile %q not found", lp)
+		}
+		fp, err := os.Open(profilePath)
 		if err != nil {
-			return Images{}, errors.Wrapf(err, "opening lower profile %q", lowerProfilePath)
+			return Images{}, errors.Wrapf(err, "opening profile %q", profilePath)
 		}
 		defer fp.Close()
 		images, err := readProfileReader(bufio.NewReader(fp))
 		if err != nil && err != io.EOF {
-			return Images{}, errors.Wrapf(err, "reading lower profile %q", lowerProfilePath)
+			return Images{}, errors.Wrapf(err, "reading profile %q", profilePath)
 		}
-		lowerImages = images
+		mergedImages = mergeImages(mergedImages, images)
 	}
-
-	// Get upper profile (user)
-	if applyCfg.UpperProfile != "" {
-		upperProfilePath, ok := localProfiles[applyCfg.UpperProfile]
-		if !ok {
-			return Images{}, errors.Errorf("profile %q not found", applyCfg.UpperProfile)
-		}
-		fp, err := os.Open(upperProfilePath)
-		if err != nil {
-			return Images{}, errors.Wrapf(err, "opening user profile %q", upperProfilePath)
-		}
-		defer fp.Close()
-		images, err := readProfileReader(bufio.NewReader(fp))
-		if err != nil && err != io.EOF {
-			return Images{}, errors.Wrapf(err, "reading user profile %q", upperProfilePath)
-		}
-		upperImages = images
-	}
-
-	return mergeImages(lowerImages, upperImages), nil
-
+	return mergedImages, nil
 }
 
 // mergeImages merges two arrays of images ("lower" and "upper"), keeping their relative order.

@@ -15,10 +15,10 @@
 package torcx
 
 const (
-	// SealUserProfile is the key label for user profile name
-	SealUserProfile = "TORCX_USER_PROFILE"
-	// SealVendorProfile is the key label for vendor profile path
-	SealVendorProfile = "TORCX_VENDOR_PROFILE"
+	// SealUpperProfile is the key label for user profile name
+	SealUpperProfile = "TORCX_UPPER_PROFILE"
+	// SealLowerProfiles is the key label for vendor profile path
+	SealLowerProfiles = "TORCX_LOWER_PROFILES"
 	// SealRunProfilePath is the key label for vendor profile path
 	SealRunProfilePath = "TORCX_PROFILE_PATH"
 	// SealBindir is the key label for seal bindir
@@ -52,16 +52,16 @@ type CommonConfig struct {
 // the `apply` subcommand
 type ApplyConfig struct {
 	CommonConfig
-	LowerProfile string
-	UpperProfile string
+	LowerProfiles []string
+	UpperProfile  string
 }
 
 // ProfileConfig contains runtime configuration items specific to
 // the `profile` subcommand
 type ProfileConfig struct {
 	CommonConfig
+	LowerProfileNames  []string
 	UserProfileName    string
-	VendorProfileName  string
 	CurrentProfilePath string
 	NextProfile        string
 }
