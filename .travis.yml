@@ -1,7 +1,9 @@
-language: go
+dist: trusty
+sudo: required
 
+language: go
+go_import_path: github.com/coreos/torcx
 go:
-  - 1.7
   - 1.8
 
 env:
@@ -10,3 +12,4 @@ env:
 script:
 - ./scripts/build.sh
 - ./scripts/test.sh ${SRC_DIRS}
+- make ftest

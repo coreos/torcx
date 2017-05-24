@@ -122,6 +122,13 @@ test: build-dirs
 	        ./scripts/test.sh $(SRC_DIRS)                                  \
 	    "
 
+ftest: build
+	@sh -c "                                                               \
+	        BUILDTAGS='$(BUILDTAGS)'                                       \
+	        CGO_ENABLED=0                                                  \
+	        ./scripts/ftest.sh                                             \
+	    "
+
 build-dirs:
 	@mkdir -p bin/$(ARCH)
 	@mkdir -p .go/src/$(PKG) .go/pkg .go/bin .go/std/$(ARCH)

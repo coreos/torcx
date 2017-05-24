@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Copyright 2016 The Kubernetes Authors.
 #
@@ -18,37 +18,22 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
+RKT_VER="1.26.0"
+RKT_URL="https://github.com/rkt/rkt/releases/download/v${RKT_VER}/rkt-v${RKT_VER}.tar.gz"
+RKT_STAGE1="coreos.com/rkt/stage1-coreos:${RKT_VER}"
+
 if [ -n "${BUILDTAGS}" ]; then
     BUILDTAGS="-tags ${BUILDTAGS}"
 fi
 
-TARGETS=$(for d in "$@"; do echo ./$d/...; done)
-
-echo -n "Checking gofmt: "
-ERRS=$(find "$@" -type f -name \*.go | xargs gofmt -l 2>&1 || true)
-if [ -n "${ERRS}" ]; then
-    echo "FAIL - the following files need to be gofmt'ed:"
-    for e in ${ERRS}; do
-        echo "    $e"
-    done
-    echo
-    exit 1
+if [ ! -x "$(which rkt)" ]; then
+    sudo mkdir -p /usr/local/bin/
+    curl -L ${RKT_URL} |
+    sudo tar -C /usr/local/bin --strip-components=1 -xazv rkt-v${RKT_VER}/rkt &&
+    hash -r &&
+    sudo rkt fetch --trust-keys-from-https=true ${RKT_STAGE1}
 fi
-echo "PASS"
-echo
 
-echo -n "Checking go vet: "
-ERRS=$(go vet ${TARGETS} 2>&1 || true)
-if [ -n "${ERRS}" ]; then
-    echo "FAIL"
-    echo "${ERRS}"
-    echo
-    exit 1
-fi
-echo "PASS"
-echo
-
-echo "Running unit-tests:"
-go test ${BUILDTAGS} -i -installsuffix "static" ${TARGETS}
-go test ${BUILDTAGS} -installsuffix "static" ${TARGETS}
+echo "Running functional-tests:"
+sudo -E env "GOPATH=$GOPATH" "PATH=$PATH" go test ${BUILDTAGS} -test.v ./ftests/
 echo
