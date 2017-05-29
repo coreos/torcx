@@ -29,7 +29,9 @@ const (
 	manifestPath = "/.torcx/manifest.json"
 	// systemdDir is the runtime systemd base path
 	// TODO(lucab): possibly not constant, group all link-time parameter together
-	systemdDir = "/run/systemd"
+	systemdDir  = "/run/systemd"
+	sysUsersDir = "/run/sysusers.d"
+	tmpFilesDir = "/run/tmpfiles.d"
 )
 
 func retrieveAssets(applyCfg *ApplyConfig, imageRoot string) (*Assets, error) {
@@ -72,6 +74,15 @@ func propagateNetworkdUnits(applyCfg *ApplyConfig, imageRoot string, units []str
 func propagateSystemdUnits(applyCfg *ApplyConfig, imageRoot string, units []string) error {
 	sdUnitsDir := filepath.Join(systemdDir, "system")
 	return propagateUnits(applyCfg, imageRoot, units, sdUnitsDir)
+}
+
+// propagateSysusersUnits installs sysusers config in /run/sysusers.d
+func propagateSysusersUnits(applyCfg *ApplyConfig, imageRoot string, units []string) error {
+	return propagateUnits(applyCfg, imageRoot, units, sysUsersDir)
+}
+
+func propagateTmpfilesUnits(applyCfg *ApplyConfig, imageRoot string, units []string) error {
+	return propagateUnits(applyCfg, imageRoot, units, tmpFilesDir)
 }
 
 // propagateUnits installs unit assets as runtime units for systemd/networkd/etc.

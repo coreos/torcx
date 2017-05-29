@@ -56,7 +56,20 @@ Note: The list of optional assets types will likely grow in the future. This is 
           "items": {
             "type": "string"
           }
+        },
+		"sysusers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "tmpfiles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
+
       }
     }
   },

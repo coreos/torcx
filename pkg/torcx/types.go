@@ -103,4 +103,6 @@ type Assets struct {
 	Binaries []string `json:"bin,omitempty"`
 	Network  []string `json:"network,omitempty"`
 	Units    []string `json:"units,omitempty"`
+	Sysusers []string `json:"sysusers,omitempty"`
+	Tmpfiles []string `json:"tmpfiles,omitempty"`
 }
