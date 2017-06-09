@@ -66,19 +66,49 @@ func runApply(cmd *cobra.Command, args []string) error {
 // fillApplyRuntime generate runtime config for apply subcommand starting from
 // system-wide configuration
 func fillApplyRuntime(commonCfg *torcx.CommonConfig) (*torcx.ApplyConfig, error) {
-	// If we fail to read /etc/torcx/next-profile, report the error and use the default
-	profileName, err := commonCfg.NextProfileName()
+	// If we fail to read lower profiles, report the error proceed without
+	lowerProfileNames, err := lowerProfiles(commonCfg)
 	if err != nil {
-		logrus.Warn("Falling back to default profile:", err)
-		profileName = torcx.DEFAULT_PROFILE_NAME
+		return nil, err
+	}
+
+	// If we fail to read /etc/torcx/next-profile, report the error and proceed without
+	upperProfileName, err := commonCfg.NextProfileName()
+	if err != nil {
+		logrus.Warnf("no next profile: %s", err)
+		upperProfileName = ""
 	}
 
 	logrus.WithFields(logrus.Fields{
-		"profile": profileName,
+		"lower profiles (vendor/oem)": lowerProfileNames,
+		"upper profile (user)":        upperProfileName,
 	}).Debug("apply configuration parsed")
 
 	return &torcx.ApplyConfig{
-		CommonConfig: *commonCfg,
-		Profile:      profileName,
+		CommonConfig:  *commonCfg,
+		LowerProfiles: lowerProfileNames,
+		UpperProfile:  upperProfileName,
 	}, nil
+}
+
+func lowerProfiles(commonCfg *torcx.CommonConfig) ([]string, error) {
+	if commonCfg == nil {
+		return nil, errors.New("missing common configuration")
+	}
+
+	lowerProfiles := []string{}
+	localProfiles, err := torcx.ListProfiles(commonCfg.ProfileDirs())
+	if err != nil {
+		return nil, err
+	}
+	for _, prof := range torcx.DefaultLowerProfiles {
+		if path, ok := localProfiles[prof]; ok && path != "" {
+			lowerProfiles = append(lowerProfiles, prof)
+		} else {
+			logrus.WithFields(logrus.Fields{
+				"missing profile": prof,
+			}).Debug("skipped missing lower profile")
+		}
+	}
+	return lowerProfiles, nil
 }

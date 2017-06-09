@@ -53,17 +53,17 @@ func TestGetProfile(t *testing.T) {
 }
 
 func TestPutGetProfile(t *testing.T) {
-	tmp, err := ioutil.TempFile(os.TempDir(), "test-put-profile.json")
+	tmp, err := ioutil.TempFile("", "test-torcx-putget-profile")
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer os.Remove(tmp.Name())
+	profilePath := tmp.Name()
+	defer os.Remove(profilePath)
 
 	if err := tmp.Close(); err != nil {
 		t.Fatal(err)
 	}
 
-	profilePath := tmp.Name()
 	if err := putProfile(profilePath, os.FileMode(0755), inManifest); err != nil {
 		t.Fatal(err)
 	}
@@ -79,5 +79,137 @@ func TestPutGetProfile(t *testing.T) {
 
 	if !reflect.DeepEqual(inManifest, outManifest) {
 		t.Fatalf("manifests do not match with each other.\nin:%v\nout:%v\n", inManifest, outManifest)
+	}
+}
+
+func TestMergeImages(t *testing.T) {
+	testCases := []struct {
+		desc  string
+		lower []Image
+		upper []Image
+
+		merged []Image
+	}{
+		{
+			"empty total",
+			[]Image{},
+			[]Image{},
+
+			[]Image{},
+		}, {
+			"empty lower",
+			[]Image{},
+			[]Image{
+				Image{
+					Name:      "foo0",
+					Reference: "0",
+				},
+			},
+
+			[]Image{
+				Image{
+					Name:      "foo0",
+					Reference: "0",
+				},
+			},
+		}, {
+			"empty upper",
+			[]Image{
+				Image{
+					Name:      "foo1",
+					Reference: "1",
+				},
+			},
+			[]Image{},
+
+			[]Image{
+				Image{
+					Name:      "foo1",
+					Reference: "1",
+				},
+			},
+		}, {
+			"ordered merge",
+			[]Image{
+				Image{
+					Name:      "foo1",
+					Reference: "1",
+				},
+			},
+			[]Image{
+				Image{
+					Name:      "foo2",
+					Reference: "2",
+				},
+			},
+
+			[]Image{
+				Image{
+					Name:      "foo1",
+					Reference: "1",
+				},
+				Image{
+					Name:      "foo2",
+					Reference: "2",
+				},
+			},
+		}, {
+			"re-order and override reference in lower",
+			[]Image{
+				Image{
+					Name:      "foo2",
+					Reference: "3",
+				},
+				Image{
+					Name:      "foo1",
+					Reference: "1",
+				},
+			},
+			[]Image{
+				Image{
+					Name:      "foo2",
+					Reference: "2",
+				},
+			},
+
+			[]Image{
+				Image{
+					Name:      "foo1",
+					Reference: "1",
+				},
+				Image{
+					Name:      "foo2",
+					Reference: "2",
+				},
+			},
+		}, {
+			"remove image in lower",
+			[]Image{
+				Image{
+					Name:      "foo3",
+					Reference: "3",
+				},
+			},
+			[]Image{
+				Image{
+					Name:      "foo3",
+					Reference: "",
+				},
+			},
+
+			[]Image{},
+		},
+	}
+
+	for _, tt := range testCases {
+		expected := Images{tt.merged}
+		lower := Images{Images: tt.lower}
+		upper := Images{Images: tt.upper}
+		result := mergeImages(lower, upper)
+
+		if !reflect.DeepEqual(result, expected) {
+			t.Errorf("testcase %q failed: got %#v, expected %#v", tt.desc, result.Images, expected.Images)
+		}
+
 	}
 }

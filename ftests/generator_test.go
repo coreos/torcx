@@ -15,7 +15,6 @@
 package ftests
 
 import (
-	"os"
 	"os/exec"
 	"testing"
 )
@@ -28,14 +27,6 @@ func TestGeneratorEmpty(t *testing.T) {
 		RunTestInContainer(t, cfg)
 		return
 	}
-
-	// Prepare an empty vendor profile
-	_ = os.MkdirAll("/usr/share/torcx/profiles", 0755)
-	fp, err := os.Create("/usr/share/torcx/profiles/vendor.json")
-	if err != nil && !os.IsExist(err) {
-		t.Fatal(err)
-	}
-	fp.Close()
 
 	cmd := exec.Command("torcx-generator")
 	bytes, err := cmd.CombinedOutput()

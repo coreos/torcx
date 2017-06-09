@@ -18,10 +18,11 @@ import (
 	"archive/tar"
 	"bufio"
 	"compress/gzip"
+	"encoding/json"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"syscall"
 
 	"github.com/Sirupsen/logrus"
@@ -47,28 +48,49 @@ func ApplyProfile(applyCfg *ApplyConfig) error {
 		return errors.Wrap(err, "profile setup")
 	}
 
-	localProfiles, err := ListProfiles(applyCfg.ProfileDirs())
-	if err != nil {
-		return errors.Wrap(err, "profiles listing failed")
-	}
-
-	originPath, ok := localProfiles[applyCfg.Profile]
-	if !ok {
-		return fmt.Errorf("profile %q not found", applyCfg.Profile)
-	}
-
-	opp, err := os.Open(originPath)
+	images, err := mergeProfiles(applyCfg)
 	if err != nil {
 		return err
 	}
-	defer opp.Close()
+	if len(images.Images) > 0 {
+		if err := applyImages(applyCfg, images); err != nil {
+			return err
+		}
+	}
 
-	images, err := readProfileReader(bufio.NewReader(opp))
+	runProfile := ProfileManifestV0{
+		Kind:  ProfileManifestV0K,
+		Value: images,
+	}
+	rpp, err := os.Create(applyCfg.RunProfile())
 	if err != nil {
 		return err
 	}
-	if len(images.Images) == 0 {
-		return nil
+	defer rpp.Close()
+	bufwr := bufio.NewWriter(rpp)
+	defer bufwr.Flush()
+	enc := json.NewEncoder(bufwr)
+	enc.SetIndent("", "  ")
+	if err := enc.Encode(runProfile); err != nil {
+		return errors.Wrapf(err, "writing %q", applyCfg.RunProfile())
+	}
+
+	err = os.Chmod(applyCfg.RunProfile(), 0444)
+	if err != nil {
+		return err
+	}
+
+	logrus.WithFields(logrus.Fields{
+		"upper profile":  applyCfg.UpperProfile,
+		"sealed profile": applyCfg.RunProfile(),
+	}).Debug("profile applied")
+	return nil
+}
+
+// applyImages unpacks and propagates assets from a list of images.
+func applyImages(applyCfg *ApplyConfig, images Images) error {
+	if applyCfg == nil {
+		return errors.New("missing apply configuration")
 	}
 
 	storeCache, err := NewStoreCache(applyCfg.StorePaths)
@@ -93,7 +115,6 @@ func ApplyProfile(applyCfg *ApplyConfig) error {
 			continue
 		}
 
-		// phase 1: unpack image
 		imageRoot, err := unpackTgz(applyCfg, tgzArchive.Filepath, im.Name)
 		if err != nil {
 			failedImages = append(failedImages, im)
@@ -103,7 +124,6 @@ func ApplyProfile(applyCfg *ApplyConfig) error {
 		logFields["path"] = imageRoot
 		logrus.WithFields(logFields).Debug("image unpacked")
 
-		// phase 2: propagate assets
 		assets, err := retrieveAssets(applyCfg, imageRoot)
 		if err != nil {
 			failedImages = append(failedImages, im)
@@ -164,29 +184,6 @@ func ApplyProfile(applyCfg *ApplyConfig) error {
 		return fmt.Errorf("failed to install %d images", len(failedImages))
 	}
 
-	// phase 3: record current profile
-	rpp, err := os.Create(applyCfg.RunProfile())
-	if err != nil {
-		return err
-	}
-	defer rpp.Close()
-	if n, err := opp.Seek(0, io.SeekStart); err != nil || n != 0 {
-		return fmt.Errorf("seek failed")
-	}
-	_, err = io.Copy(rpp, opp)
-	if err != nil {
-		return err
-	}
-	err = os.Chmod(applyCfg.RunProfile(), 0444)
-	if err != nil {
-		return err
-	}
-
-	logrus.WithFields(logrus.Fields{
-		"name":             applyCfg.Profile,
-		"original profile": originPath,
-		"sealed profile":   applyCfg.RunProfile(),
-	}).Debug("profile applied")
 	return nil
 }
 
@@ -197,24 +194,25 @@ func SealSystemState(applyCfg *ApplyConfig) error {
 		return errors.New("missing apply configuration")
 	}
 
-	dirname := filepath.Dir(FUSE_PATH)
+	dirname := filepath.Dir(SealPath)
 	if _, err := os.Stat(dirname); err != nil && os.IsNotExist(err) {
 		if err := os.MkdirAll(dirname, 0755); err != nil {
 			return err
 		}
 	}
 
-	fp, err := os.Create(FUSE_PATH)
+	fp, err := os.Create(SealPath)
 	if err != nil {
 		return err
 	}
 	defer fp.Close()
 
 	content := []string{
-		fmt.Sprintf("%s=%q", FUSE_PROFILE_NAME, applyCfg.Profile),
-		fmt.Sprintf("%s=%q", FUSE_PROFILE_PATH, applyCfg.RunProfile()),
-		fmt.Sprintf("%s=%q", FUSE_BINDIR, applyCfg.RunBinDir()),
-		fmt.Sprintf("%s=%q", FUSE_UNPACKDIR, applyCfg.RunUnpackDir()),
+		fmt.Sprintf("%s=%q", SealLowerProfiles, strings.Join(applyCfg.LowerProfiles, ":")),
+		fmt.Sprintf("%s=%q", SealUpperProfile, applyCfg.UpperProfile),
+		fmt.Sprintf("%s=%q", SealRunProfilePath, applyCfg.RunProfile()),
+		fmt.Sprintf("%s=%q", SealBindir, applyCfg.RunBinDir()),
+		fmt.Sprintf("%s=%q", SealUnpackdir, applyCfg.RunUnpackDir()),
 	}
 
 	for _, line := range content {
@@ -232,7 +230,7 @@ func SealSystemState(applyCfg *ApplyConfig) error {
 	}
 
 	logrus.WithFields(logrus.Fields{
-		"path":    FUSE_PATH,
+		"path":    SealPath,
 		"content": content,
 	}).Debug("system state sealed")
 
@@ -263,19 +261,18 @@ func setupPaths(applyCfg *ApplyConfig) error {
 		}
 	}
 
-	// Now, mount a tmpfs directory to the unpack directory
-	// We need to do this because, unsurprisingly, "/run" is noexec
+	// Now, mount a tmpfs directory to the unpack directory.
+	// We need to do this because "/run" is typically marked "noexec".
 	if err := syscall.Mount("none", applyCfg.RunUnpackDir(), "tmpfs", 0, ""); err != nil {
 		return errors.Wrap(err, "failed to mount unpack dir")
 	}
-
-	logrus.WithField("target", applyCfg.RunUnpackDir()).Debug("mounted tmpfs")
 
 	// Default tmpfs permissions are 1777, which can trip up path auditing
 	if err := os.Chmod(applyCfg.RunUnpackDir(), 0755); err != nil {
 		return errors.Wrap(err, "failed to chmod unpack dir")
 	}
 
+	logrus.WithField("target", applyCfg.RunUnpackDir()).Debug("mounted tmpfs")
 	return nil
 }
 

@@ -57,6 +57,7 @@ func RunTestInContainer(t *testing.T, cfg RktConfig) {
 	}
 	rktOpts := []string{
 		"--insecure-options=all",
+		"--net=none",
 		"run",
 	}
 	args := rktOpts

@@ -57,20 +57,28 @@ func runProfileList(cmd *cobra.Command, args []string) error {
 		profNames = append(profNames, k)
 	}
 
-	var curName, curPath *string
-	if profileCfg.CurrentProfileName != "" {
-		curName = &profileCfg.CurrentProfileName
+	var userName, nextName, curPath *string
+	lowerNames := []string{}
+	if len(profileCfg.LowerProfileNames) > 0 {
+		lowerNames = profileCfg.LowerProfileNames
+	}
+	if profileCfg.UserProfileName != "" {
+		userName = &profileCfg.UserProfileName
+	}
+	if profileCfg.NextProfile != "" {
+		nextName = &profileCfg.NextProfile
 	}
 	if profileCfg.CurrentProfilePath != "" {
 		curPath = &profileCfg.CurrentProfilePath
 	}
 
 	profListOut := ProfileList{
-		Kind: TorcxProfileListV0,
+		Kind: TorcxProfileListV0K,
 		Value: profileList{
-			CurrentProfileName: curName,
+			LowerProfileNames:  lowerNames,
+			UserProfileName:    userName,
 			CurrentProfilePath: curPath,
-			NextProfileName:    profileCfg.NextProfile,
+			NextProfileName:    nextName,
 			Profiles:           profNames,
 		},
 	}

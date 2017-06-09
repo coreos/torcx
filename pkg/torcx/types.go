@@ -15,26 +15,20 @@
 package torcx
 
 const (
-	// FUSE_PATH is the hardcoded fuse location
-	FUSE_PATH = "/run/metadata/torcx"
-	// FUSE_PROFILE_NAME is the key label for fuse profile name
-	FUSE_PROFILE_NAME = "TORCX_PROFILE_NAME"
-	// FUSE_PROFILE_PATH is the key label for fuse profile path
-	FUSE_PROFILE_PATH = "TORCX_PROFILE_PATH"
-	// FUSE_BINDIR is the key label for fuse bindir
-	FUSE_BINDIR = "TORCX_BINDIR"
-	// FUSE_UNPACKDIR is the key label for fuse unpackdir
-	FUSE_UNPACKDIR = "TORCX_UNPACKDIR"
-	// VENDOR_DIR
-	VENDOR_DIR = "/usr/share/torcx"
+	// SealUpperProfile is the key label for user profile name
+	SealUpperProfile = "TORCX_UPPER_PROFILE"
+	// SealLowerProfiles is the key label for vendor profile path
+	SealLowerProfiles = "TORCX_LOWER_PROFILES"
+	// SealRunProfilePath is the key label for vendor profile path
+	SealRunProfilePath = "TORCX_PROFILE_PATH"
+	// SealBindir is the key label for seal bindir
+	SealBindir = "TORCX_BINDIR"
+	// SealUnpackdir is the key label for seal unpackdir
+	SealUnpackdir = "TORCX_UNPACKDIR"
 	// ProfileManifestV0K - profile manifest kind, v0
 	ProfileManifestV0K = "profile-manifest-v0"
 	// ImageManifestV0K - image manifest kind, v0
 	ImageManifestV0K = "image-manifest-v0"
-	// DefaultTagRef is the default image reference looked up in archives
-	DefaultTagRef = "com.coreos.cl"
-	// DEFAULT_PROFILE_NAME is the default profile name used
-	DEFAULT_PROFILE_NAME = "vendor"
 	// CommonConfigV0K - common torcx config kind, v0
 	CommonConfigV0K = "torcx-config-v0"
 )
@@ -58,14 +52,16 @@ type CommonConfig struct {
 // the `apply` subcommand
 type ApplyConfig struct {
 	CommonConfig
-	Profile string
+	LowerProfiles []string
+	UpperProfile  string
 }
 
 // ProfileConfig contains runtime configuration items specific to
 // the `profile` subcommand
 type ProfileConfig struct {
 	CommonConfig
-	CurrentProfileName string
+	LowerProfileNames  []string
+	UserProfileName    string
 	CurrentProfilePath string
 	NextProfile        string
 }

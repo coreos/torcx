@@ -26,11 +26,19 @@ const (
 	DefaultBaseDir = "/var/lib/torcx/"
 	// DefaultConfDir is the default torcx config directory
 	DefaultConfDir = "/etc/torcx/"
-	// VendorStorePath is the vendor store path
-	VendorStorePath = VENDOR_DIR + "/store/"
+
+	// VendorStoreDir is the vendor store path
+	VendorStoreDir = VendorDir + "store/"
+	// VendorProfilesDir is the vendor profiles path
+	VendorProfilesDir = VendorDir + "profiles/"
+
+	// OemStoreDir is the vendor store path
+	OemStoreDir = OemDir + "store/"
+	// OemProfilesDir is the vendor profiles path
+	OemProfilesDir = OemDir + "profiles/"
 
 	// defaultCfgPath is the default path for common torcx config
-	defaultCfgPath = "/etc/torcx/config.json"
+	defaultCfgPath = DefaultConfDir + "config.json"
 )
 
 // RunUnpackDir is the directory where root filesystems are unpacked.
@@ -46,7 +54,8 @@ func (cc *CommonConfig) RunBinDir() string {
 // ProfileDirs are the list of directories where we look for profiles.
 func (cc *CommonConfig) ProfileDirs() []string {
 	return []string{
-		filepath.Join(VENDOR_DIR, "profiles"),
+		VendorProfilesDir,
+		OemProfilesDir,
 		cc.UserProfileDir(),
 	}
 }
