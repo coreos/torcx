@@ -32,7 +32,9 @@ var (
 )
 
 func init() {
-	cmdImage.AddCommand(cmdImageFetch)
+	if hasExpFeature("FETCH") {
+		cmdImage.AddCommand(cmdImageFetch)
+	}
 }
 
 func runImageFetch(cmd *cobra.Command, args []string) error {
