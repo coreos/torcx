@@ -15,7 +15,9 @@
 package cli
 
 import (
+	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/pkg/errors"
@@ -73,4 +75,12 @@ func fillCommonRuntime() (*torcx.CommonConfig, error) {
 	}).Debug("common configuration parsed")
 
 	return &commonCfg, nil
+}
+
+// hasExpFeature checks if an experimental feature is enabled
+// via its corresponding `TORCX_EXP_<featureName>` env flag.
+func hasExpFeature(featureName string) bool {
+	featureBase := "TORCX_EXP_"
+	feat := featureBase + strings.ToUpper(featureName)
+	return os.Getenv(feat) != ""
 }
