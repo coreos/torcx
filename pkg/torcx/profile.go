@@ -263,11 +263,16 @@ func mergeProfiles(applyCfg *ApplyConfig) (Images, error) {
 		}
 
 	}
+	// Then we check whether we should append an upper profile
+	if applyCfg.UpperProfile != "" {
+		resProfiles = append(resProfiles, applyCfg.UpperProfile)
+	}
+
 	// Then we do a stable merge of images from all profiles (in-order)
-	for _, lp := range append(resProfiles, applyCfg.UpperProfile) {
+	for _, lp := range resProfiles {
 		profilePath, ok := localProfiles[lp]
 		if !ok || profilePath == "" {
-			return Images{}, errors.Wrapf(err, "profile %q not found", lp)
+			return Images{}, errors.Errorf("profile %q not found", lp)
 		}
 		fp, err := os.Open(profilePath)
 		if err != nil {
