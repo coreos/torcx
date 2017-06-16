@@ -15,8 +15,12 @@
 package ftests
 
 import (
+	"encoding/json"
+	"os"
 	"os/exec"
 	"testing"
+
+	"github.com/coreos/torcx/pkg/torcx"
 )
 
 func TestGeneratorEmpty(t *testing.T) {
@@ -32,5 +36,48 @@ func TestGeneratorEmpty(t *testing.T) {
 	bytes, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Error(string(bytes))
+	}
+}
+
+func TestGeneratorNoNextprofile(t *testing.T) {
+	if !IsInContainer() {
+		cfg := RktConfig{
+			imageName: VendorImage,
+		}
+		RunTestInContainer(t, cfg)
+		return
+	}
+
+	cmd := exec.Command("torcx-generator")
+	bytes, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Error(string(bytes))
+	}
+
+	var profManifest torcx.ProfileManifestV0
+	fp, err := os.Open("/run/torcx/profile.json")
+	if err != nil {
+		t.Error(err)
+	}
+
+	err = json.NewDecoder(fp).Decode(&profManifest)
+	if err != nil {
+		t.Error(err)
+	}
+
+	imgLen := len(profManifest.Value.Images)
+	if imgLen != 1 {
+		t.Errorf("Expected %d images, got %d", 1, imgLen)
+	}
+
+	expName := "empty_vendor"
+	expRef := "com.coreos.cl"
+	imgName := profManifest.Value.Images[0].Name
+	imgRef := profManifest.Value.Images[0].Reference
+	if imgName != expName {
+		t.Errorf("Expected image name %q, got %q", expName, imgName)
+	}
+	if imgRef != expRef {
+		t.Errorf("Expected image reference %q, got %q", expRef, imgRef)
 	}
 }
