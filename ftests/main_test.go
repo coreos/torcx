@@ -23,11 +23,16 @@ import (
 )
 
 const (
-	EmptyImage = "github.com/coreos/torcx/ftests/empty"
+	EmptyImage  = "github.com/coreos/torcx/ftests/empty"
+	VendorImage = "github.com/coreos/torcx/ftests/vendor"
 )
 
 func init() {
-	LocalImages = append(LocalImages, "fixtures/empty.aci")
+	LocalImages = append(LocalImages,
+		[]string{
+			"fixtures/empty.aci",
+			"fixtures/vendor.aci",
+		}...)
 }
 
 func TestMain(m *testing.M) {
