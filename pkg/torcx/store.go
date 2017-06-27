@@ -16,6 +16,7 @@ package torcx
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -38,11 +39,8 @@ func NewStoreCache(paths []string) (StoreCache, error) {
 		Images: map[Image]Archive{},
 	}
 
-	walkFn := func(inPath string, inInfo os.FileInfo, inErr error) error {
-		if inErr != nil {
-			return nil
-		}
-		path := filepath.Clean(inPath)
+	walkFn := func(dir string, inInfo os.FileInfo) error {
+		path := filepath.Clean(filepath.Join(dir, inInfo.Name()))
 		name := filepath.Base(path)
 
 		// Ensure a symlink points to a regular file
@@ -77,12 +75,13 @@ func NewStoreCache(paths []string) (StoreCache, error) {
 
 		// The first archive to define a reference always wins,
 		// warn on collision
-		if _, ok := sc.Images[image]; ok {
+		if ar, ok := sc.Images[image]; ok {
 			logrus.WithFields(logrus.Fields{
 				"name":      image.Name,
 				"reference": image.Reference,
-				"path":      path,
-			}).Warn("Duplicate name + reference ignored!")
+				"original":  ar.Filepath,
+				"duplicate": path,
+			}).Warn("skipped duplicate image")
 		} else {
 			logrus.WithFields(logrus.Fields{
 				"name":      image.Name,
@@ -96,8 +95,18 @@ func NewStoreCache(paths []string) (StoreCache, error) {
 		return nil
 	}
 
-	for _, root := range paths {
-		_ = filepath.Walk(root, walkFn)
+	for _, dir := range paths {
+		files, err := ioutil.ReadDir(dir)
+		if err != nil {
+			logrus.WithFields(logrus.Fields{
+				"path": dir,
+				"err":  err,
+			}).Info("store skipped")
+			continue
+		}
+		for _, fi := range files {
+			_ = walkFn(dir, fi)
+		}
 	}
 
 	return sc, nil
