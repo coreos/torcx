@@ -22,6 +22,8 @@ const (
 	VendorDir = "/usr/share/torcx/"
 	// OemDir contains (mutable) assets provided by the oem.
 	OemDir = "/usr/share/oem/torcx/"
+	// OsReleasePath contains the current os-release version.
+	OsReleasePath = "/usr/share/coreos/os-release"
 	// DefaultTagRef is the default image reference looked up in archives.
 	DefaultTagRef = "com.coreos.cl"
 	// VendorProfileName is the default vendor profile used.
