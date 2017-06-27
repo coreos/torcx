@@ -29,10 +29,12 @@ var (
 		Short: "Locally fetch a remote torcx image",
 		RunE:  runImageFetch,
 	}
+	flagTargetVersionID string
 )
 
 func init() {
 	if hasExpFeature("FETCH") {
+		cmdImageFetch.Flags().StringVarP(&flagTargetVersionID, "os-release", "n", "", "target OS release version")
 		cmdImage.AddCommand(cmdImageFetch)
 	}
 }
@@ -50,7 +52,7 @@ func runImageFetch(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "common configuration failed")
 	}
 
-	userStorePath := commonCfg.UserStorePath()
+	userStorePath := commonCfg.UserStorePath(flagTargetVersionID)
 	err = os.MkdirAll(userStorePath, 0755)
 	if err != nil {
 		return err
