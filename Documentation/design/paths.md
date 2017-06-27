@@ -19,7 +19,9 @@ Derived from configurables (shown with defaults):
 * NextProfile: ConfDir + `next-profile` (`/etc/torcx/next-profile`)
 * StoreDir:
   * (vendor) VendorDir + `store/` (`/usr/share/torcx/store/`)
+  * (versioned-oem) OemDir + `store/` + CurOSVer (`/usr/share/oem/torcx/store/<CurOSVer>/`)
   * (oem) OemDir + `store/` (`/usr/share/oem/torcx/store`)
+  * (versioned-user) BaseDir + `store/` + CurOSVer (`/var/lib/torcx/store/<CurOSVer>/`)
   * (user) BaseDir + `store/` (`/var/lib/torcx/store/`)
   * (runtime) `$TORCX_STOREPATH`
 * AuthDir: 
