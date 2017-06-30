@@ -36,9 +36,23 @@ func fillCommonRuntime() (*torcx.CommonConfig, error) {
 		ConfDir: torcx.DefaultConfDir,
 		StorePaths: []string{
 			torcx.VendorStoreDir,
-			torcx.OemStoreDir,
 		},
 	}
+
+	// Determine OS release ID
+	OsRelease, err := torcx.CurrentOsVersionID(torcx.OsReleasePath)
+	if err != nil {
+		OsRelease = ""
+		logrus.WithFields(logrus.Fields{
+			"path": torcx.OsReleasePath,
+		}).Warn("unable to detect OS version-id")
+	}
+
+	// Add OEM store (versioned first)
+	if OsRelease != "" {
+		commonCfg.StorePaths = append(commonCfg.StorePaths, filepath.Join(torcx.OemStoreDir, OsRelease))
+	}
+	commonCfg.StorePaths = append(commonCfg.StorePaths, torcx.OemStoreDir)
 
 	// Read common config from config file, if present
 	cfgPath := torcx.RuntimeConfigPath()
@@ -57,7 +71,10 @@ func fillCommonRuntime() (*torcx.CommonConfig, error) {
 		commonCfg.ConfDir = confdir
 	}
 
-	// Add user and runtime store paths
+	// Add user and runtime store paths (versioned first)
+	if OsRelease != "" {
+		commonCfg.StorePaths = append(commonCfg.StorePaths, filepath.Join(commonCfg.BaseDir, "store", OsRelease))
+	}
 	commonCfg.StorePaths = append(commonCfg.StorePaths, filepath.Join(commonCfg.BaseDir, "store"))
 	extraStorePaths := viper.GetStringSlice("storepath")
 	if extraStorePaths != nil {

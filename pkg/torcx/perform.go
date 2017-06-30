@@ -20,6 +20,7 @@ import (
 	"compress/gzip"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -28,6 +29,11 @@ import (
 	"github.com/Sirupsen/logrus"
 	pkgtar "github.com/coreos/torcx/pkg/tar"
 	"github.com/pkg/errors"
+)
+
+var (
+	// ErrUnknownOSVersionID is the error returned on generic os-release parsing errors
+	ErrUnknownOSVersionID = errors.New(`unable to parse "VERSION_ID" from os-release`)
 )
 
 // ApplyProfile is called at boot-time to apply the configured profile
@@ -313,4 +319,48 @@ func unpackTgz(applyCfg *ApplyConfig, tgzPath, imageName string) (string, error)
 	}
 
 	return topDir, nil
+}
+
+// CurrentOsVersionID parses an os-release file to extract the VERSION_ID.
+//
+// For more details about the expect format of the os-release file, see
+// https://www.freedesktop.org/software/systemd/man/os-release.html
+func CurrentOsVersionID(path string) (string, error) {
+	if path == "" {
+		path = OsReleasePath
+	}
+	fp, err := os.Open(path)
+	if err != nil {
+		return "", errors.Wrapf(err, "failed to open %q", path)
+	}
+	defer fp.Close()
+	return parseOsVersionID(fp)
+}
+
+// parseOsVersionID is the parser for os-release.
+func parseOsVersionID(rd io.Reader) (string, error) {
+	ver := ""
+
+	sc := bufio.NewScanner(rd)
+	for sc.Scan() {
+		line := sc.Text()
+		if line == "" {
+			continue
+		}
+		parts := strings.SplitN(line, "=", 2)
+		if len(parts) != 2 {
+			continue
+		}
+		if parts[0] == "VERSION_ID" {
+			ver = parts[1]
+			break
+		}
+	}
+	if sc.Err() != nil {
+		return "", errors.Wrap(sc.Err(), "failed to parse os-release file")
+	}
+	if ver == "" {
+		return "", ErrUnknownOSVersionID
+	}
+	return ver, nil
 }
