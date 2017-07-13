@@ -75,11 +75,6 @@ func (cc *CommonConfig) UserStorePath(version string) string {
 	return storePath
 }
 
-// AuthDir will have docker trust roots. It is currently unused.
-func (cc *CommonConfig) AuthDir() string {
-	return filepath.Join(cc.ConfDir, "auth.d")
-}
-
 // UserProfileDir is where user profiles are written.
 func (cc *CommonConfig) UserProfileDir() string {
 	return filepath.Join(cc.ConfDir, "profiles")

@@ -12,15 +12,3 @@ import:
   version: 0.11.4
   subpackages:
   - hooks/syslog
-- package: github.com/opencontainers/image-spec
-  version: 1.0.0-rc4
-- package: github.com/containers/image
-  version: cb1908f14e99f5f26bf30d8786bbae71bbd4bd4a
-  subpackages:
-  - image/copy
-  - image/docker
-  - image/docker/reference
-  - image/oci/layout
-  - image/signature
-- package: github.com/squeed/image-tools/image
-  version: back-to-rc4

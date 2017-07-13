@@ -65,7 +65,7 @@ func runImageList(cmd *cobra.Command, args []string) error {
 		}
 		imgList = append(imgList, imageEntry{arch})
 
-		// TODO: fetch metadata
+		// TODO(caseyc): inspect xattr metadata
 	}
 
 	imageListOut := ImageList{

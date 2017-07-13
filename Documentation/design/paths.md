@@ -24,9 +24,6 @@ Derived from configurables (shown with defaults):
   * (versioned-user) BaseDir + `store/` + CurOSVer (`/var/lib/torcx/store/<CurOSVer>/`)
   * (user) BaseDir + `store/` (`/var/lib/torcx/store/`)
   * (runtime) `$TORCX_STOREPATH`
-* AuthDir: 
-  * (vendor) VendorDir + `auth.d/` (`/usr/share/torcx/auth.d/`)
-  * (user) ConfDir + `auth.d/` (`/etc/torcx/auth.d/`)
 * ProfileDir:
   * (vendor) VendorDir + `profiles/` (`/usr/share/torcx/profiles/`)
   * (oem) OemDir + `profiles/` (`/usr/share/oem/torcx/profiles/`)

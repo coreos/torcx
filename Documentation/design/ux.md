@@ -65,12 +65,6 @@ exist in the stores. An apply-able profile will have an exit code of 0.
 ### Bundle commands
 
 ```
-torcx image fetch NAME[:TAG|@DIGEST]
-```
-
-`fetch` fetches an image into the user store.
-
-```
 torcx image list [NAME]
 ```
 
