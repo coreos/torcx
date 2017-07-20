@@ -1,66 +1,10 @@
-hash: d33e1b83491a8acbd6f2a905450dc4df811970d5e4ac9b30f8879fd4b639639b
-updated: 2017-05-08T13:28:05.648718954Z
+hash: 798472afa20b5836441df66808269c328ab98c22234944c0531474545240a468
+updated: 2017-07-19T09:30:03.911813065Z
 imports:
-- name: github.com/containers/image
-  version: cb1908f14e99f5f26bf30d8786bbae71bbd4bd4a
-  subpackages:
-  - copy
-  - directory/explicitfilepath
-  - docker
-  - docker/policyconfiguration
-  - docker/reference
-  - image
-  - image/copy
-  - image/docker
-  - image/docker/reference
-  - image/oci/layout
-  - image/signature
-  - manifest
-  - oci/layout
-  - pkg/compression
-  - signature
-  - transports
-  - types
-  - version
-- name: github.com/containers/storage
-  version: d10d8680af74070b362637408a7fe28c4b1f1eff
-  subpackages:
-  - pkg/homedir
-- name: github.com/docker/distribution
-  version: ce936a85915a55418ea62dc32a0a1274f2740104
-  subpackages:
-  - context
-  - digestset
-  - reference
-  - registry/api/errcode
-  - registry/api/v2
-  - registry/client
-  - registry/client/auth/challenge
-  - registry/client/transport
-  - registry/storage/cache
-  - registry/storage/cache/memory
-  - uuid
-- name: github.com/docker/docker
-  version: afd7e2d2d5ba506205fcc6501d4479c7e2706f50
-  subpackages:
-  - api/types/strslice
-- name: github.com/docker/go-connections
-  version: e15c02316c12de00874640cd76311849de2aeed5
-  subpackages:
-  - sockets
-  - tlsconfig
-- name: github.com/docker/libtrust
-  version: aabc10ec26b754e797f9028f4589c5b7bd90dc20
 - name: github.com/fsnotify/fsnotify
   version: 4da3e2cfbabc9f751898f250b49f2439785783a1
-- name: github.com/ghodss/yaml
-  version: 0ca9ea5df5451ffdf184b4428c902747c2c11cd7
-- name: github.com/gorilla/context
-  version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
-- name: github.com/gorilla/mux
-  version: 4c1c3952b7d9d0a061a3fa7b36fd373ba0398ebc
 - name: github.com/hashicorp/hcl
-  version: a4b07c25de5ff55ad3b8936cea69a79a3d95a855
+  version: 392dba7d905ed5d04a5794ba89f558b27e2ba1ca
   subpackages:
   - hcl/ast
   - hcl/parser
@@ -73,35 +17,11 @@ imports:
 - name: github.com/inconshreveable/mousetrap
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/magiconair/properties
-  version: 51463bfca2576e06c62a8504b5c0f06d61312647
-- name: github.com/mattn/go-runewidth
-  version: 14207d285c6c197daabb5c9793d63e7af9ab2d50
-- name: github.com/Microsoft/go-winio
-  version: 13736c32520969a64987228c21c138a4cfdb3720
+  version: be5ece7dd465ab0765a9682137865547526d1dfb
 - name: github.com/mitchellh/mapstructure
-  version: cc8532a8e9a55ea36402aa21efdf403a60d34096
-- name: github.com/mtrmac/gpgme
-  version: b2432428689ca58c2b8e8dea9449d3295cf96fc9
-- name: github.com/opencontainers/go-digest
-  version: aa2ec055abd10d26d539eb630a92241b781ce4bc
-- name: github.com/opencontainers/image-spec
-  version: 86308139a22b005bfda7b2e49c02fade937b4180
-  subpackages:
-  - schema
-  - specs-go
-  - specs-go/v1
-- name: github.com/opencontainers/runc
-  version: 75f8da7c889acc4509a0cf6f0d3a8f9584778375
-  subpackages:
-  - libcontainer/user
-- name: github.com/opencontainers/runtime-spec
-  version: 339eba52400dde8732b03e32624607a4517a556c
-  subpackages:
-  - specs-go
-- name: github.com/pelletier/go-buffruneio
-  version: c37440a7cf42ac63b919c752ca73a85067e05992
+  version: d0303fe809921458f417bcf828397a65db30a7e4
 - name: github.com/pelletier/go-toml
-  version: 23f644976aa7c724adf4aec911dadf4af17840ab
+  version: 69d355db5304c0f7f809a2edc054553e7142f016
 - name: github.com/pkg/errors
   version: 645ef00459ed84a119197bfb8d8205042c6df63d
 - name: github.com/Sirupsen/logrus
@@ -117,52 +37,20 @@ imports:
 - name: github.com/spf13/cobra
   version: 16c014f1a19d865b765b420e74508f80eb831ada
 - name: github.com/spf13/jwalterweatherman
-  version: fa7ca7e836cf3a8bb4ebf799f472c12d7e903d66
+  version: 0efa5202c04663c757d84f90f5219c1250baf94f
 - name: github.com/spf13/pflag
   version: 9ff6c6923cfffbcd502984b8e0c80539a94968b7
 - name: github.com/spf13/viper
   version: 7538d73b4eb9511d85a9f1dfef202eeb8ac260f4
-- name: github.com/squeed/image-tools
-  version: 1362349744a6bd686869b56766765c3234278b6c
-  subpackages:
-  - image
-- name: github.com/xeipuuv/gojsonpointer
-  version: 6fe8760cad3569743d51ddbb243b26f8456742dc
-- name: github.com/xeipuuv/gojsonreference
-  version: e02fc20de94c78484cd5ffb007f8af96be030a45
-- name: github.com/xeipuuv/gojsonschema
-  version: a55c211c418162597a32c74c7230f81adb5ad616
-- name: go4.org
-  version: 16ace784e4b16df1d51c3435223b1d602cd43bfa
-  subpackages:
-  - errorutil
-- name: golang.org/x/crypto
-  version: 5a033cc77e57eca05bdb50522851d29e03569cbe
-  subpackages:
-  - cast5
-  - openpgp
-  - openpgp/armor
-  - openpgp/elgamal
-  - openpgp/errors
-  - openpgp/packet
-  - openpgp/s2k
-- name: golang.org/x/net
-  version: feeb485667d1fdabe727840fe00adc22431bc86e
-  subpackages:
-  - context
-  - proxy
 - name: golang.org/x/sys
-  version: 9ccfe848b9db8435a24c424abbc07a921adf1df5
+  version: 442cd600860ce722f6615730eb008a37a87b13ee
   subpackages:
   - unix
-  - windows
 - name: golang.org/x/text
-  version: 470f45bf29f4147d6fbd7dfd0a02a848e49f5bf4
+  version: 2910a502d2bf9e43193af9d68ca516529614eed3
   subpackages:
   - transform
   - unicode/norm
-- name: gopkg.in/cheggaaa/pb.v1
-  version: f6ccf2184de4dd34495277e38dc19b6e7fbe0ea2
 - name: gopkg.in/yaml.v2
-  version: cd8b52f8269e0feb286dfeef29f8fe4d5b397e0b
+  version: 53feefa2559fb8dfa8d81baad31be332c97d6c77
 testImports: []

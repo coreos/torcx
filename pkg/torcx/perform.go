@@ -248,7 +248,6 @@ func setupPaths(applyCfg *ApplyConfig) error {
 		return errors.New("missing apply configuration")
 	}
 
-	// TODO(squeed): implement fetch-auth and add cc.AuthDir() at the bottom
 	paths := []string{
 		// RunDir is the first path created, signaling that torcx run
 		applyCfg.RunDir,
