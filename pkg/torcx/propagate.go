@@ -16,6 +16,7 @@ package torcx
 
 import (
 	"encoding/json"
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -242,7 +243,20 @@ func symlinkUnitAsset(applyCfg *ApplyConfig, unitsDir string, asset string) erro
 				// Do not overwrite previous assets
 				return nil
 			}
-			return os.Symlink(path, hostPath)
+			fpDst, err := os.Create(hostPath)
+			if err != nil {
+				return errors.Wrapf(err, "error creating %q", hostPath)
+			}
+			defer fpDst.Close()
+			fpSrc, err := os.Open(path)
+			if err != nil {
+				return errors.Wrapf(err, "error opening %q", path)
+			}
+			defer fpSrc.Close()
+			if _, err := io.Copy(fpDst, fpSrc); err != nil {
+				return errors.Wrapf(err, "error copying to %q", hostPath)
+			}
+			return nil
 		}
 		return nil
 	}
