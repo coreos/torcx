@@ -31,10 +31,12 @@ var (
 If "INAME" is specified, only list the references for that image name.`,
 		RunE: runImageList,
 	}
+	flagImageListOsVersion string
 )
 
 func init() {
 	cmdImage.AddCommand(cmdImageList)
+	cmdImageList.Flags().StringVarP(&flagImageListOsVersion, "os-release", "n", "", "override OS version")
 }
 
 func runImageList(cmd *cobra.Command, args []string) error {
@@ -48,7 +50,8 @@ func runImageList(cmd *cobra.Command, args []string) error {
 		imageName = args[0]
 	}
 
-	commonCfg, err := fillCommonRuntime()
+	commonCfg, err := fillCommonRuntime(flagImageListOsVersion)
+
 	if err != nil {
 		return errors.Wrap(err, "common configuration failed")
 	}
