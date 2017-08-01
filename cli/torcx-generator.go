@@ -42,7 +42,7 @@ func runGenerator(cmd *cobra.Command, args []string) error {
 	// TODO(lucab): provide config via persistent JSON file and /proc/cmdline
 	logrus.SetLevel(logrus.DebugLevel)
 
-	commonCfg, err := fillCommonRuntime()
+	commonCfg, err := fillCommonRuntime("")
 	if err != nil {
 		return errors.Wrap(err, "common configuration failed")
 	}

@@ -28,7 +28,9 @@ import (
 
 // fillCommonRuntime initializes common configuration settings, from several
 // input sources (in order: defaults, file config, environment overrides).
-func fillCommonRuntime() (*torcx.CommonConfig, error) {
+func fillCommonRuntime(OsRelease string) (*torcx.CommonConfig, error) {
+	var err error
+
 	// Default common config settings
 	commonCfg := torcx.CommonConfig{
 		BaseDir: torcx.DefaultBaseDir,
@@ -40,17 +42,18 @@ func fillCommonRuntime() (*torcx.CommonConfig, error) {
 	}
 
 	// Determine OS release ID
-	OsRelease, err := torcx.CurrentOsVersionID(torcx.OsReleasePath)
-	if err != nil {
-		OsRelease = ""
-		logrus.WithFields(logrus.Fields{
-			"path": torcx.OsReleasePath,
-		}).Warn("unable to detect OS version-id")
+	if OsRelease == "" {
+		OsRelease, err = torcx.CurrentOsVersionID(torcx.OsReleasePath)
+		if err != nil {
+			logrus.WithFields(logrus.Fields{
+				"path": torcx.OsReleasePath,
+			}).Warn("unable to detect OS version-id")
+		}
 	}
 
 	// Add OEM store (versioned first)
 	if OsRelease != "" {
-		commonCfg.StorePaths = append(commonCfg.StorePaths, filepath.Join(torcx.OemStoreDir, OsRelease))
+		commonCfg.StorePaths = append(commonCfg.StorePaths, filepath.Join(torcx.OemStoreDir, OsRelease)+"/")
 	}
 	commonCfg.StorePaths = append(commonCfg.StorePaths, torcx.OemStoreDir)
 
@@ -73,9 +76,9 @@ func fillCommonRuntime() (*torcx.CommonConfig, error) {
 
 	// Add user and runtime store paths (versioned first)
 	if OsRelease != "" {
-		commonCfg.StorePaths = append(commonCfg.StorePaths, filepath.Join(commonCfg.BaseDir, "store", OsRelease))
+		commonCfg.StorePaths = append(commonCfg.StorePaths, filepath.Join(commonCfg.BaseDir, "store", OsRelease, "")+"/")
 	}
-	commonCfg.StorePaths = append(commonCfg.StorePaths, filepath.Join(commonCfg.BaseDir, "store"))
+	commonCfg.StorePaths = append(commonCfg.StorePaths, filepath.Join(commonCfg.BaseDir, "store")+"/")
 	extraStorePaths := viper.GetStringSlice("storepath")
 	if extraStorePaths != nil {
 		commonCfg.StorePaths = append(commonCfg.StorePaths, extraStorePaths...)

@@ -32,20 +32,22 @@ var (
 		RunE:  runProfileCheck,
 	}
 
-	flagProfileCheckName string
-	flagProfileCheckPath string
+	flagProfileCheckName      string
+	flagProfileCheckPath      string
+	flagProfileCheckOsVersion string
 )
 
 func init() {
 	cmdProfile.AddCommand(cmdProfileCheck)
 	cmdProfileCheck.Flags().StringVar(&flagProfileCheckName, "name", "", "profile name to check")
 	cmdProfileCheck.Flags().StringVar(&flagProfileCheckPath, "file", "", "profile file to check")
+	cmdProfileCheck.Flags().StringVarP(&flagProfileCheckOsVersion, "os-release", "n", "", "override OS version")
 }
 
 func runProfileCheck(cmd *cobra.Command, args []string) error {
 	var err error
 
-	commonCfg, err := fillCommonRuntime()
+	commonCfg, err := fillCommonRuntime(flagProfileCheckOsVersion)
 	if err != nil {
 		return errors.Wrap(err, "common configuration failed")
 	}

@@ -16,6 +16,7 @@ package cli
 
 import (
 	"os"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -41,7 +42,7 @@ func TestFillCommon(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Logf("Testing %q", tt.desc)
-		cfg, err := fillCommonRuntime()
+		cfg, err := fillCommonRuntime("")
 		if tt.isErr {
 			if err == nil {
 				t.Fatal("expected error, got nil")
@@ -75,6 +76,26 @@ func TestFillCommon(t *testing.T) {
 		if !foundVendor {
 			t.Fatalf("vendor store %q not found in %#v", vendorStore, cfg.StorePaths)
 		}
+	}
+}
+
+func TestStorePaths(t *testing.T) {
+	//
+	cfg, err := fillCommonRuntime("999.9")
+	if err != nil {
+		t.Fatalf("expected no error, got %#v", err)
+	}
+
+	expectedStorePaths := []string{
+		"/usr/share/torcx/store/",
+		"/usr/share/oem/torcx/store/999.9/",
+		"/usr/share/oem/torcx/store/",
+		"/var/lib/torcx/store/999.9/",
+		"/var/lib/torcx/store/",
+	}
+
+	if !reflect.DeepEqual(cfg.StorePaths, expectedStorePaths) {
+		t.Fatalf("wrong StorePaths, expected %q, got %q", expectedStorePaths, cfg.StorePaths)
 	}
 }
 

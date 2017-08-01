@@ -45,7 +45,7 @@ func init() {
 }
 
 func runProfileUse(cmd *cobra.Command, args []string) error {
-	commonCfg, err := fillCommonRuntime()
+	commonCfg, err := fillCommonRuntime("")
 	if err != nil {
 		return errors.Wrap(err, "common configuration failed")
 	}

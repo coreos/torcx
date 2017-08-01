@@ -39,7 +39,7 @@ func init() {
 func runProfileList(cmd *cobra.Command, args []string) error {
 	var err error
 
-	commonCfg, err := fillCommonRuntime()
+	commonCfg, err := fillCommonRuntime("")
 	if err != nil {
 		return errors.Wrap(err, "common configuration failed")
 	}
