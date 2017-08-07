@@ -61,12 +61,17 @@ func runImageList(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	imgList := make([]imageEntry, 0, len(storeCache.Images))
+	imgList := make([]ImageEntry, 0, len(storeCache.Images))
 	for _, arch := range storeCache.Images {
 		if imageName != "" && arch.Name != imageName {
 			continue
 		}
-		imgList = append(imgList, imageEntry{arch})
+		entry := ImageEntry{
+			Name:      arch.Name,
+			Reference: arch.Reference,
+			Filepath:  arch.Filepath,
+		}
+		imgList = append(imgList, entry)
 
 		// TODO(caseyc): inspect xattr metadata
 	}
