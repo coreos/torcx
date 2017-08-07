@@ -14,8 +14,6 @@
 
 package cli
 
-import "github.com/coreos/torcx/pkg/torcx"
-
 const (
 	// TorcxProfileListV0K is the JSON kind identifier for a profile list
 	TorcxProfileListV0K = "torcx-profile-list-v0"
@@ -40,12 +38,15 @@ const (
 	TorcxImageListV0K = "torcx-image-list-v0"
 )
 
+// ImageList is the JSON container for profile list output
 type ImageList struct {
 	Kind  string       `json:"kind"`
-	Value []imageEntry `json:"value"`
+	Value []ImageEntry `json:"value"`
 }
 
-type imageEntry struct {
-	torcx.Archive
-	// TODO: metadata
+// ImageEntry represents an entry in an image list
+type ImageEntry struct {
+	Name      string `json:"name"`
+	Reference string `json:"reference"`
+	Filepath  string `json:"filepath"`
 }

@@ -185,12 +185,12 @@ func TestImageListUser(t *testing.T) {
 			t.Log(string(b))
 			t.Fatalf("Expected %d images, got %d", 1, imgLen)
 		}
-		checkImage(t, imgList.Value[0].Archive, expName, expRef, tt.imgPath)
+		checkImage(t, imgList.Value[0], expName, expRef, tt.imgPath)
 	}
 
 }
 
-func checkImage(t *testing.T, entry torcx.Archive, expName, expRef, expPath string) {
+func checkImage(t *testing.T, entry cli.ImageEntry, expName, expRef, expPath string) {
 	imgName := entry.Name
 	imgRef := entry.Reference
 	imgPath := entry.Filepath
