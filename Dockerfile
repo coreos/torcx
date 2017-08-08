@@ -1,12 +1,6 @@
-FROM debian:stretch-slim
+FROM scratch
 
-MAINTAINER CoreOS Inc. <coreos-dev@googlegroups.com>
+LABEL org.label-schema.vendor="CoreOS Inc. <coreos-dev@googlegroups.com>" \
+      org.label-schema.vcs-url="https://github.com/coreos/torcx"
 
-ADD bin/amd64/torcx /usr/sbin/torcx
-
-RUN  mkdir -p /run/metadata /var/lib/torcx /etc/torcx && \
-     mkdir -p /etc/containers && echo '{"default": [{"type": "insecureAcceptAnything"}]}' > /etc/containers/policy.json
-
-
-USER root:root
-CMD /bin/bash
+COPY bin/amd64/torcx /usr/sbin/torcx
