@@ -112,12 +112,10 @@ func NewStoreCache(paths []string) (StoreCache, error) {
 	return sc, nil
 }
 
-// LookupReference looks for a reference in the store, returning the path
+// ArchiveFor looks for a reference in the store, returning the path
 // to the archive containing it
 func (sc *StoreCache) ArchiveFor(im Image) (Archive, error) {
-
-	arch, ok := sc.Images[im]
-	if ok {
+	if arch, ok := sc.Images[im]; ok {
 		return arch, nil
 	}
 
