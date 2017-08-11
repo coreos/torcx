@@ -56,7 +56,15 @@ func runImageList(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "common configuration failed")
 	}
 
-	storeCache, err := torcx.NewStoreCache(commonCfg.StorePaths)
+	storePaths := commonCfg.StorePaths
+	if flagImageListOsVersion != "" {
+		osRelease, err := torcx.CurrentOsVersionID(torcx.OsReleasePath)
+		if err != nil {
+			osRelease = ""
+		}
+		storePaths = torcx.FilterStoreVersions(commonCfg.StorePaths, osRelease, flagImageListOsVersion)
+	}
+	storeCache, err := torcx.NewStoreCache(storePaths)
 	if err != nil {
 		return err
 	}
