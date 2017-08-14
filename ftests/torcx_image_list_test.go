@@ -129,17 +129,19 @@ func TestImageListUser(t *testing.T) {
 	// These just re-use the vendor package embedded in the ACI,
 	// moving/symlinking it around across stores.
 	tests := []struct {
-		desc    string
-		store   string
-		oldPath string
-		imgPath string
-		doMove  bool
+		desc          string
+		store         string
+		oldPath       string
+		imgPath       string
+		versionFilter string
+		doMove        bool
 	}{
 		{
 			"user store",
 			userStore,
 			fmt.Sprintf("/usr/share/torcx/store/%s:%s.torcx.tgz", expName, expRef),
 			fmt.Sprintf("%s/%s:%s.torcx.tgz", userStore, expName, expRef),
+			"",
 			true,
 		},
 		{
@@ -147,6 +149,7 @@ func TestImageListUser(t *testing.T) {
 			filepath.Join(userStore, OSVersion),
 			fmt.Sprintf("%s/%s:%s.torcx.tgz", userStore, expName, expRef),
 			fmt.Sprintf("%s/%s/%s:%s.torcx.tgz", userStore, OSVersion, expName, expRef),
+			OSVersion,
 			false, // Just symlink, and check for proper shadowing
 		},
 	}
@@ -166,7 +169,11 @@ func TestImageListUser(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		cmd := exec.Command("torcx", "image", "list", "-v=error")
+		args := []string{"image", "list", "-v=error"}
+		if tt.versionFilter != "" {
+			args = append(args, []string{"-n", tt.versionFilter}...)
+		}
+		cmd := exec.Command("torcx", args...)
 		b, err := cmd.CombinedOutput()
 		if err != nil {
 			t.Log(string(b))
@@ -186,6 +193,101 @@ func TestImageListUser(t *testing.T) {
 			t.Fatalf("Expected %d images, got %d", 1, imgLen)
 		}
 		checkImage(t, imgList.Value[0], expName, expRef, tt.imgPath)
+	}
+
+}
+
+func TestImageListVersionFilter(t *testing.T) {
+	if !IsInContainer() {
+		cfg := RktConfig{
+			imageName: VendorImage,
+		}
+		RunTestInContainer(t, cfg)
+		return
+	}
+
+	OSVersion := "1.2.3"
+	OSEntry := bytes.NewBufferString(fmt.Sprintf("VERSION_ID=%s\n", OSVersion))
+	if err := os.MkdirAll(filepath.Dir(torcx.OsReleasePath), 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := ioutil.WriteFile(torcx.OsReleasePath, OSEntry.Bytes(), 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	origName := "empty_vendor"
+	origRef := "com.coreos.cl"
+	origPath := fmt.Sprintf("/usr/share/torcx/store/%s:%s.torcx.tgz", origName, origRef)
+	userStore := "/var/lib/torcx/store"
+	versionedStore := filepath.Join(userStore, OSVersion)
+	newName := "fake_empty"
+	versionedRef := "versioned"
+	unversionedRef := "unversioned"
+	unversionedPath := fmt.Sprintf("%s/%s:%s.torcx.tgz", userStore, newName, unversionedRef)
+	versionedPath := fmt.Sprintf("%s/%s:%s.torcx.tgz", versionedStore, newName, versionedRef)
+	err := os.MkdirAll(versionedStore, 0755)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = os.Symlink(origPath, versionedPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = os.Symlink(origPath, unversionedPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// These just re-use the vendor package embedded in the ACI,
+	// moving/symlinking it around across stores.
+	tests := []struct {
+		desc          string
+		versionFilter string
+		numImages     int
+	}{
+		{
+			"no version",
+			"",
+			3,
+		},
+		{
+			"matching version",
+			OSVersion,
+			3,
+		},
+		{
+			"non-matching version",
+			"bad.version",
+			1,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Logf("Testing %q", tt.desc)
+
+		args := []string{"image", "list", "-v=error"}
+		if tt.versionFilter != "" {
+			args = append(args, []string{"-n", tt.versionFilter}...)
+		}
+		cmd := exec.Command("torcx", args...)
+		b, err := cmd.CombinedOutput()
+		if err != nil {
+			t.Log(string(b))
+			t.Fatal(err)
+		}
+
+		var imgList cli.ImageList
+		err = json.NewDecoder(bytes.NewReader(b)).Decode(&imgList)
+		if err != nil {
+			t.Log(string(b))
+			t.Fatal(err)
+		}
+
+		imgLen := len(imgList.Value)
+		if imgLen != tt.numImages {
+			t.Log(string(b))
+			t.Fatalf("Expected %d images, got %d", tt.numImages, imgLen)
+		}
 	}
 
 }

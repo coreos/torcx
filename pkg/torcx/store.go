@@ -112,14 +112,33 @@ func NewStoreCache(paths []string) (StoreCache, error) {
 	return sc, nil
 }
 
-// LookupReference looks for a reference in the store, returning the path
+// ArchiveFor looks for a reference in the store, returning the path
 // to the archive containing it
 func (sc *StoreCache) ArchiveFor(im Image) (Archive, error) {
-
-	arch, ok := sc.Images[im]
-	if ok {
+	if arch, ok := sc.Images[im]; ok {
 		return arch, nil
 	}
 
 	return Archive{}, fmt.Errorf("image %s:%s not found", im.Name, im.Reference)
+}
+
+// FilterStoreVersions filters out unversioned store based on the match between the
+// currently detected OS version (`curVersion`) and the one to filter for (`filterVersion`)
+func FilterStoreVersions(paths []string, curVersion string, filterVersion string) []string {
+	if len(paths) <= 0 || filterVersion == "" {
+		return paths
+	}
+	if curVersion != "" && filterVersion == curVersion {
+		return paths
+	}
+
+	retPaths := make([]string, 0, len(paths))
+	for _, p := range paths {
+		// filter unversioned vendor store
+		if filepath.Clean(p) != filepath.Clean(VendorStoreDir) {
+			retPaths = append(retPaths, p)
+		}
+	}
+
+	return retPaths
 }
