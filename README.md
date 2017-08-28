@@ -15,11 +15,6 @@ torcx focuses on:
 * allowing users to pin specific software versions, in a seamless and system-wide way
 * supplying human- and machine-friendly interfaces to work with images and profiles
 
-# <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Achtung.svg/2000px-Achtung.svg.png" alt="WARNING" width="25" height="25"> Disclaimer <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Achtung.svg/2000px-Achtung.svg.png" alt="NOTICE" width="25" height="25">
-
-Torcx is currently in an experimental state. The API and CLI have no guarantees of stability, and the design is not yet finalized. Running torcx in production is not recommended.
-
-
 ## Getting started
 
 This project provides a very lightweight add-ons manager for otherwise immutable distributions.
