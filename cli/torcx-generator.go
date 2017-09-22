@@ -15,7 +15,11 @@
 package cli
 
 import (
+	"io/ioutil"
 	"log/syslog"
+	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/Sirupsen/logrus"
 	logrus_syslog "github.com/Sirupsen/logrus/hooks/syslog"
@@ -107,6 +111,14 @@ func lowerProfiles(commonCfg *torcx.CommonConfig) ([]string, error) {
 		return nil, err
 	}
 	for _, prof := range torcx.DefaultLowerProfiles {
+		// select alternate vendor profile based on Docker 1.12
+		// flag file
+		if prof == torcx.VendorProfileName {
+			if dockerProf := vendorProfileFromDockerFlag(commonCfg); dockerProf != "" {
+				prof = dockerProf
+			}
+		}
+
 		if path, ok := localProfiles[prof]; ok && path != "" {
 			lowerProfiles = append(lowerProfiles, prof)
 		} else {
@@ -116,4 +128,30 @@ func lowerProfiles(commonCfg *torcx.CommonConfig) ([]string, error) {
 		}
 	}
 	return lowerProfiles, nil
+}
+
+// vendorProfileFromDockerFlag returns the vendor profile name, if any,
+// implied by the contents of /etc/coreos/docker-1.12.
+func vendorProfileFromDockerFlag(commonCfg *torcx.CommonConfig) string {
+	flagPath := filepath.Join(filepath.Dir(filepath.Clean(commonCfg.ConfDir)), "coreos", "docker-1.12")
+	flagBytes, err := ioutil.ReadFile(flagPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			logrus.Infof("no vendor profile selected by %s", flagPath)
+		} else {
+			logrus.Errorf("reading %s: %s", flagPath, err)
+		}
+		return ""
+	}
+
+	flag := strings.TrimSpace(string(flagBytes))
+	switch flag {
+	case "yes", "no":
+		profile := "docker-1.12-" + flag
+		logrus.Infof("selecting vendor profile %q from %s", profile, flagPath)
+		return profile
+	default:
+		logrus.Warnf("unknown value %q in %s; ignoring", flag, flagPath)
+		return ""
+	}
 }
