@@ -23,8 +23,9 @@ import (
 )
 
 const (
-	EmptyImage  = "github.com/coreos/torcx/ftests/empty"
-	VendorImage = "github.com/coreos/torcx/ftests/vendor"
+	EmptyImage      = "github.com/coreos/torcx/ftests/empty"
+	VendorImage     = "github.com/coreos/torcx/ftests/vendor"
+	DockerFlagImage = "github.com/coreos/torcx/ftests/docker-flag"
 )
 
 func init() {
@@ -32,6 +33,7 @@ func init() {
 		[]string{
 			"fixtures/empty.aci",
 			"fixtures/vendor.aci",
+			"fixtures/docker-flag.aci",
 		}...)
 }
 
