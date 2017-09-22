@@ -95,6 +95,16 @@ func TestGeneratorDockerFlagOverride(t *testing.T) {
 	testDockerFlag(t, setup, "1.12")
 }
 
+func TestGeneratorDockerProfileMissing(t *testing.T) {
+	setup := func(t *testing.T) {
+		makeFile(dockerFlagPath, "yes")(t)
+		if err := os.Remove("/usr/share/torcx/profiles/docker-1.12-yes.json"); err != nil {
+			t.Fatal(err)
+		}
+	}
+	testDockerFlag(t, setup, "com.coreos.cl")
+}
+
 func makeFile(path, contents string) func(*testing.T) {
 	return func(t *testing.T) {
 		if err := os.MkdirAll(filepath.Dir(path), 0777); err != nil {

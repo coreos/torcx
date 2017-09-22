@@ -115,7 +115,11 @@ func lowerProfiles(commonCfg *torcx.CommonConfig) ([]string, error) {
 		// flag file
 		if prof == torcx.VendorProfileName {
 			if dockerProf := vendorProfileFromDockerFlag(commonCfg); dockerProf != "" {
-				prof = dockerProf
+				if _, ok := localProfiles[dockerProf]; ok {
+					prof = dockerProf
+				} else {
+					logrus.Errorf("vendor profile %q does not exist; using default", dockerProf)
+				}
 			}
 		}
 
