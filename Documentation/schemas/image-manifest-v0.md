@@ -82,4 +82,4 @@ Note: The list of optional assets types will likely grow in the future. This is 
 
 ## Example
 
-See [examples/image-manifest.json] for a sample.
+See [examples/image-manifest.json](../../examples/image-manifest.json) for a sample.
