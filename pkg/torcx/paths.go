@@ -41,7 +41,13 @@ const (
 	defaultCfgPath = DefaultConfDir + "config.json"
 )
 
-// RunUnpackDir is the directory where root filesystems are unpacked.
+// UnpackDir is the directory where root filesystems are unpacked
+func (cc *CommonConfig) UnpackDir() string {
+	return filepath.Join(cc.BaseDir, "unpack")
+}
+
+// RunUnpackDir is the directory where the set of unpacked root filesystems is
+// unpacked for runtime usage.
 func (cc *CommonConfig) RunUnpackDir() string {
 	return filepath.Join(cc.RunDir, "unpack")
 }

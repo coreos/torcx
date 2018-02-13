@@ -23,7 +23,7 @@ const (
 	SealRunProfilePath = "TORCX_PROFILE_PATH"
 	// SealBindir is the key label for seal bindir
 	SealBindir = "TORCX_BINDIR"
-	// SealUnpackdir is the key label for seal unpackdir
+	// SealUnpackdir is the key label for seal runtime unpackdir path
 	SealUnpackdir = "TORCX_UNPACKDIR"
 	// ProfileManifestV0K - profile manifest kind, v0
 	ProfileManifestV0K = "profile-manifest-v0"

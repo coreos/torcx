@@ -24,11 +24,11 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"syscall"
 
 	"github.com/Sirupsen/logrus"
 	pkgtar "github.com/coreos/torcx/pkg/tar"
 	"github.com/pkg/errors"
+	"golang.org/x/sys/unix"
 )
 
 var (
@@ -49,6 +49,10 @@ func ApplyProfile(applyCfg *ApplyConfig) error {
 		return errors.New("missing apply configuration")
 	}
 
+	err = cleanPaths(applyCfg)
+	if err != nil {
+		return errors.Wrap(err, "clean paths")
+	}
 	err = setupPaths(applyCfg)
 	if err != nil {
 		return errors.Wrap(err, "profile setup")
@@ -229,8 +233,8 @@ func SealSystemState(applyCfg *ApplyConfig) error {
 	}
 
 	// Remount the unpackdir RO
-	if err := syscall.Mount(applyCfg.RunUnpackDir(), applyCfg.RunUnpackDir(),
-		"", syscall.MS_REMOUNT|syscall.MS_RDONLY, ""); err != nil {
+	if err := unix.Mount(applyCfg.UnpackDir(), applyCfg.UnpackDir(),
+		"", unix.MS_REMOUNT|unix.MS_RDONLY, ""); err != nil {
 
 		return errors.Wrap(err, "failed to remount read-only")
 	}
@@ -240,6 +244,22 @@ func SealSystemState(applyCfg *ApplyConfig) error {
 		"content": content,
 	}).Debug("system state sealed")
 
+	return nil
+}
+
+func cleanPaths(applyCfg *ApplyConfig) error {
+	if applyCfg == nil {
+		return errors.New("missing apply configuration")
+	}
+
+	// TODO: we can safely leave the persistent unpackdir if we have a good way
+	// to uniquely identify it (e.g. the hash of its contents or such).
+	// For now, deal with extra disk churn; delete and recreate it even when not
+	// necessary.
+
+	if err := os.RemoveAll(applyCfg.UnpackDir()); err != nil && !os.IsNotExist(err) {
+		return errors.Wrap(err, "unable to remove previous unpackdir")
+	}
 	return nil
 }
 
@@ -254,6 +274,7 @@ func setupPaths(applyCfg *ApplyConfig) error {
 		applyCfg.BaseDir,
 		applyCfg.ConfDir,
 		applyCfg.RunBinDir(),
+		applyCfg.UnpackDir(),
 		applyCfg.RunUnpackDir(),
 		applyCfg.UserProfileDir(),
 	}
@@ -266,15 +287,17 @@ func setupPaths(applyCfg *ApplyConfig) error {
 		}
 	}
 
-	// Now, mount a tmpfs directory to the unpack directory.
-	// We need to do this because "/run" is typically marked "noexec".
-	if err := syscall.Mount("none", applyCfg.RunUnpackDir(), "tmpfs", 0, ""); err != nil {
-		return errors.Wrap(err, "failed to mount unpack dir")
-	}
-
-	// Default tmpfs permissions are 1777, which can trip up path auditing
-	if err := os.Chmod(applyCfg.RunUnpackDir(), 0755); err != nil {
-		return errors.Wrap(err, "failed to chmod unpack dir")
+	// Bind the UnpackDir over to the RunUnpackDir.
+	// This is done to provide a transient location for currently active images
+	// (the RunUnpackDir, typically a tmpfs which will vanish on reboot), while
+	// not actually storing data in the tmpfs (memory usage).
+	// This decoupling means that, in theory, multiple UnpackDirs could exist and
+	// then, at boot-time, be selected between by choosing which to bindmount.
+	// In addition, this is done for backwards compatibility; previously the
+	// 'UnpackDir' did not exist and the 'RunUnpackDir' was both the source of
+	// truth and store of data.
+	if err := unix.Mount(applyCfg.UnpackDir(), applyCfg.RunUnpackDir(), "", unix.MS_BIND|unix.MS_REC|unix.MS_SLAVE, ""); err != nil {
+		return errors.Wrap(err, "failed to bindmount unpackdir")
 	}
 
 	logrus.WithField("target", applyCfg.RunUnpackDir()).Debug("mounted tmpfs")
