@@ -24,11 +24,11 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"syscall"
 
 	"github.com/Sirupsen/logrus"
 	pkgtar "github.com/coreos/torcx/pkg/tar"
 	"github.com/pkg/errors"
+	"golang.org/x/sys/unix"
 )
 
 var (
@@ -49,6 +49,10 @@ func ApplyProfile(applyCfg *ApplyConfig) error {
 		return errors.New("missing apply configuration")
 	}
 
+	err = cleanPaths(applyCfg)
+	if err != nil {
+		return errors.Wrap(err, "clean paths")
+	}
 	err = setupPaths(applyCfg)
 	if err != nil {
 		return errors.Wrap(err, "profile setup")
@@ -218,7 +222,7 @@ func SealSystemState(applyCfg *ApplyConfig) error {
 		fmt.Sprintf("%s=%q", SealUpperProfile, applyCfg.UpperProfile),
 		fmt.Sprintf("%s=%q", SealRunProfilePath, applyCfg.RunProfile()),
 		fmt.Sprintf("%s=%q", SealBindir, applyCfg.RunBinDir()),
-		fmt.Sprintf("%s=%q", SealUnpackdir, applyCfg.RunUnpackDir()),
+		fmt.Sprintf("%s=%q", SealUnpackdir, applyCfg.UnpackDir()),
 	}
 
 	for _, line := range content {
@@ -228,18 +232,27 @@ func SealSystemState(applyCfg *ApplyConfig) error {
 		}
 	}
 
-	// Remount the unpackdir RO
-	if err := syscall.Mount(applyCfg.RunUnpackDir(), applyCfg.RunUnpackDir(),
-		"", syscall.MS_REMOUNT|syscall.MS_RDONLY, ""); err != nil {
-
-		return errors.Wrap(err, "failed to remount read-only")
-	}
-
 	logrus.WithFields(logrus.Fields{
 		"path":    SealPath,
 		"content": content,
 	}).Debug("system state sealed")
 
+	return nil
+}
+
+func cleanPaths(applyCfg *ApplyConfig) error {
+	if applyCfg == nil {
+		return errors.New("missing apply configuration")
+	}
+
+	// TODO: we can safely leave the persistent unpackdir if we have a good way
+	// to uniquely identify it (e.g. the hash of its contents or such).
+	// For now, deal with extra disk churn; delete and recreate it even when not
+	// necessary.
+
+	if err := os.RemoveAll(applyCfg.UnpackDir()); err != nil && !os.IsNotExist(err) {
+		return errors.Wrap(err, "unable to remove previous unpackdir")
+	}
 	return nil
 }
 
@@ -254,7 +267,8 @@ func setupPaths(applyCfg *ApplyConfig) error {
 		applyCfg.BaseDir,
 		applyCfg.ConfDir,
 		applyCfg.RunBinDir(),
-		applyCfg.RunUnpackDir(),
+		applyCfg.UnpackDir(),
+		applyCfg.InternalUnpackDir(),
 		applyCfg.UserProfileDir(),
 	}
 
@@ -266,18 +280,20 @@ func setupPaths(applyCfg *ApplyConfig) error {
 		}
 	}
 
-	// Now, mount a tmpfs directory to the unpack directory.
-	// We need to do this because "/run" is typically marked "noexec".
-	if err := syscall.Mount("none", applyCfg.RunUnpackDir(), "tmpfs", 0, ""); err != nil {
-		return errors.Wrap(err, "failed to mount unpack dir")
+	// Bind the InternalUnpackDir over to the UnpackDir.
+	// This is done to provide a transient location for currently active images
+	// (the UnpackDir, typically a tmpfs which will vanish on reboot), while
+	// not actually storing data in the tmpfs (memory usage).
+	// This decoupling means that, in theory, multiple InternalUnpackDirs could
+	// exist and then, at boot-time, be selected between by choosing which to
+	// bindmount.  In addition, this is done for backwards compatibility;
+	// previously the 'InternalUnpackDir' did not exist and the 'UnpackDir' was both
+	// the source of truth and store of data.
+	if err := unix.Mount(applyCfg.InternalUnpackDir(), applyCfg.UnpackDir(), "", unix.MS_RDONLY|unix.MS_BIND|unix.MS_REC|unix.MS_SLAVE, ""); err != nil {
+		return errors.Wrap(err, "failed to bindmount unpackdir")
 	}
 
-	// Default tmpfs permissions are 1777, which can trip up path auditing
-	if err := os.Chmod(applyCfg.RunUnpackDir(), 0755); err != nil {
-		return errors.Wrap(err, "failed to chmod unpack dir")
-	}
-
-	logrus.WithField("target", applyCfg.RunUnpackDir()).Debug("mounted tmpfs")
+	logrus.WithField("target", applyCfg.UnpackDir()).Debug("mounted tmpfs")
 	return nil
 }
 
@@ -291,7 +307,7 @@ func unpackTgz(applyCfg *ApplyConfig, tgzPath, imageName string) (string, error)
 		return "", errors.New("missing unpack source")
 	}
 
-	topDir := filepath.Join(applyCfg.RunUnpackDir(), imageName)
+	topDir := filepath.Join(applyCfg.UnpackDir(), imageName)
 	if _, err := os.Stat(topDir); err != nil && os.IsNotExist(err) {
 		if err := os.MkdirAll(topDir, 0755); err != nil {
 			return "", err

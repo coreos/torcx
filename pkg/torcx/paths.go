@@ -41,8 +41,15 @@ const (
 	defaultCfgPath = DefaultConfDir + "config.json"
 )
 
-// RunUnpackDir is the directory where root filesystems are unpacked.
-func (cc *CommonConfig) RunUnpackDir() string {
+// InternalUnpackDir is the directory where root filesystems are unpacked.
+func (cc *CommonConfig) InternalUnpackDir() string {
+	return filepath.Join(cc.BaseDir, "unpack")
+}
+
+// UnpackDir is the directory where root filesystems are available at runtime.
+// UnpackDir acts as the public interface to the UnpackDir. It is where
+// users of torcx may expect to find image's contents.
+func (cc *CommonConfig) UnpackDir() string {
 	return filepath.Join(cc.RunDir, "unpack")
 }
 
