@@ -232,13 +232,6 @@ func SealSystemState(applyCfg *ApplyConfig) error {
 		}
 	}
 
-	// Remount the unpackdir RO
-	if err := unix.Mount(applyCfg.UnpackDir(), applyCfg.UnpackDir(),
-		"", unix.MS_REMOUNT|unix.MS_RDONLY, ""); err != nil {
-
-		return errors.Wrap(err, "failed to remount read-only")
-	}
-
 	logrus.WithFields(logrus.Fields{
 		"path":    SealPath,
 		"content": content,
@@ -296,7 +289,7 @@ func setupPaths(applyCfg *ApplyConfig) error {
 	// In addition, this is done for backwards compatibility; previously the
 	// 'UnpackDir' did not exist and the 'RunUnpackDir' was both the source of
 	// truth and store of data.
-	if err := unix.Mount(applyCfg.UnpackDir(), applyCfg.RunUnpackDir(), "", unix.MS_BIND|unix.MS_REC|unix.MS_SLAVE, ""); err != nil {
+	if err := unix.Mount(applyCfg.UnpackDir(), applyCfg.RunUnpackDir(), "", unix.MS_RDONLY|unix.MS_BIND|unix.MS_REC|unix.MS_SLAVE, ""); err != nil {
 		return errors.Wrap(err, "failed to bindmount unpackdir")
 	}
 
