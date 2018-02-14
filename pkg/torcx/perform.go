@@ -222,7 +222,7 @@ func SealSystemState(applyCfg *ApplyConfig) error {
 		fmt.Sprintf("%s=%q", SealUpperProfile, applyCfg.UpperProfile),
 		fmt.Sprintf("%s=%q", SealRunProfilePath, applyCfg.RunProfile()),
 		fmt.Sprintf("%s=%q", SealBindir, applyCfg.RunBinDir()),
-		fmt.Sprintf("%s=%q", SealUnpackdir, applyCfg.RunUnpackDir()),
+		fmt.Sprintf("%s=%q", SealUnpackdir, applyCfg.UnpackDir()),
 	}
 
 	for _, line := range content {
@@ -268,7 +268,7 @@ func setupPaths(applyCfg *ApplyConfig) error {
 		applyCfg.ConfDir,
 		applyCfg.RunBinDir(),
 		applyCfg.UnpackDir(),
-		applyCfg.RunUnpackDir(),
+		applyCfg.InternalUnpackDir(),
 		applyCfg.UserProfileDir(),
 	}
 
@@ -280,20 +280,20 @@ func setupPaths(applyCfg *ApplyConfig) error {
 		}
 	}
 
-	// Bind the UnpackDir over to the RunUnpackDir.
+	// Bind the InternalUnpackDir over to the UnpackDir.
 	// This is done to provide a transient location for currently active images
-	// (the RunUnpackDir, typically a tmpfs which will vanish on reboot), while
+	// (the UnpackDir, typically a tmpfs which will vanish on reboot), while
 	// not actually storing data in the tmpfs (memory usage).
-	// This decoupling means that, in theory, multiple UnpackDirs could exist and
-	// then, at boot-time, be selected between by choosing which to bindmount.
-	// In addition, this is done for backwards compatibility; previously the
-	// 'UnpackDir' did not exist and the 'RunUnpackDir' was both the source of
-	// truth and store of data.
-	if err := unix.Mount(applyCfg.UnpackDir(), applyCfg.RunUnpackDir(), "", unix.MS_RDONLY|unix.MS_BIND|unix.MS_REC|unix.MS_SLAVE, ""); err != nil {
+	// This decoupling means that, in theory, multiple InternalUnpackDirs could
+	// exist and then, at boot-time, be selected between by choosing which to
+	// bindmount.  In addition, this is done for backwards compatibility;
+	// previously the 'InternalUnpackDir' did not exist and the 'UnpackDir' was both
+	// the source of truth and store of data.
+	if err := unix.Mount(applyCfg.InternalUnpackDir(), applyCfg.UnpackDir(), "", unix.MS_RDONLY|unix.MS_BIND|unix.MS_REC|unix.MS_SLAVE, ""); err != nil {
 		return errors.Wrap(err, "failed to bindmount unpackdir")
 	}
 
-	logrus.WithField("target", applyCfg.RunUnpackDir()).Debug("mounted tmpfs")
+	logrus.WithField("target", applyCfg.UnpackDir()).Debug("mounted tmpfs")
 	return nil
 }
 
@@ -307,7 +307,7 @@ func unpackTgz(applyCfg *ApplyConfig, tgzPath, imageName string) (string, error)
 		return "", errors.New("missing unpack source")
 	}
 
-	topDir := filepath.Join(applyCfg.RunUnpackDir(), imageName)
+	topDir := filepath.Join(applyCfg.UnpackDir(), imageName)
 	if _, err := os.Stat(topDir); err != nil && os.IsNotExist(err) {
 		if err := os.MkdirAll(topDir, 0755); err != nil {
 			return "", err
