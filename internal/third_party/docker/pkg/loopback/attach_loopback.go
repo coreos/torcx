@@ -90,10 +90,10 @@ func openNextAvailableLoopback(index int, sparseFile *os.File) (loopFile *os.Fil
 	return loopFile, nil
 }
 
-// AttachLoopDevice attaches the given sparse file to the next
-// available loopback device. It returns an opened *os.File.
-func AttachLoopDevice(sparseName string) (loop *os.File, err error) {
-
+// AttachLoopDevice attaches the given squashfs file to the next
+// available loopback device. It returns an opened *os.File of the loop device
+// created.
+func AttachLoopDevice(fileName string) (loop *os.File, err error) {
 	// Try to retrieve the next available loopback device via syscall.
 	// If it fails, we discard error and start looping for a
 	// loopback from index 0.
@@ -103,14 +103,14 @@ func AttachLoopDevice(sparseName string) (loop *os.File, err error) {
 	}
 
 	// OpenFile adds O_CLOEXEC
-	sparseFile, err := os.OpenFile(sparseName, os.O_RDWR, 0644)
+	file, err := os.OpenFile(fileName, os.O_RDONLY, 0600)
 	if err != nil {
-		logrus.Errorf("Error opening sparse file %s: %s", sparseName, err)
+		logrus.Errorf("Error opening file %s: %s", fileName, err)
 		return nil, ErrAttachLoopbackDevice
 	}
-	defer sparseFile.Close()
+	defer file.Close()
 
-	loopFile, err := openNextAvailableLoopback(startIndex, sparseFile)
+	loopFile, err := openNextAvailableLoopback(startIndex, file)
 	if err != nil {
 		return nil, err
 	}
