@@ -1,6 +1,6 @@
 // +build linux,cgo
 
-package loopback // import "github.com/docker/docker/pkg/loopback"
+package loopback
 
 import (
 	"errors"
