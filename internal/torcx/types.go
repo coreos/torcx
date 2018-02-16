@@ -16,6 +16,7 @@ package torcx
 
 import (
 	"encoding/json"
+	"fmt"
 )
 
 const (
@@ -68,10 +69,11 @@ type ProfileConfig struct {
 	NextProfile        string
 }
 
-// Archive represents a .torcx.tgz on disk
+// Archive represents a .torcx.squashfs or .torcx.tgz on disk
 type Archive struct {
 	Image
-	Filepath string `json:"filepath"`
+	Filepath string        `json:"filepath"`
+	Format   ArchiveFormat `json:"format"`
 }
 
 // Image represents an addon archive within a profile.
@@ -79,6 +81,56 @@ type Image struct {
 	Name      string `json:"name"`
 	Reference string `json:"reference"`
 	Remote    string `json:"remote"`
+}
+
+// ArchiveFormat is a torcx archive format, either 'tgz' or 'squashfs'
+type ArchiveFormat string
+
+const (
+	// ArchiveFormatUnknown is the zero value of ArchiveFormat. It indicates the image format is unknown
+	ArchiveFormatUnknown ArchiveFormat = ""
+	// ArchiveFormatTgz indicates a tar-gzipped image
+	ArchiveFormatTgz = "tgz"
+	// ArchiveFormatSquashfs indicates a squashfs image archive
+	ArchiveFormatSquashfs = "squashfs"
+)
+
+// UnmarshalJSON unmarshals an ArchiveFormat
+func (arf *ArchiveFormat) UnmarshalJSON(b []byte) error {
+	s := ""
+	if err := json.Unmarshal(b, &s); err != nil {
+		return err
+	}
+	switch s {
+	case ArchiveFormatTgz:
+		*arf = ArchiveFormatTgz
+	case ArchiveFormatSquashfs:
+		*arf = ArchiveFormatSquashfs
+	default:
+		return fmt.Errorf("could not unmarshal into ArchiveFormat: must be one of %q, %q", ArchiveFormatTgz, ArchiveFormatSquashfs)
+	}
+	return nil
+}
+
+// UnmarshalJSON unmarshals an Archive, including defaulting the "format" field
+// to "tgz" if it was not set.
+func (ar *Archive) UnmarshalJSON(b []byte) error {
+	type archiveAlias Archive
+	var arAlias archiveAlias
+	if err := json.Unmarshal(b, &arAlias); err != nil {
+		return err
+	}
+	if arAlias.Format == ArchiveFormatUnknown {
+		// Default to tgz if it wasn't set
+		arAlias.Format = ArchiveFormatTgz
+	}
+	*ar = Archive(arAlias)
+	return nil
+}
+
+// FileSuffix returns the file extension this archive format must have.
+func (arf ArchiveFormat) FileSuffix() string {
+	return fmt.Sprintf(".torcx.%s", arf)
 }
 
 // ToJSONV0 converts an internal Image into ImageV0.

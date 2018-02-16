@@ -28,7 +28,7 @@ import (
 type StoreCache struct {
 	Paths []string
 
-	// The mapping of name + reference to .tgz file
+	// The mapping of name + reference to image archive
 	Images map[Image]Archive
 }
 
@@ -55,10 +55,17 @@ func NewStoreCache(paths []string) (StoreCache, error) {
 		if !inInfo.Mode().IsRegular() {
 			return nil
 		}
-		if !strings.HasSuffix(name, ".torcx.tgz") {
+		var arFormat ArchiveFormat
+		for _, format := range []ArchiveFormat{ArchiveFormatTgz, ArchiveFormatSquashfs} {
+			if strings.HasSuffix(name, format.FileSuffix()) {
+				arFormat = format
+				break
+			}
+		}
+		if arFormat == ArchiveFormatUnknown {
 			return nil
 		}
-		baseName := strings.TrimSuffix(name, ".torcx.tgz")
+		baseName := strings.TrimSuffix(name, arFormat.FileSuffix())
 		imageName := baseName
 		imageRef := DefaultTagRef
 		if strings.ContainsRune(baseName, ':') {
@@ -71,7 +78,7 @@ func NewStoreCache(paths []string) (StoreCache, error) {
 			Name:      imageName,
 			Reference: imageRef,
 		}
-		archive := Archive{image, path}
+		archive := Archive{image, path, arFormat}
 
 		// The first archive to define a reference always wins,
 		// warn on collision
@@ -80,12 +87,14 @@ func NewStoreCache(paths []string) (StoreCache, error) {
 				"name":      image.Name,
 				"reference": image.Reference,
 				"original":  ar.Filepath,
+				"format":    ar.Format,
 				"duplicate": path,
 			}).Warn("skipped duplicate image")
 		} else {
 			logrus.WithFields(logrus.Fields{
 				"name":      image.Name,
 				"reference": image.Reference,
+				"format":    arFormat,
 				"path":      path,
 			}).Debug("new archive/reference added to cache")
 
