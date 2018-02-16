@@ -15,8 +15,8 @@
 package cli
 
 import (
-	"github.com/Sirupsen/logrus"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
 	"github.com/coreos/torcx/internal/torcx"

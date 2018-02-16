@@ -2,13 +2,15 @@ package: github.com/coreos/torcx
 import:
 - package: github.com/pkg/errors
   version: v0.8.0
+- package: golang.org/x/sys/unix
+  version: 37707fdb30a5b38865cfb95e5aab41707daec7fd
 - package: github.com/spf13/cobra
   version: 16c014f1a19d865b765b420e74508f80eb831ada
 - package: github.com/spf13/pflag
   version: 9ff6c6923cfffbcd502984b8e0c80539a94968b7
 - package: github.com/spf13/viper
   version: 7538d73b4eb9511d85a9f1dfef202eeb8ac260f4 
-- package: github.com/Sirupsen/logrus
-  version: 0.11.4
+- package: github.com/sirupsen/logrus
+  version: v1.0.4
   subpackages:
   - hooks/syslog
