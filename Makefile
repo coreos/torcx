@@ -19,7 +19,7 @@ BIN := torcx
 PKG := github.com/coreos/torcx
 
 # Where to push the docker image.
-REGISTRY ?= coreos
+REGISTRY ?= quay.io/coreos
 
 # Which architecture to build - see $(ALL_ARCH) for options.
 ARCH ?= amd64
@@ -41,22 +41,16 @@ SRC_DIRS := cli pkg
 ###
 
 ALL_ARCH := amd64 arm arm64 ppc64le
+BASEIMAGE?=scratch
 
-# Set default base image dynamically for each arch
+# Image name ends with the -arch unless it's amd64
 ifeq ($(ARCH),amd64)
-    BASEIMAGE?=alpine
-endif
-ifeq ($(ARCH),arm)
-    BASEIMAGE?=armel/busybox
-endif
-ifeq ($(ARCH),arm64)
-    BASEIMAGE?=aarch64/busybox
-endif
-ifeq ($(ARCH),ppc64le)
-    BASEIMAGE?=ppc64le/busybox
+        IMARCH?=""
+else
+        IMARCH?="-$(ARCH)"
 endif
 
-IMAGE := $(REGISTRY)/$(BIN)-$(ARCH)
+IMAGE ?= $(REGISTRY)/$(BIN)$(IMARCH)
 
 BUILD_IMAGE ?= golang:1.8-stretch
 
@@ -101,8 +95,19 @@ bin/$(ARCH)/$(BIN): build-dirs
 	        BUILDTAGS='$(BUILDTAGS)'                                       \
 	        ./scripts/build.sh                                             \
 	    "
-
 DOTFILE_IMAGE = $(subst :,_,$(subst /,_,$(IMAGE))-$(VERSION))
+
+container-name:
+	@echo "container: $(IMAGE):$(VERSION)"
+
+container: .container-$(DOTFILE_IMAGE) container-name
+.container-$(DOTFILE_IMAGE): bin/$(ARCH)/$(BIN) Dockerfile.in
+	@sed \
+	    -e 's|ARG_ARCH|$(ARCH)|g' \
+	    -e 's|ARG_FROM|$(BASEIMAGE)|g' \
+	    Dockerfile.in > .dockerfile-$(ARCH)
+	@docker build -t $(IMAGE):$(VERSION) -f .dockerfile-$(ARCH) .
+	@docker images -q $(IMAGE):$(VERSION) > $@
 
 version:
 	@echo $(VERSION)
