@@ -4,12 +4,19 @@ sudo: required
 language: go
 go_import_path: github.com/coreos/torcx
 go:
-  - 1.8
+  - 1.8.x
+  - 1.9.x
+  - 1.10.x
 
 env:
-  - ARCH=amd64 PKG=github.com/coreos/torcx VERSION=travis-dev BUILDTAGS="containers_image_openpgp" SRC_DIRS="cli pkg"
+  global:
+    - ARCH=amd64
+    - PKG=github.com/coreos/torcx
+    - VERSION=travis-dev
+    - BUILDTAGS="containers_image_openpgp"
+    - SRC_DIRS="cli pkg"
 
 script:
-- ./scripts/build.sh
-- ./scripts/test.sh ${SRC_DIRS}
-- make ftest
+  - ./scripts/build.sh
+  - ./scripts/test.sh ${SRC_DIRS}
+  - make ftest
