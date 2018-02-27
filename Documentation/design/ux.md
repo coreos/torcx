@@ -71,20 +71,3 @@ torcx image list [NAME]
 List all images in the store.
 
 If NAME is specified, only list the references for that image name.
-
-```
-torcx image list-unused
-```
-
-Lists the unused archives in the user store.
-
-### Other commands
-
-```
-torcx apply
-```
-
-`apply` applies current profile to the machine.
-
-This is meant to be used exactly once-per-boot, and seals the system into its new state after successful setup.
-

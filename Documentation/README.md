@@ -1,4 +1,5 @@
-## torcx devdocs
+## Developer documentation
 
-This directory contains developer documentation and design documents for the torcx project.
-User documentation is not meant to be hosted here, and will be available separately.
+This directory contains developer documentation and design documents ("devdocs") for Torcx.
+
+User documentation is provided separately at https://github.com/coreos/docs/tree/master/torcx.
