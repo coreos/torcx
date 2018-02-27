@@ -3,7 +3,7 @@
 # torcx - a boot-time addon manager
 
 [![Apache](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
-
+[![Build Status](https://travis-ci.org/coreos/torcx.svg?branch=master)](https://travis-ci.org/coreos/torcx)
 
 torcx (pronounced _"torks"_) is a boot-time manager for system-wide ephemeral customization of Linux systems.
 It has been built specifically to work with an immutable OS such as [Container Linux][coreos-cl] by CoreOS.
@@ -45,12 +45,7 @@ Image archives are looked up in several search paths, called "stores":
 At boot-time, torcx unpacks and propagates the addons defined in the active profile, specified in `/etc/torcx/next-profile`.
 Once done, torcx seals the system into its new state and records its own metadata under `/run/metadata/torcx`.
 
-## Example
-
-Here is a short demo of torcx applying a profile with a single `socat` addon on top of a fresh Container Linux stable image.
-
-[![asciicast](https://asciinema.org/a/115034.png)](https://asciinema.org/a/115034)
-
 ## License
 
-torcx is released under the Apache 2.0 license. See the [LICENSE](LICENSE) file for details.
+torcx is released under the Apache 2.0 license.
+See the [LICENSE](LICENSE) file for all details.
