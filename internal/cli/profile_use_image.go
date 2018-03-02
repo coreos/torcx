@@ -20,7 +20,7 @@ import (
 	"strings"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/coreos/torcx/pkg/torcx"
+	"github.com/coreos/torcx/internal/torcx"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
