@@ -24,7 +24,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/coreos/torcx/cli"
+	"github.com/coreos/torcx/internal/cli"
 	"github.com/coreos/torcx/pkg/torcx"
 )
 

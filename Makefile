@@ -34,7 +34,7 @@ VERSION := $(shell git describe --tags --always --dirty)
 BUILDTAGS ?= containers_image_openpgp
 
 # directories which hold app source (not vendored)
-SRC_DIRS := cli pkg
+SRC_DIRS := internal pkg
 
 ###
 ### These variables should not need tweaking.
