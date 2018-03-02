@@ -23,7 +23,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 
-	"github.com/coreos/torcx/pkg/torcx"
+	"github.com/coreos/torcx/internal/torcx"
 )
 
 // fillCommonRuntime initializes common configuration settings, from several

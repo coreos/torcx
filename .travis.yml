@@ -14,7 +14,7 @@ env:
     - PKG=github.com/coreos/torcx
     - VERSION=travis-dev
     - BUILDTAGS="containers_image_openpgp"
-    - SRC_DIRS="cli pkg"
+    - SRC_DIRS="internal pkg"
 
 script:
   - ./scripts/build.sh

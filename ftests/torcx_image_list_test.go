@@ -24,8 +24,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/coreos/torcx/cli"
-	"github.com/coreos/torcx/pkg/torcx"
+	"github.com/coreos/torcx/internal/cli"
+	"github.com/coreos/torcx/internal/torcx"
 )
 
 func TestImageListEmpty(t *testing.T) {
