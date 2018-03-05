@@ -1,14 +1,22 @@
 # Schemas and types
 
+This document describes format of manifests and configuration files related to torcx.
+
 # Profile selector
 
-* `/etc/torcx/profile`: single plaintext string, `EOF`-terminated
-* profile name: non-empty string, allowed char in regexp `^[a-zA-Z._-]{1,512}$`
+* `/etc/torcx/profile`: plaintext string (leading and trailing spaces are ignored)
+* profile name: non-empty string, allowed characters in regexp `^[a-zA-Z._-]{1,512}$`
 
 # Runtime metadata
 
 * `/run/metadata/torcx`: "key=value" environment variables, each line `\n`-terminated
 
-# Profile manifest
+# JSON manifests
 
-* schema at `schemas/profile-manifest-v<n>.json` where highest `<n>` is the current version.
+Configuration files and assets manifests are in JSON format.
+Existing [manifest schemas][schemas] are:
+* Image manifest (`schemas/image-manifest-v<n>.json`): describes the content of an image.
+* Profile manifest (`schemas/profile-manifest-v<n>.json`): describes the set of images in a profile.
+* Torcx config (`schemas/torcx-config-v<n>.json`): global torcx configuration.
+
+[schemas]: ../schemas
