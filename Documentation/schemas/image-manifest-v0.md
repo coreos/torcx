@@ -24,6 +24,10 @@ Note: The list of optional assets types will likely grow in the future. This is 
   List of absolute paths of networkd units to be propagated under networkd runtime directory. This can reference single unit-files as well as directories (e.g. for ".conf" dropins)
 - value/units: array of string, arbitrary length.
   List of absolute paths of units to be propagated under systemd runtime directory. This can reference single unit-files as well as directories (e.g. for ".wants" and ".requires")
+- value/sysusers: array of string, arbitrary length.
+  List of absolute paths of files to be propagated under `sysusers.d` directory.
+- value/tmpfiles: array of string, arbitrary length.
+  List of absolute paths of files to be propagated under `tmpfiles.d` directory.
 
 ## JSON schema
 
