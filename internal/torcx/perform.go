@@ -183,7 +183,14 @@ func applyImages(applyCfg *ApplyConfig, images Images) error {
 			logrus.WithFields(logFields).WithField("assets", assets.Units).Debug("tmpfiles propagated")
 		}
 
-		// TODO(lucab): evaluate and propagate more units types
+		if len(assets.UdevRules) > 0 {
+			if err := propagateUdevRules(applyCfg, imageRoot, assets.UdevRules); err != nil {
+				failedImages = append(failedImages, im)
+				logrus.WithFields(logFields).WithField("assets", assets.UdevRules).Error("failed to propagate udev rules: ", err)
+				continue
+			}
+			logrus.WithFields(logFields).WithField("assets", assets.UdevRules).Debug("udev rules propagated")
+		}
 	}
 
 	if len(failedImages) > 0 {

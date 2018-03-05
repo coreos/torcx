@@ -96,9 +96,10 @@ type ImageManifestV0 struct {
 
 // Assets holds lists of assets propagated from an image to the system
 type Assets struct {
-	Binaries []string `json:"bin,omitempty"`
-	Network  []string `json:"network,omitempty"`
-	Units    []string `json:"units,omitempty"`
-	Sysusers []string `json:"sysusers,omitempty"`
-	Tmpfiles []string `json:"tmpfiles,omitempty"`
+	Binaries  []string `json:"bin,omitempty"`
+	Network   []string `json:"network,omitempty"`
+	Units     []string `json:"units,omitempty"`
+	Sysusers  []string `json:"sysusers,omitempty"`
+	Tmpfiles  []string `json:"tmpfiles,omitempty"`
+	UdevRules []string `json:"udev_rules,omitempty"`
 }
