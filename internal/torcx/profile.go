@@ -100,7 +100,8 @@ func (cc *CommonConfig) SetNextProfileName(name string) error {
 	if err := os.MkdirAll(cc.UserProfileDir(), 0755); err != nil {
 		return err
 	}
-	return ioutil.WriteFile(cc.NextProfile(), []byte(name), 0644)
+	line := strings.TrimSpace(name) + "\n"
+	return ioutil.WriteFile(cc.NextProfile(), []byte(line), 0644)
 }
 
 // ReadCurrentProfile returns the content of the currently running profile
