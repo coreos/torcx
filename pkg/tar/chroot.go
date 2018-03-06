@@ -18,7 +18,8 @@ import (
 	"archive/tar"
 	"fmt"
 	"os"
-	"syscall"
+
+	"golang.org/x/sys/unix"
 )
 
 // ChrootUntar extracts a tar reader into a target destination, by first
@@ -45,14 +46,14 @@ func ChrootUntar(tr *tar.Reader, targetDir string, cfg ExtractCfg) error {
 		return err
 	}
 
-	err = syscall.Chroot(targetDir)
+	err = unix.Chroot(targetDir)
 	if err != nil {
 		return fmt.Errorf("failed to chroot to %q: %s", targetDir, err)
 	}
-	defer syscall.Chroot(".")
-	defer syscall.Fchdir(rootFd)
+	defer unix.Chroot(".")
+	defer unix.Fchdir(rootFd)
 
-	err = syscall.Chdir("/")
+	err = unix.Chdir("/")
 	if err != nil {
 		return fmt.Errorf("failed to chdir to rootdir: %v", err)
 	}

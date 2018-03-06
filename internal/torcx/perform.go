@@ -24,11 +24,11 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"syscall"
 
 	pkgtar "github.com/coreos/torcx/pkg/tar"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"golang.org/x/sys/unix"
 )
 
 var (
@@ -229,8 +229,8 @@ func SealSystemState(applyCfg *ApplyConfig) error {
 	}
 
 	// Remount the unpackdir RO
-	if err := syscall.Mount(applyCfg.RunUnpackDir(), applyCfg.RunUnpackDir(),
-		"", syscall.MS_REMOUNT|syscall.MS_RDONLY, ""); err != nil {
+	if err := unix.Mount(applyCfg.RunUnpackDir(), applyCfg.RunUnpackDir(),
+		"", unix.MS_REMOUNT|unix.MS_RDONLY, ""); err != nil {
 
 		return errors.Wrap(err, "failed to remount read-only")
 	}
@@ -268,7 +268,7 @@ func setupPaths(applyCfg *ApplyConfig) error {
 
 	// Now, mount a tmpfs directory to the unpack directory.
 	// We need to do this because "/run" is typically marked "noexec".
-	if err := syscall.Mount("none", applyCfg.RunUnpackDir(), "tmpfs", 0, ""); err != nil {
+	if err := unix.Mount("none", applyCfg.RunUnpackDir(), "tmpfs", 0, ""); err != nil {
 		return errors.Wrap(err, "failed to mount unpack dir")
 	}
 
