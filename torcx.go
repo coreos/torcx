@@ -17,7 +17,7 @@ package main
 import (
 	"os"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 
 	"github.com/coreos/torcx/internal/cli"
 	"github.com/coreos/torcx/pkg/multicall"

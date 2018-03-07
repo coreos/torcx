@@ -24,8 +24,9 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"syscall"
 	"time"
+
+	"golang.org/x/sys/unix"
 )
 
 // ExtractCfg holds configuration for a tar extractor
@@ -137,18 +138,18 @@ func extractOne(hdr *tar.Header, r io.Reader, targetDir string, cfg ExtractCfg) 
 		}
 	case tar.TypeChar:
 		dev := makedev(uint(hdr.Devmajor), uint(hdr.Devminor))
-		mode := uint32(fi.Mode()) | syscall.S_IFCHR
-		if err := syscall.Mknod(path, mode, int(dev)); err != nil {
+		mode := uint32(fi.Mode()) | unix.S_IFCHR
+		if err := unix.Mknod(path, mode, int(dev)); err != nil {
 			return err
 		}
 	case tar.TypeBlock:
 		dev := makedev(uint(hdr.Devmajor), uint(hdr.Devminor))
-		mode := uint32(fi.Mode()) | syscall.S_IFBLK
-		if err := syscall.Mknod(path, mode, int(dev)); err != nil {
+		mode := uint32(fi.Mode()) | unix.S_IFBLK
+		if err := unix.Mknod(path, mode, int(dev)); err != nil {
 			return err
 		}
 	case tar.TypeFifo:
-		if err := syscall.Mkfifo(path, uint32(fi.Mode())); err != nil {
+		if err := unix.Mkfifo(path, uint32(fi.Mode())); err != nil {
 			return err
 		}
 	case tar.TypeCont, tar.TypeXHeader, tar.TypeXGlobalHeader:
@@ -193,7 +194,7 @@ func extractOne(hdr *tar.Header, r io.Reader, targetDir string, cfg ExtractCfg) 
 				continue
 			}
 
-			err := syscall.Setxattr(path, k, []byte(v), 0)
+			err := unix.Setxattr(path, k, []byte(v), 0)
 			if err != nil {
 				return err
 			}

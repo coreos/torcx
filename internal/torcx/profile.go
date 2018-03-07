@@ -23,8 +23,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 )
 
 // DefaultLowerProfiles are the default lower profiles (for vendor and oem entries)
