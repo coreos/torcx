@@ -3,7 +3,7 @@
 ## Concepts
 
  * *torcx*: a CLI tool organized in subcommand
- * *archive*: an torcx.tgz archive containing addon binaries and assets
+ * *archive*: an torcx.squashfs archive containing addon binaries and assets
  * *profile*: a JSON manifest specifying a set of images to be applied on top of the base OS
  * *vendor profile*: the default profile, shipped hardcoded inside the OS
  * *custom profile*: a thrid-party profile *not* shipped together with the OS
