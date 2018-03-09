@@ -28,11 +28,12 @@ import (
 const (
 	// manifestPath is the well-known location for image manifest
 	manifestPath = "/.torcx/manifest.json"
-	// systemdDir is the runtime systemd base path
 	// TODO(lucab): possibly not constant, group all link-time parameter together
-	systemdDir  = "/run/systemd"
-	sysUsersDir = "/run/sysusers.d"
-	tmpFilesDir = "/run/tmpfiles.d"
+	// systemdDir is the runtime systemd base path
+	systemdDir   = "/run/systemd"
+	sysUsersDir  = "/run/sysusers.d"
+	tmpFilesDir  = "/run/tmpfiles.d"
+	udevRulesDir = "/run/udev/rules.d"
 )
 
 func retrieveAssets(applyCfg *ApplyConfig, imageRoot string) (*Assets, error) {
@@ -77,13 +78,19 @@ func propagateSystemdUnits(applyCfg *ApplyConfig, imageRoot string, units []stri
 	return propagateUnits(applyCfg, imageRoot, units, sdUnitsDir)
 }
 
-// propagateSysusersUnits installs sysusers config in /run/sysusers.d
+// propagateSysusersUnits installs sysusers files as runtime configuration (in /run/sysusers.d/).
 func propagateSysusersUnits(applyCfg *ApplyConfig, imageRoot string, units []string) error {
 	return propagateUnits(applyCfg, imageRoot, units, sysUsersDir)
 }
 
+// propagateTmpfilesUnits installs tmpfiles files as runtime configuration (in /run/tmpfiles.d/).
 func propagateTmpfilesUnits(applyCfg *ApplyConfig, imageRoot string, units []string) error {
 	return propagateUnits(applyCfg, imageRoot, units, tmpFilesDir)
+}
+
+// propagateUdevRules installs udev rules as runtime configuration (in /run/udev/rules.d/).
+func propagateUdevRules(applyCfg *ApplyConfig, imageRoot string, udevRules []string) error {
+	return propagateUnits(applyCfg, imageRoot, udevRules, udevRulesDir)
 }
 
 // propagateUnits installs unit assets as runtime units for systemd/networkd/etc.

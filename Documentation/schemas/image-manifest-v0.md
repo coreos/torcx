@@ -28,6 +28,8 @@ Note: The list of optional assets types will likely grow in the future. This is 
   List of absolute paths of files to be propagated under `sysusers.d` directory.
 - value/tmpfiles: array of string, arbitrary length.
   List of absolute paths of files to be propagated under `tmpfiles.d` directory.
+- value/udev_rules: array of string, arbitrary length.
+  List of absolute paths of udev rules to be propagated under `rules.d` directory.
 
 ## JSON schema
 
@@ -72,8 +74,13 @@ Note: The list of optional assets types will likely grow in the future. This is 
           "items": {
             "type": "string"
           }
+        },
+        "udev_rules": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
-
       }
     }
   },

@@ -29,6 +29,7 @@ It currently looks for:
 * systemd network units
 * sysusers files
 * tmpfiles files
+* udev rules
 
 [schemas]: ./schemas.md
 [paths]: ./paths.md
