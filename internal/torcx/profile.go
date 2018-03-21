@@ -145,6 +145,14 @@ func readProfileReader(in io.Reader) ([]Image, error) {
 			return nil, err
 		}
 		return ImagesFromJSONV0(manifest.Value), nil
+	case ProfileManifestV1K:
+		manifest := ProfileManifestV1JSON{
+			Kind: container.Kind,
+		}
+		if err := json.Unmarshal(container.Value, &manifest.Value); err != nil {
+			return nil, err
+		}
+		return ImagesFromJSONV1(manifest.Value), nil
 	}
 
 	return nil, errors.Errorf("unknown profile kind %s", container.Kind)
@@ -157,15 +165,23 @@ func AddToProfile(profilePath string, im Image) error {
 		return err
 	}
 
-	if v0Profile, err := getProfileV0(profilePath); err == nil {
+	// Try v1 first
+	v1Profile, err := getProfileV1(profilePath)
+	if err == nil {
+		return addToProfileV1(profilePath, st.Mode().Perm(), v1Profile, &im)
+	}
+
+	// Fallback to v0
+	v0Profile, err := getProfileV0(profilePath)
+	if err == nil {
 		return addToProfileV0(profilePath, st.Mode().Perm(), v0Profile, &im)
 	}
 
 	return errors.Wrapf(err, "unable to unmarshal profile to %s", profilePath)
 }
 
-// getProfileV0 reads a profile from the given path, does unmarshal json format,
-// to return the interpreted profile manifest.
+// getProfileV0 reads a profile from the given path, returning the unmarshalled
+// JSON (v0) profile manifest.
 func getProfileV0(profilePath string) (ProfileManifestV0JSON, error) {
 	var manifest ProfileManifestV0JSON
 	empty := ProfileManifestV0JSON{
@@ -192,8 +208,36 @@ func getProfileV0(profilePath string) (ProfileManifestV0JSON, error) {
 	return manifest, nil
 }
 
-// addToProfileV0 does marshal the given profile manifest into json format,
-// to write the profile into the given path.
+// getProfileV1 reads a profile from the given path, returning the unmarshalled
+// JSON (v1) profile manifest.
+func getProfileV1(profilePath string) (ProfileManifestV1JSON, error) {
+	var manifest ProfileManifestV1JSON
+	empty := ProfileManifestV1JSON{
+		Kind: ProfileManifestV1K,
+	}
+
+	b, err := ioutil.ReadFile(profilePath)
+	if err != nil {
+		if err == io.EOF {
+			return empty, nil
+		}
+		return ProfileManifestV1JSON{}, err
+	}
+	if len(b) == 0 {
+		return empty, nil
+	}
+	if err := json.Unmarshal(b, &manifest); err != nil {
+		return ProfileManifestV1JSON{}, err
+	}
+	if manifest.Kind != ProfileManifestV1K {
+		return manifest, errors.Errorf("expected manifest kind %s, got %s", ProfileManifestV1K, manifest.Kind)
+	}
+
+	return manifest, nil
+}
+
+// addToProfileV0 adds an image to the given JSON (v0) profile manifest,
+// and writes it to disk at the given path.
 func addToProfileV0(profilePath string, perm os.FileMode, manifest ProfileManifestV0JSON, im *Image) error {
 	// Update if existing
 	found := false
@@ -212,6 +256,35 @@ func addToProfileV0(profilePath string, perm os.FileMode, manifest ProfileManife
 	// Add otherwise
 	if !found {
 		manifest.Value.Images = append(manifest.Value.Images, im.ToJSONV0())
+	}
+
+	b, err := json.Marshal(manifest)
+	if err != nil {
+		return err
+	}
+	return ioutil.WriteFile(profilePath, b, perm)
+}
+
+// addToProfileV1 adds an image to the given JSON (v1) profile manifest,
+// and writes it to disk at the given path.
+func addToProfileV1(profilePath string, perm os.FileMode, manifest ProfileManifestV1JSON, im *Image) error {
+	// Update if existing
+	found := false
+	if im == nil {
+		found = true
+	}
+	for idx, mim := range manifest.Value.Images {
+		if found {
+			break
+		}
+		if mim.Name == im.Name {
+			manifest.Value.Images[idx] = im.ToJSONV1()
+			found = true
+		}
+	}
+	// Add otherwise
+	if !found {
+		manifest.Value.Images = append(manifest.Value.Images, im.ToJSONV1())
 	}
 
 	b, err := json.Marshal(manifest)

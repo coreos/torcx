@@ -1,0 +1,12 @@
+{
+  "kind": "profile-manifest-v1",
+  "value": {
+    "images": [
+      {
+        "name": "docker-suite",
+        "reference": "custom-reference",
+        "remote": "com.example.custom"
+      }
+    ]
+  }
+}

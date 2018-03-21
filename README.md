@@ -24,12 +24,13 @@ Profiles are simple JSON files, usually stored under `/etc/torcx/profiles/` with
 
 ```json
 {
-  "kind": "profile-manifest-v0",
+  "kind": "profile-manifest-v1",
   "value": {
     "images": [
       {
-        "name": "foo-binary",
-        "reference": "0.1"
+        "name": "foo-addon",
+        "reference": "0.1",
+        "remote": "com.example.foo"
       }
     ]
   }

@@ -78,6 +78,7 @@ type Archive struct {
 type Image struct {
 	Name      string `json:"name"`
 	Reference string `json:"reference"`
+	Remote    string `json:"remote"`
 }
 
 // ToJSONV0 converts an internal Image into ImageV0.
@@ -93,7 +94,27 @@ func ImageFromJSONV0(j ImageV0) Image {
 	return Image{
 		Name:      j.Name,
 		Reference: j.Reference,
+		Remote:    "",
 	}
+}
+
+// ToJSONV1 converts an internal Image into ImageV1.
+func (im Image) ToJSONV1() ImageV1 {
+	return ImageV1{
+		Name:      im.Name,
+		Reference: im.Reference,
+		Remote:    "",
+	}
+}
+
+// ImageFromJSONV1 converts an ImageV1 into an internal Image.
+func ImageFromJSONV1(j ImageV1) Image {
+	entry := Image{
+		Name:      j.Name,
+		Reference: j.Reference,
+		Remote:    j.Remote,
+	}
+	return entry
 }
 
 // ImagesToJSONV0 converts an internal Image list into ImagesV0.
@@ -111,6 +132,26 @@ func ImagesFromJSONV0(j ImagesV0) []Image {
 	result := []Image{}
 	for _, im := range j.Images {
 		entry := ImageFromJSONV0(im)
+		result = append(result, entry)
+	}
+	return result
+}
+
+// ImagesToJSONV1 converts an internal Image list into ImagesV1.
+func ImagesToJSONV1(ims []Image) ImagesV1 {
+	j := ImagesV1{}
+	for _, im := range ims {
+		entry := im.ToJSONV1()
+		j.Images = append(j.Images, entry)
+	}
+	return j
+}
+
+// ImagesFromJSONV1 converts an ImagesV1 into an internal Image list.
+func ImagesFromJSONV1(j ImagesV1) []Image {
+	result := []Image{}
+	for _, im := range j.Images {
+		entry := ImageFromJSONV1(im)
 		result = append(result, entry)
 	}
 	return result
