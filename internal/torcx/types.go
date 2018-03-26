@@ -173,6 +173,22 @@ type Assets struct {
 	UdevRules []string `json:"udev_rules,omitempty"`
 }
 
+type Remote struct {
+	TemplateURL string
+	ArmoredKeys []string
+}
+
+// RemoteFromJSONV0 translates a RemoteKeyV0 to an internal Remote.
+func RemoteFromJSONV0(j RemoteV0) Remote {
+	res := Remote{
+		TemplateURL: j.BaseURL,
+	}
+	for _, key := range j.Keys {
+		res.ArmoredKeys = append(res.ArmoredKeys, key.ArmoredKeyring)
+	}
+	return res
+}
+
 // kindValueJSON holds a generic, typed, kind-value JSON manifest.
 type kindValueJSON struct {
 	Kind  string          `json:"kind"`
