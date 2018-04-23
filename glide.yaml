@@ -14,3 +14,14 @@ import:
   version: v1.0.4
   subpackages:
   - hooks/syslog
+- package: github.com/northbright/ctx
+  version: d1b203ae2564afef5bccd35d157f100304b09087
+  subpackages:
+  - ctxcopy
+- package: golang.org/x/crypto
+  version: d6449816ce06963d9d136eee5a56fca5b0616e7e
+  subpackages:
+  - openpgp
+  - openpgp/clearsign
+- package: github.com/opencontainers/go-digest
+  version: v1.0.0-rc1
