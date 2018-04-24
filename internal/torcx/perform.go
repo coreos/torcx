@@ -58,15 +58,15 @@ func ApplyProfile(applyCfg *ApplyConfig) error {
 	if err != nil {
 		return err
 	}
-	if len(images.Images) > 0 {
+	if len(images) > 0 {
 		if err := applyImages(applyCfg, images); err != nil {
 			return err
 		}
 	}
 
-	runProfile := ProfileManifestV0{
+	runProfile := ProfileManifestV0JSON{
 		Kind:  ProfileManifestV0K,
-		Value: images,
+		Value: ImagesToJSONV0(images),
 	}
 	rpp, err := os.Create(applyCfg.RunProfile())
 	if err != nil {
@@ -94,7 +94,7 @@ func ApplyProfile(applyCfg *ApplyConfig) error {
 }
 
 // applyImages unpacks and propagates assets from a list of images.
-func applyImages(applyCfg *ApplyConfig, images Images) error {
+func applyImages(applyCfg *ApplyConfig, images []Image) error {
 	if applyCfg == nil {
 		return errors.New("missing apply configuration")
 	}
@@ -107,7 +107,7 @@ func applyImages(applyCfg *ApplyConfig, images Images) error {
 	// Unpack all images, continuing on error
 	failedImages := []Image{}
 
-	for _, im := range images.Images {
+	for _, im := range images {
 		// Some log fields we keep using
 		logFields := logrus.Fields{
 			"image":     im.Name,

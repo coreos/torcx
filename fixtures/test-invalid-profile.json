@@ -1,0 +1,11 @@
+{
+  "kind": "profile-manifest-invalid",
+  "value": {
+    "images": [
+      {
+        "name": "test-name",
+        "reference": "test-reference"
+      }
+    ]
+  }
+}

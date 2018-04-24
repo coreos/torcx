@@ -144,7 +144,7 @@ func testDockerFlag(t *testing.T, setup func(*testing.T), expRef string) {
 }
 
 func checkProfileSelection(t *testing.T, expName, expRef string) {
-	var profManifest torcx.ProfileManifestV0
+	var profManifest torcx.ProfileManifestV0JSON
 	fp, err := os.Open("/run/torcx/profile.json")
 	if err != nil {
 		t.Error(err)

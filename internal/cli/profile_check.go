@@ -89,7 +89,7 @@ func runProfileCheck(cmd *cobra.Command, args []string) error {
 	}
 
 	// Empty profiles are allowed
-	if len(profile.Images) == 0 {
+	if len(profile) == 0 {
 		logrus.Warn("Profile specifies no images")
 		return nil
 	}
@@ -100,7 +100,7 @@ func runProfileCheck(cmd *cobra.Command, args []string) error {
 	}
 
 	missing := false
-	for _, im := range profile.Images {
+	for _, im := range profile {
 		ar, err := storeCache.ArchiveFor(im)
 		if err != nil {
 			missing = true

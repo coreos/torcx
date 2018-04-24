@@ -105,20 +105,20 @@ func (cc *CommonConfig) SetNextProfileName(name string) error {
 }
 
 // ReadCurrentProfile returns the content of the currently running profile
-func ReadCurrentProfile() (Images, error) {
+func ReadCurrentProfile() ([]Image, error) {
 	path, err := CurrentProfilePath()
 	if err != nil {
-		return Images{}, err
+		return nil, err
 	}
 
 	return ReadProfilePath(path)
 }
 
 // ReadProfilePath returns the content of a specific profile, specified via path.
-func ReadProfilePath(path string) (Images, error) {
+func ReadProfilePath(path string) ([]Image, error) {
 	fp, err := os.Open(path)
 	if err != nil {
-		return Images{}, err
+		return nil, err
 	}
 	defer fp.Close()
 
@@ -126,77 +126,99 @@ func ReadProfilePath(path string) (Images, error) {
 }
 
 // readProfileReader returns the content of a specific profile, specified via a reader.
-func readProfileReader(in io.Reader) (Images, error) {
-	var manifest ProfileManifestV0
-
-	jsonIn := json.NewDecoder(in)
-	err := jsonIn.Decode(&manifest)
+func readProfileReader(in io.Reader) ([]Image, error) {
+	var container kindValueJSON
+	err := json.NewDecoder(in).Decode(&container)
 	if err == io.EOF {
-		return Images{}, nil
+		return nil, nil
 	}
 	if err != nil {
-		return Images{}, err
+		return nil, err
 	}
 
-	// TODO(lucab): perform semantic validation
+	switch container.Kind {
+	case ProfileManifestV0K:
+		manifest := ProfileManifestV0JSON{
+			Kind: container.Kind,
+		}
+		if err := json.Unmarshal(container.Value, &manifest.Value); err != nil {
+			return nil, err
+		}
+		return ImagesFromJSONV0(manifest.Value), nil
+	}
 
-	return manifest.Value, nil
+	return nil, errors.Errorf("unknown profile kind %s", container.Kind)
 }
 
-// getProfile reads a profile from the given path, does unmarshal json format,
-// to return the interpreted profile manifest.
-func getProfile(profilePath string) (ProfileManifestV0, error) {
-	var manifest ProfileManifestV0
-
-	b, err := ioutil.ReadFile(profilePath)
-	if err != nil {
-		return ProfileManifestV0{}, err
-	}
-	if err := json.Unmarshal(b, &manifest); err != nil {
-		return ProfileManifestV0{}, err
-	}
-
-	return manifest, nil
-}
-
-// putProfile does marshal the given profile manifest into json format,
-// to write the profile into the given path.
-func putProfile(profilePath string, perm os.FileMode, manifest ProfileManifestV0) error {
-	b, err := json.Marshal(manifest)
-	if err != nil {
-		return err
-	}
-
-	return ioutil.WriteFile(profilePath, b, perm)
-}
-
+// AddToProfile adds an image to an existing profile.
 func AddToProfile(profilePath string, im Image) error {
 	st, err := os.Stat(profilePath)
 	if err != nil {
 		return err
 	}
 
-	manifest, err := getProfile(profilePath)
+	if v0Profile, err := getProfileV0(profilePath); err == nil {
+		return addToProfileV0(profilePath, st.Mode().Perm(), v0Profile, &im)
+	}
+
+	return errors.Wrapf(err, "unable to unmarshal profile to %s", profilePath)
+}
+
+// getProfileV0 reads a profile from the given path, does unmarshal json format,
+// to return the interpreted profile manifest.
+func getProfileV0(profilePath string) (ProfileManifestV0JSON, error) {
+	var manifest ProfileManifestV0JSON
+	empty := ProfileManifestV0JSON{
+		Kind: ProfileManifestV0K,
+	}
+
+	b, err := ioutil.ReadFile(profilePath)
+	if err != nil {
+		if err == io.EOF {
+			return empty, nil
+		}
+		return ProfileManifestV0JSON{}, err
+	}
+	if len(b) == 0 {
+		return empty, nil
+	}
+	if err := json.Unmarshal(b, &manifest); err != nil {
+		return ProfileManifestV0JSON{}, err
+	}
+	if manifest.Kind != ProfileManifestV0K {
+		return manifest, errors.Errorf("expected manifest kind %s, got %s", ProfileManifestV0K, manifest.Kind)
+	}
+
+	return manifest, nil
+}
+
+// addToProfileV0 does marshal the given profile manifest into json format,
+// to write the profile into the given path.
+func addToProfileV0(profilePath string, perm os.FileMode, manifest ProfileManifestV0JSON, im *Image) error {
+	// Update if existing
+	found := false
+	if im == nil {
+		found = true
+	}
+	for idx, mim := range manifest.Value.Images {
+		if found {
+			break
+		}
+		if mim.Name == im.Name {
+			manifest.Value.Images[idx] = im.ToJSONV0()
+			found = true
+		}
+	}
+	// Add otherwise
+	if !found {
+		manifest.Value.Images = append(manifest.Value.Images, im.ToJSONV0())
+	}
+
+	b, err := json.Marshal(manifest)
 	if err != nil {
 		return err
 	}
-
-	// Update if existing
-	found := false
-	for idx, mim := range manifest.Value.Images {
-		if mim.Name == im.Name {
-			manifest.Value.Images[idx] = im
-			found = true
-			break
-		}
-	}
-
-	// Add otherwise
-	if !found {
-		manifest.Value.Images = append(manifest.Value.Images, im)
-	}
-
-	return putProfile(profilePath, st.Mode().Perm(), manifest)
+	return ioutil.WriteFile(profilePath, b, perm)
 }
 
 // ListProfiles returns a list of all available profiles
@@ -244,15 +266,15 @@ func ListProfiles(profileDirs []string) (map[string]string, error) {
 	return profiles, nil
 }
 
-func mergeProfiles(applyCfg *ApplyConfig) (Images, error) {
-	var mergedImages Images
+func mergeProfiles(applyCfg *ApplyConfig) ([]Image, error) {
+	var mergedImages []Image
 
 	if applyCfg == nil {
-		return Images{}, errors.New("missing apply configuration")
+		return nil, errors.New("missing apply configuration")
 	}
 	localProfiles, err := ListProfiles(applyCfg.ProfileDirs())
 	if err != nil {
-		return Images{}, errors.Wrap(err, "profiles listing failed")
+		return nil, errors.Wrap(err, "profiles listing failed")
 	}
 
 	// We first filter out non-existing lower profiles
@@ -273,16 +295,16 @@ func mergeProfiles(applyCfg *ApplyConfig) (Images, error) {
 	for _, lp := range resProfiles {
 		profilePath, ok := localProfiles[lp]
 		if !ok || profilePath == "" {
-			return Images{}, errors.Errorf("profile %q not found", lp)
+			return nil, errors.Errorf("profile %q not found", lp)
 		}
 		fp, err := os.Open(profilePath)
 		if err != nil {
-			return Images{}, errors.Wrapf(err, "opening profile %q", profilePath)
+			return nil, errors.Wrapf(err, "opening profile %q", profilePath)
 		}
 		defer fp.Close()
 		images, err := readProfileReader(bufio.NewReader(fp))
 		if err != nil && err != io.EOF {
-			return Images{}, errors.Wrapf(err, "reading profile %q", profilePath)
+			return nil, errors.Wrapf(err, "reading profile %q", profilePath)
 		}
 		mergedImages = mergeImages(mergedImages, images)
 	}
@@ -292,19 +314,19 @@ func mergeProfiles(applyCfg *ApplyConfig) (Images, error) {
 // mergeImages merges two arrays of images ("lower" and "upper"), keeping their relative order.
 // Images from "upper" are appended at the end, and can override images from "lower".
 // nil references and names are excluded from the final array.
-func mergeImages(lower Images, upper Images) Images {
+func mergeImages(lower []Image, upper []Image) []Image {
 	// TODO(lucab): perhaps trade-off time/memory here with a linked-hashmap
-	merged := Images{Images: make([]Image, 0, len(lower.Images)+len(upper.Images))}
-	lowerImages := make(map[string]bool, len(lower.Images))
-	upperImages := make(map[string]bool, len(upper.Images))
+	merged := make([]Image, 0, len(lower)+len(upper))
+	lowerImages := make(map[string]bool, len(lower))
+	upperImages := make(map[string]bool, len(upper))
 
 	// Compute the set of images to keep
-	for _, image := range lower.Images {
+	for _, image := range lower {
 		if image.Reference != "" {
 			lowerImages[image.Name] = true
 		}
 	}
-	for _, image := range upper.Images {
+	for _, image := range upper {
 		delete(lowerImages, image.Name)
 		if image.Reference != "" {
 			upperImages[image.Name] = true
@@ -312,14 +334,14 @@ func mergeImages(lower Images, upper Images) Images {
 	}
 
 	// Merge in order
-	for _, image := range lower.Images {
+	for _, image := range lower {
 		if image.Name != "" && lowerImages[image.Name] {
-			merged.Images = append(merged.Images, image)
+			merged = append(merged, image)
 		}
 	}
-	for _, image := range upper.Images {
+	for _, image := range upper {
 		if image.Name != "" && upperImages[image.Name] {
-			merged.Images = append(merged.Images, image)
+			merged = append(merged, image)
 		}
 	}
 
