@@ -130,10 +130,10 @@ func copyProfile(profiles map[string]string, fromName string, toPath string) err
 }
 
 func newBlankProfile(toPath string) error {
-	blank := torcx.ProfileManifestV0{
+	blank := torcx.ProfileManifestV0JSON{
 		Kind: torcx.ProfileManifestV0K,
-		Value: torcx.Images{
-			Images: []torcx.Image{},
+		Value: torcx.ImagesV0{
+			Images: []torcx.ImageV0{},
 		},
 	}
 

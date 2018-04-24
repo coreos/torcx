@@ -115,8 +115,11 @@ func NewStoreCache(paths []string) (StoreCache, error) {
 // ArchiveFor looks for a reference in the store, returning the path
 // to the archive containing it
 func (sc *StoreCache) ArchiveFor(im Image) (Archive, error) {
-	if arch, ok := sc.Images[im]; ok {
-		return arch, nil
+	for entry, archive := range sc.Images {
+		if im.Name == entry.Name &&
+			im.Reference == entry.Reference {
+			return archive, nil
+		}
 	}
 
 	return Archive{}, fmt.Errorf("image %s:%s not found", im.Name, im.Reference)

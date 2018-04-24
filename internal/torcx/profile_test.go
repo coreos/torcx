@@ -21,11 +21,11 @@ import (
 	"testing"
 )
 
-var inManifest = ProfileManifestV0{
+var inManifest = ProfileManifestV0JSON{
 	Kind: "profile-manifest-v0",
-	Value: Images{
-		[]Image{
-			Image{
+	Value: ImagesV0{
+		[]ImageV0{
+			ImageV0{
 				Name:      "test-name",
 				Reference: "test-reference",
 			},
@@ -33,7 +33,7 @@ var inManifest = ProfileManifestV0{
 	},
 }
 
-func TestGetProfile(t *testing.T) {
+func TestGetProfileV0(t *testing.T) {
 	// Schema of profile v0 is described in
 	// https://github.com/coreos/torcx/blob/master/Documentation/schemas/profile-manifest-v0.md
 	profilePath := "../../fixtures/test-get-profile-v0.json"
@@ -42,7 +42,7 @@ func TestGetProfile(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	outManifest, err := getProfile(profilePath)
+	outManifest, err := getProfileV0(profilePath)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -52,7 +52,20 @@ func TestGetProfile(t *testing.T) {
 	}
 }
 
-func TestPutGetProfile(t *testing.T) {
+func TestProfileInvalid(t *testing.T) {
+	profilePath := "../../fixtures/test-invalid-profile.json"
+
+	if _, err := os.Stat(profilePath); err != nil {
+		t.Fatal(err)
+	}
+
+	_, err := getProfileV0(profilePath)
+	if err == nil {
+		t.Fatalf("expected error, got nil")
+	}
+}
+
+func TestPutGetProfileV0(t *testing.T) {
 	tmp, err := ioutil.TempFile("", "test-torcx-putget-profile")
 	if err != nil {
 		t.Fatal(err)
@@ -64,7 +77,7 @@ func TestPutGetProfile(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := putProfile(profilePath, os.FileMode(0755), inManifest); err != nil {
+	if err := addToProfileV0(profilePath, os.FileMode(0755), inManifest, nil); err != nil {
 		t.Fatal(err)
 	}
 
@@ -72,13 +85,43 @@ func TestPutGetProfile(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	outManifest, err := getProfile(profilePath)
+	outManifest, err := getProfileV0(profilePath)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	if !reflect.DeepEqual(inManifest, outManifest) {
 		t.Fatalf("manifests do not match with each other.\nin:%v\nout:%v\n", inManifest, outManifest)
+	}
+}
+
+func TestProfileAddV0(t *testing.T) {
+	tmp, err := ioutil.TempFile("", "test-torcx-add-profile")
+	if err != nil {
+		t.Fatal(err)
+	}
+	profilePath := tmp.Name()
+	defer os.Remove(profilePath)
+	if err := tmp.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	testImage := Image{
+		Name:      "testName",
+		Reference: "testRef",
+	}
+	if err := AddToProfile(profilePath, testImage); err != nil {
+		t.Fatal(err)
+	}
+	images, err := ReadProfilePath(profilePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(images) != 1 {
+		t.Fatalf("expected 1 image, got %d", len(images))
+	}
+	if !reflect.DeepEqual(testImage, images[0]) {
+		t.Fatalf("images do not match with each other.\nin:%v\nout:%v\n", testImage, images[0])
 	}
 }
 
@@ -202,13 +245,10 @@ func TestMergeImages(t *testing.T) {
 	}
 
 	for _, tt := range testCases {
-		expected := Images{tt.merged}
-		lower := Images{Images: tt.lower}
-		upper := Images{Images: tt.upper}
-		result := mergeImages(lower, upper)
+		result := mergeImages(tt.lower, tt.upper)
 
-		if !reflect.DeepEqual(result, expected) {
-			t.Errorf("testcase %q failed: got %#v, expected %#v", tt.desc, result.Images, expected.Images)
+		if !reflect.DeepEqual(result, tt.merged) {
+			t.Errorf("testcase %q failed: got %#v, expected %#v", tt.desc, result, tt.merged)
 		}
 
 	}

@@ -14,6 +14,10 @@
 
 package torcx
 
+import (
+	"encoding/json"
+)
+
 const (
 	// SealUpperProfile is the key label for user profile name
 	SealUpperProfile = "TORCX_UPPER_PROFILE"
@@ -25,8 +29,6 @@ const (
 	SealBindir = "TORCX_BINDIR"
 	// SealUnpackdir is the key label for seal unpackdir
 	SealUnpackdir = "TORCX_UNPACKDIR"
-	// ProfileManifestV0K - profile manifest kind, v0
-	ProfileManifestV0K = "profile-manifest-v0"
 	// ImageManifestV0K - image manifest kind, v0
 	ImageManifestV0K = "image-manifest-v0"
 	// CommonConfigV0K - common torcx config kind, v0
@@ -66,26 +68,52 @@ type ProfileConfig struct {
 	NextProfile        string
 }
 
-// ProfileManifestV0 holds JSON profile manifest
-type ProfileManifestV0 struct {
-	Kind  string `json:"kind"`
-	Value Images `json:"value"`
-}
-
 // Archive represents a .torcx.tgz on disk
 type Archive struct {
 	Image
 	Filepath string `json:"filepath"`
 }
 
-// Image is an archive name + Reference
+// Image represents an addon archive within a profile.
 type Image struct {
 	Name      string `json:"name"`
 	Reference string `json:"reference"`
 }
 
-type Images struct {
-	Images []Image `json:"images"`
+// ToJSONV0 converts an internal Image into ImageV0.
+func (im Image) ToJSONV0() ImageV0 {
+	return ImageV0{
+		Name:      im.Name,
+		Reference: im.Reference,
+	}
+}
+
+// ImageFromJSONV0 converts an ImageV0 into an internal Image.
+func ImageFromJSONV0(j ImageV0) Image {
+	return Image{
+		Name:      j.Name,
+		Reference: j.Reference,
+	}
+}
+
+// ImagesToJSONV0 converts an internal Image list into ImagesV0.
+func ImagesToJSONV0(ims []Image) ImagesV0 {
+	j := ImagesV0{}
+	for _, im := range ims {
+		entry := im.ToJSONV0()
+		j.Images = append(j.Images, entry)
+	}
+	return j
+}
+
+// ImagesFromJSONV0 converts an ImagesV0 into an internal Image list.
+func ImagesFromJSONV0(j ImagesV0) []Image {
+	result := []Image{}
+	for _, im := range j.Images {
+		entry := ImageFromJSONV0(im)
+		result = append(result, entry)
+	}
+	return result
 }
 
 // ImageManifestV0 holds JSON image manifest
@@ -102,4 +130,10 @@ type Assets struct {
 	Sysusers  []string `json:"sysusers,omitempty"`
 	Tmpfiles  []string `json:"tmpfiles,omitempty"`
 	UdevRules []string `json:"udev_rules,omitempty"`
+}
+
+// kindValueJSON holds a generic, typed, kind-value JSON manifest.
+type kindValueJSON struct {
+	Kind  string          `json:"kind"`
+	Value json.RawMessage `json:"value"`
 }
