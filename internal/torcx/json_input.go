@@ -15,9 +15,31 @@
 package torcx
 
 const (
+	// ProfileManifestV1K - profile manifest kind, v1
+	ProfileManifestV1K = "profile-manifest-v1"
 	// ProfileManifestV0K - profile manifest kind, v0
 	ProfileManifestV0K = "profile-manifest-v0"
 )
+
+// * Profile manifest version 1: added "remote".
+
+// ProfileManifestV1JSON holds JSON profile manifest (version 1).
+type ProfileManifestV1JSON struct {
+	Kind  string   `json:"kind"`
+	Value ImagesV1 `json:"value"`
+}
+
+// ImagesV1 contains an array of image entries.
+type ImagesV1 struct {
+	Images []ImageV1 `json:"images"`
+}
+
+// ImageV1 describes and addon image within a v1 profile.
+type ImageV1 struct {
+	Name      string `json:"name"`
+	Reference string `json:"reference"`
+	Remote    string `json:"remote"`
+}
 
 // * Profile manifest version 0: initial version.
 
