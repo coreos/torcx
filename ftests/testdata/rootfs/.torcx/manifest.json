@@ -1,0 +1,14 @@
+{
+    "kind": "image-manifest-v0",
+    "value": {
+        "bin": [
+            "/bin/protocol"
+        ],
+        "network": [
+            "/lib/systemd/network/layer-01.network"
+        ],
+        "units": [
+            "/lib/systemd/system/autonomous.service"
+        ]
+    }
+}
