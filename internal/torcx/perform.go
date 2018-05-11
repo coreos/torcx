@@ -333,7 +333,7 @@ func unpackTgz(applyCfg *ApplyConfig, tgzPath, imageName string) (string, error)
 // https://www.freedesktop.org/software/systemd/man/os-release.html
 func CurrentOsVersionID(path string) (string, error) {
 	if path == "" {
-		path = OsReleasePath
+		path = VendorOsReleasePath("/usr")
 	}
 	fp, err := os.Open(path)
 	if err != nil {

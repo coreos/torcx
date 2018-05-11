@@ -89,3 +89,12 @@ func (cc *CommonConfig) NextProfile() string {
 func (im *Image) ArchiveFilename() string {
 	return fmt.Sprintf("%s:%s.torcx.tgz", im.Name, im.Reference)
 }
+
+// VendorOsReleasePath returns the path to vendor os-release file
+// for the specific OS partition mounted at `usrMountpoint`.
+func VendorOsReleasePath(usrMountpoint string) string {
+	if usrMountpoint == "" {
+		usrMountpoint = "/usr"
+	}
+	return filepath.Join(usrMountpoint, "lib", "os-release")
+}

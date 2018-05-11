@@ -43,10 +43,11 @@ func fillCommonRuntime(OsRelease string) (*torcx.CommonConfig, error) {
 
 	// Determine OS release ID
 	if OsRelease == "" {
-		OsRelease, err = torcx.CurrentOsVersionID(torcx.OsReleasePath)
+		osReleasePath := torcx.VendorOsReleasePath("/usr")
+		OsRelease, err = torcx.CurrentOsVersionID(osReleasePath)
 		if err != nil {
 			logrus.WithFields(logrus.Fields{
-				"path": torcx.OsReleasePath,
+				"path": osReleasePath,
 			}).Warn("unable to detect OS version-id")
 		}
 	}
