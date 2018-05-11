@@ -25,3 +25,5 @@ import:
   - openpgp/clearsign
 - package: github.com/opencontainers/go-digest
   version: v1.0.0-rc1
+- package: github.com/euank/gotmpl
+  version: v0.1.0
