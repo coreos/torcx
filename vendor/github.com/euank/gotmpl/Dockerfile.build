@@ -1,0 +1,7 @@
+FROM golang
+COPY . /go/src/github.com/euank/gotmpl/
+
+WORKDIR /go/src/github.com/euank/gotmpl/
+VOLUME /go/src/github.com/euank/gotmpl/bin
+
+CMD ["make"]
