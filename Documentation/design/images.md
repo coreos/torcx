@@ -3,8 +3,14 @@
 A torcx "[profile manifest][schemas]" specifies a set of addons (images and references) to be applied on a system.
 Starting from a profile, torcx operates on a store of image archives.
 
-An archive is a gzip-compressed tar file, containing a partial rootfs for a specific binary addon.
+## Archives
+
+An archive is a squashfs filesystem containing a partial rootfs for a specific binary addon. For backwards compatibility, it may also be a gzipped tarball, but squashfs filesystems should be preferred.
 Such archives are typically custom-built and tailored for torcx.
+
+A torcx squashfs archive *MUST* be a [version 4.0](https://github.com/torvalds/linux/blob/v4.16/Documentation/filesystems/squashfs.txt) squashfs filesystem archive. It *MUST* be compressed using either gzip or lz4.
+
+## References
 
 Image references may entail special values reserved by vendors, such as `com.coreos.cl`.
 

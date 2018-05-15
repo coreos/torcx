@@ -28,7 +28,7 @@ It contains an ordered list of images (name + reference) to a be applied on a sy
 
 ## JSON schema
 
-```
+```json
 
 {
   "$schema": "http://json-schema.org/draft-05/schema#",

@@ -70,6 +70,8 @@ func RunTestInContainer(t *testing.T, cfg RktConfig) {
 		"--mount=volume=torcx-bin,target=/usr/bin/torcx",
 		"--mount=volume=torcx-bin,target=/usr/bin/torcx-generator",
 	}
+	// For the squashfs code to create a loopback mount, it needs access to /dev/loop*
+	testsuiteMounts = append(testsuiteMounts, loopbackMounts(t)...)
 	args = append(args, testsuiteMounts...)
 	if cfg.imageName == "" {
 		cfg.imageName = "docker://busybox"
@@ -86,4 +88,25 @@ func RunTestInContainer(t *testing.T, cfg RktConfig) {
 	if err != nil {
 		t.Error(string(bytes))
 	}
+}
+
+func loopbackMounts(t *testing.T) []string {
+	mounts := []string{
+		"--volume=loopctl,kind=host,source=/dev/loop-control", "--mount=volume=loopctl,target=/dev/loop-control",
+	}
+
+	for i := 0; true; i++ {
+		_, err := os.Stat(fmt.Sprintf("/dev/loop%d", i))
+		if err != nil && os.IsNotExist(err) {
+			return mounts
+		}
+		if err != nil {
+			t.Fatalf("error looking for loop%d device: %v", i, err)
+		}
+		mounts = append(mounts,
+			fmt.Sprintf("--volume=loop%d,kind=host,source=/dev/loop%d", i, i),
+			fmt.Sprintf("--mount=volume=loop%d,target=/dev/loop%d", i, i),
+		)
+	}
+	return mounts
 }

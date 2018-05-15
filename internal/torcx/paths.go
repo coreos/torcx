@@ -15,7 +15,6 @@
 package torcx
 
 import (
-	"fmt"
 	"path/filepath"
 )
 
@@ -87,11 +86,6 @@ func (cc *CommonConfig) UserProfileDir() string {
 // NextProfile is the path for the `next-profile` selector configuration file.
 func (cc *CommonConfig) NextProfile() string {
 	return filepath.Join(cc.ConfDir, "next-profile")
-}
-
-// ArchiveFilename is the filename (no directory) for the archive of an image.
-func (im *Image) ArchiveFilename() string {
-	return fmt.Sprintf("%s:%s.torcx.tgz", im.Name, im.Reference)
 }
 
 // VendorOsReleasePath returns the path to vendor os-release file

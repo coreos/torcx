@@ -25,6 +25,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/coreos/torcx/internal/third_party/docker/pkg/loopback"
 	pkgtar "github.com/coreos/torcx/pkg/tar"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -114,14 +115,22 @@ func applyImages(applyCfg *ApplyConfig, images []Image) error {
 			"reference": im.Reference,
 		}
 
-		tgzArchive, err := storeCache.ArchiveFor(im)
+		archive, err := storeCache.ArchiveFor(im)
 		if err != nil {
 			logrus.WithFields(logFields).Error(err)
 			failedImages = append(failedImages, im)
 			continue
 		}
 
-		imageRoot, err := unpackTgz(applyCfg, tgzArchive.Filepath, im.Name)
+		var imageRoot string
+		switch archive.Format {
+		case ArchiveFormatTgz:
+			imageRoot, err = unpackTgz(applyCfg, archive.Filepath, im.Name)
+		case ArchiveFormatSquashfs:
+			imageRoot, err = mountSquashfs(applyCfg, archive.Filepath, im.Name)
+		default:
+			err = fmt.Errorf("unrecognized format for archive: %q", archive)
+		}
 		if err != nil {
 			failedImages = append(failedImages, im)
 			logrus.WithFields(logFields).Error("failed to unpack: ", err)
@@ -322,6 +331,36 @@ func unpackTgz(applyCfg *ApplyConfig, tgzPath, imageName string) (string, error)
 	err = pkgtar.ChrootUntar(tr, topDir, untarCfg)
 	if err != nil {
 		return "", errors.Wrapf(err, "unpacking %q", tgzPath)
+	}
+
+	return topDir, nil
+}
+
+// mountSquashfs mounts a squashfs rootfs, returning the mounted directory.
+func mountSquashfs(applyCfg *ApplyConfig, archivePath, imageName string) (string, error) {
+	if applyCfg == nil {
+		return "", errors.New("missing apply configuration")
+	}
+
+	if archivePath == "" || imageName == "" {
+		return "", errors.New("missing unpack source")
+	}
+
+	topDir := filepath.Join(applyCfg.RunUnpackDir(), imageName)
+	if _, err := os.Stat(topDir); err != nil && os.IsNotExist(err) {
+		if err := os.MkdirAll(topDir, 0755); err != nil {
+			return "", err
+		}
+	}
+
+	loopDev, err := loopback.AttachLoopDevice(archivePath)
+	if err != nil {
+		return "", err
+	}
+	defer loopDev.Close()
+
+	if err := unix.Mount(loopDev.Name(), topDir, "squashfs", unix.MS_RDONLY, ""); err != nil {
+		return "", err
 	}
 
 	return topDir, nil
