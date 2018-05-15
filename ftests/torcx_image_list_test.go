@@ -118,11 +118,12 @@ func TestImageListUser(t *testing.T) {
 	OSVersion := "1.2.3"
 	OSEntry := bytes.NewBufferString(fmt.Sprintf("VERSION_ID=%s\n", OSVersion))
 	userStore := "/var/lib/torcx/store"
+	osReleasePath := torcx.VendorOsReleasePath("/usr")
 
-	if err := os.MkdirAll(filepath.Dir(torcx.OsReleasePath), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(osReleasePath), 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := ioutil.WriteFile(torcx.OsReleasePath, OSEntry.Bytes(), 0755); err != nil {
+	if err := ioutil.WriteFile(osReleasePath, OSEntry.Bytes(), 0755); err != nil {
 		t.Fatal(err)
 	}
 
@@ -208,10 +209,11 @@ func TestImageListVersionFilter(t *testing.T) {
 
 	OSVersion := "1.2.3"
 	OSEntry := bytes.NewBufferString(fmt.Sprintf("VERSION_ID=%s\n", OSVersion))
-	if err := os.MkdirAll(filepath.Dir(torcx.OsReleasePath), 0755); err != nil {
+	osReleasePath := torcx.VendorOsReleasePath("/usr")
+	if err := os.MkdirAll(filepath.Dir(osReleasePath), 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := ioutil.WriteFile(torcx.OsReleasePath, OSEntry.Bytes(), 0755); err != nil {
+	if err := ioutil.WriteFile(osReleasePath, OSEntry.Bytes(), 0755); err != nil {
 		t.Fatal(err)
 	}
 

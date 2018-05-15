@@ -31,11 +31,15 @@ const (
 	VendorStoreDir = VendorDir + "store/"
 	// VendorProfilesDir is the vendor profiles path
 	VendorProfilesDir = VendorDir + "profiles/"
+	// VendorRemotesDir is the vendor remotes path
+	VendorRemotesDir = VendorDir + "remotes/"
 
-	// OemStoreDir is the vendor store path
+	// OemStoreDir is the OEM store path
 	OemStoreDir = OemDir + "store/"
-	// OemProfilesDir is the vendor profiles path
+	// OemProfilesDir is the OEM profiles path
 	OemProfilesDir = OemDir + "profiles/"
+	// OemRemotesDir is the OEM remotes path
+	OemRemotesDir = OemDir + "remotes/"
 
 	// defaultCfgPath is the default path for common torcx config
 	defaultCfgPath = DefaultConfDir + "config.json"
@@ -88,4 +92,13 @@ func (cc *CommonConfig) NextProfile() string {
 // ArchiveFilename is the filename (no directory) for the archive of an image.
 func (im *Image) ArchiveFilename() string {
 	return fmt.Sprintf("%s:%s.torcx.tgz", im.Name, im.Reference)
+}
+
+// VendorOsReleasePath returns the path to vendor os-release file
+// for the specific OS partition mounted at `usrMountpoint`.
+func VendorOsReleasePath(usrMountpoint string) string {
+	if usrMountpoint == "" {
+		usrMountpoint = "/usr"
+	}
+	return filepath.Join(usrMountpoint, "lib", "os-release")
 }

@@ -19,6 +19,8 @@ const (
 	ProfileManifestV1K = "profile-manifest-v1"
 	// ProfileManifestV0K - profile manifest kind, v0
 	ProfileManifestV0K = "profile-manifest-v0"
+	// RemoteManifestV0K - remote manifest kind, v0
+	RemoteManifestV0K = "remote-manifest-v0"
 )
 
 // * Profile manifest version 1: added "remote".
@@ -58,4 +60,23 @@ type ImagesV0 struct {
 type ImageV0 struct {
 	Name      string `json:"name"`
 	Reference string `json:"reference"`
+}
+
+// * Remote manifest version 0: initial version.
+
+// RemoteManifestV0JSON holds a JSON remote manifest (version 0).
+type RemoteManifestV0JSON struct {
+	Kind  string   `json:"kind"`
+	Value RemoteV0 `json:"value"`
+}
+
+// RemoteV0 describes a remote.
+type RemoteV0 struct {
+	BaseURL string        `json:"base_url"`
+	Keys    []RemoteKeyV0 `json:"keys"`
+}
+
+// RemoteKeyV0 represents a signing key for a remote.
+type RemoteKeyV0 struct {
+	ArmoredKeyring string `json:"armored_keyring,omitempty"`
 }

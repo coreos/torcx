@@ -28,6 +28,10 @@ Derived from configurables (shown with defaults):
   * (vendor) VendorDir + `profiles/` (`/usr/share/torcx/profiles/`)
   * (oem) OemDir + `profiles/` (`/usr/share/oem/torcx/profiles/`)
   * (user) ConfDir + `profiles/` (`/etc/torcx/profiles/`)
+* RemotesDir:
+  * (vendor) VendorDir + `remotes/` (`/usr/share/torcx/remotes/`)
+  * (oem) OemDir + `remotes/` (`/usr/share/oem/torcx/remotes/`)
+  * (user) ConfDir + `remotes/` (`/etc/torcx/remotes/`)
 
 # Paths from environmental flags
 
