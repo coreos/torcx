@@ -18,7 +18,6 @@ These are the non-goals and out-of-scope topics that `torcx` wants to avoid:
 1. full packaging system: it should not be involved into complex upgrade paths
 1. upgrading and downgrading packages at runtime: profile activation is an atomic operation performed at-most-once at boot-time
 1. pre-removal and post-installation custom logic: changes performed by torcx are (mainly) volatile and are meant to only last for a single boot
-1. defining a custom package format: torcx just handles squashfs rootfs archives
 
 ## User Stories
 
