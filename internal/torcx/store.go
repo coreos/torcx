@@ -80,9 +80,19 @@ func NewStoreCache(paths []string) (StoreCache, error) {
 		}
 		archive := Archive{image, path, arFormat}
 
-		// The first archive to define a reference always wins,
-		// warn on collision
-		if ar, ok := sc.Images[image]; ok {
+		// The first squashfs archive to define a reference wins, followed by the
+		// first tgz.  Any collisions will result in a warning.
+		ar, ok := sc.Images[image]
+		if ok && archive.Format == ArchiveFormatSquashfs && ar.Format != ArchiveFormatSquashfs {
+			logrus.WithFields(logrus.Fields{
+				"name":      image.Name,
+				"reference": image.Reference,
+				"original":  ar.Filepath,
+				"format":    ar.Format,
+				"duplicate": path,
+			}).Warn("prefering squashfs for duplicate image")
+		} else if ok {
+			// Duplicate, but not squashfs overriding tgz
 			logrus.WithFields(logrus.Fields{
 				"name":      image.Name,
 				"reference": image.Reference,
@@ -90,6 +100,7 @@ func NewStoreCache(paths []string) (StoreCache, error) {
 				"format":    ar.Format,
 				"duplicate": path,
 			}).Warn("skipped duplicate image")
+			return nil
 		} else {
 			logrus.WithFields(logrus.Fields{
 				"name":      image.Name,
@@ -97,9 +108,8 @@ func NewStoreCache(paths []string) (StoreCache, error) {
 				"format":    arFormat,
 				"path":      path,
 			}).Debug("new archive/reference added to cache")
-
-			sc.Images[image] = archive
 		}
+		sc.Images[image] = archive
 
 		return nil
 	}

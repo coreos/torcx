@@ -32,7 +32,7 @@ Profile manifest v1 includes a new field:
 - value/images/#/reference: string, compatible with OCI image reference specs.
   Referenced image will be locally looked up as a file named
   `${name}:${reference}.torcx.${format}` where `format` may be either `tgz` or
-  `squashfs`. If both exist, either may arbitrarily be chosen.
+  `squashfs`. If both exist, the squashfs file will take precedence.
 - value/images/#/remote: string.
   Identifier for the remote where this image can be found.
 
