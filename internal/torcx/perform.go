@@ -129,8 +129,7 @@ func applyImages(applyCfg *ApplyConfig, images []Image) error {
 		case ArchiveFormatSquashfs:
 			imageRoot, err = mountSquashfs(applyCfg, archive.Filepath, im.Name)
 		default:
-			logrus.WithFields(logFields).Error("unrecognized format for archive: ", archive)
-			continue
+			err = fmt.Errorf("unrecognized format for archive: %q", archive)
 		}
 		if err != nil {
 			failedImages = append(failedImages, im)
