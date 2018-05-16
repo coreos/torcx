@@ -15,6 +15,8 @@
 package cli
 
 import (
+	"strings"
+
 	"github.com/coreos/torcx/pkg/multicall"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -42,6 +44,8 @@ var (
 func Init() error {
 	viper.SetEnvPrefix("TORCX")
 	viper.AutomaticEnv()
+	replacer := strings.NewReplacer("-", "_")
+	viper.SetEnvKeyReplacer(replacer)
 
 	logrus.SetLevel(logrus.WarnLevel)
 

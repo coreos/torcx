@@ -16,12 +16,13 @@ package cli
 
 import (
 	"fmt"
+	"strconv"
 
+	"github.com/coreos/torcx/internal/torcx"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-
-	"github.com/coreos/torcx/internal/torcx"
+	"github.com/spf13/viper"
 )
 
 var (
@@ -32,16 +33,34 @@ var (
 		RunE:  runProfileCheck,
 	}
 
-	flagProfileCheckName      string
-	flagProfileCheckPath      string
-	flagProfileCheckOsVersion string
+	flagProfileCheckName       string
+	flagProfileCheckPath       string
+	flagProfileCheckRemoteOnly string
+	flagProfileCheckOsVersion  string
 )
 
 func init() {
 	cmdProfile.AddCommand(cmdProfileCheck)
 	cmdProfileCheck.Flags().StringVar(&flagProfileCheckName, "name", "", "profile name to check")
 	cmdProfileCheck.Flags().StringVar(&flagProfileCheckPath, "file", "", "profile file to check")
+	cmdProfileCheck.Flags().StringVar(&flagProfileCheckRemoteOnly, "remote-only", "", "whether to only check addons with an explicit remote")
 	cmdProfileCheck.Flags().StringVarP(&flagProfileCheckOsVersion, "os-release", "n", "", "override OS version")
+}
+
+func parseFlagRemoteOnly() bool {
+	remoteOnly := false
+	env, ok := viper.Get("CHECK_REMOTE_ONLY").(string)
+	if ok && env != "" {
+		if value, err := strconv.ParseBool(env); err == nil {
+			remoteOnly = value
+		}
+	}
+	if flagProfileCheckRemoteOnly != "" {
+		if value, err := strconv.ParseBool(flagProfileCheckRemoteOnly); err == nil {
+			remoteOnly = value
+		}
+	}
+	return remoteOnly
 }
 
 func runProfileCheck(cmd *cobra.Command, args []string) error {
@@ -51,6 +70,7 @@ func runProfileCheck(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.Wrap(err, "common configuration failed")
 	}
+	remoteOnly := parseFlagRemoteOnly()
 
 	if len(args) != 0 {
 		return cmd.Usage()
@@ -101,18 +121,28 @@ func runProfileCheck(cmd *cobra.Command, args []string) error {
 
 	missing := false
 	for _, im := range profile {
+		if remoteOnly && im.Remote == "" {
+			logrus.WithFields(logrus.Fields{
+				"name":       im.Name,
+				"references": im.Reference,
+				"remote":     im.Remote,
+			}).Debug("skipping remoteless image")
+			continue
+		}
 		ar, err := storeCache.ArchiveFor(im)
 		if err != nil {
 			missing = true
 			logrus.WithFields(logrus.Fields{
 				"name":      im.Name,
 				"reference": im.Reference,
+				"remote":    im.Remote,
 			}).Error("image/reference not found")
 		} else {
 			logrus.WithFields(logrus.Fields{
 				"name":         im.Name,
 				"references":   im.Reference,
 				"archive path": ar.Filepath,
+				"remote":       im.Remote,
 			}).Debug("image/reference found")
 		}
 	}
