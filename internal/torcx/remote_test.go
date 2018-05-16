@@ -45,7 +45,7 @@ func TestBasicEvaluateURL(t *testing.T) {
 	if err != nil {
 		t.Fatalf("got unexpected error %s", err)
 	}
-	if res != url {
+	if res.String() != url {
 		t.Fatalf("expected %s, got %s", url, res)
 	}
 }
@@ -110,7 +110,7 @@ COREOS_BOARD="amd64-usr"
 		if err != nil {
 			t.Fatalf("got unexpected error %s", err)
 		}
-		if res != tt.result {
+		if res.String() != tt.result {
 			t.Fatalf("expected %s, got %s", tt.result, res)
 		}
 	}
