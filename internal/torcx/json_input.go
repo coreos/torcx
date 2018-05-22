@@ -21,6 +21,8 @@ const (
 	ProfileManifestV0K = "profile-manifest-v0"
 	// RemoteManifestV0K - remote manifest kind, v0
 	RemoteManifestV0K = "remote-manifest-v0"
+	// RemoteContentsV1K - remote contents kind, v1
+	RemoteContentsV1K = "torcx-remote-contents-v1"
 )
 
 // * Profile manifest version 1: added "remote".
@@ -79,4 +81,33 @@ type RemoteV0 struct {
 // RemoteKeyV0 represents a signing key for a remote.
 type RemoteKeyV0 struct {
 	ArmoredKeyring string `json:"armored_keyring,omitempty"`
+}
+
+// * Remote contents version 1: initial version.
+
+// RemoteContentsV1JSON holds JSON contents metadata for a remote manifest.
+type RemoteContentsV1JSON struct {
+	Kind  string         `json:"kind"`
+	Value RemoteImagesV1 `json:"value"`
+}
+
+// RemoteImagesV1 lists all images available on a remote.
+type RemoteImagesV1 struct {
+	Images []RemoteImageV1 `json:"images"`
+}
+
+// RemoteImageV1 describes image versions available on a remote.
+type RemoteImageV1 struct {
+	DefaultVersion string            `json:"defaultVersion"`
+	Name           string            `json:"name"`
+	Versions       []RemoteVersionV1 `json:"versions"`
+}
+
+// RemoteVersionV1 describes a specific image (with version and format)
+// available on a remote.
+type RemoteVersionV1 struct {
+	Format   string `json:"format"`
+	Hash     string `json:"hash"`
+	Location string `json:"location"`
+	Version  string `json:"version"`
 }
