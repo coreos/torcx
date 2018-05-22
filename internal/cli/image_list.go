@@ -63,7 +63,7 @@ func runImageList(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			osRelease = ""
 		}
-		storePaths = torcx.FilterStoreVersions(commonCfg.StorePaths, osRelease, flagImageListOsVersion)
+		storePaths = torcx.FilterStoreVersions(commonCfg.UsrDir, commonCfg.StorePaths, osRelease, flagImageListOsVersion)
 	}
 	storeCache, err := torcx.NewStoreCache(storePaths)
 	if err != nil {

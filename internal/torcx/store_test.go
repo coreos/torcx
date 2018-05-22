@@ -37,14 +37,14 @@ func TestFilterStoreVersion(t *testing.T) {
 		},
 		{
 			"matching version",
-			[]string{VendorStoreDir},
+			[]string{VendorStoreDir(VendorUsrDir)},
 			"1.0.0",
 			"1.0.0",
-			[]string{VendorStoreDir},
+			[]string{VendorStoreDir(VendorUsrDir)},
 		},
 		{
 			"non-matching version",
-			[]string{VendorStoreDir},
+			[]string{VendorStoreDir(VendorUsrDir)},
 			"1.0.0",
 			"2.0.0",
 			[]string{},
@@ -61,7 +61,7 @@ func TestFilterStoreVersion(t *testing.T) {
 	for _, tt := range tests {
 		t.Logf("Checking %q", tt.desc)
 
-		res := FilterStoreVersions(tt.stores, tt.curVersion, tt.filterVersion)
+		res := FilterStoreVersions(VendorUsrDir, tt.stores, tt.curVersion, tt.filterVersion)
 		if !reflect.DeepEqual(res, tt.resultStore) {
 			t.Fatalf("expected %#v, got %#v", tt.resultStore, res)
 		}
