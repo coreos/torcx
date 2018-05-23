@@ -26,23 +26,40 @@ const (
 	// DefaultConfDir is the default torcx config directory
 	DefaultConfDir = "/etc/torcx/"
 
-	// VendorStoreDir is the vendor store path
-	VendorStoreDir = VendorDir + "store/"
-	// VendorProfilesDir is the vendor profiles path
-	VendorProfilesDir = VendorDir + "profiles/"
-	// VendorRemotesDir is the vendor remotes path
-	VendorRemotesDir = VendorDir + "remotes/"
-
 	// OemStoreDir is the OEM store path
-	OemStoreDir = OemDir + "store/"
+	OemStoreDir = OemDir + "store"
 	// OemProfilesDir is the OEM profiles path
-	OemProfilesDir = OemDir + "profiles/"
+	OemProfilesDir = OemDir + "profiles"
 	// OemRemotesDir is the OEM remotes path
-	OemRemotesDir = OemDir + "remotes/"
+	OemRemotesDir = OemDir + "remotes"
 
 	// defaultCfgPath is the default path for common torcx config
 	defaultCfgPath = DefaultConfDir + "config.json"
 )
+
+// VendorRemotesDir is the vendor remotes path
+func VendorRemotesDir(usrMountpoint string) string {
+	if usrMountpoint == "" {
+		usrMountpoint = VendorUsrDir
+	}
+	return filepath.Join(usrMountpoint, "share", "torcx", "remotes")
+}
+
+// VendorProfilesDir is the vendor profiles path
+func VendorProfilesDir(usrMountpoint string) string {
+	if usrMountpoint == "" {
+		usrMountpoint = VendorUsrDir
+	}
+	return filepath.Join(usrMountpoint, "share", "torcx", "profiles")
+}
+
+// VendorStoreDir is the vendor store path
+func VendorStoreDir(usrMountpoint string) string {
+	if usrMountpoint == "" {
+		usrMountpoint = VendorUsrDir
+	}
+	return filepath.Join(usrMountpoint, "share", "torcx", "store")
+}
 
 // RunUnpackDir is the directory where root filesystems are unpacked.
 func (cc *CommonConfig) RunUnpackDir() string {
@@ -57,7 +74,7 @@ func (cc *CommonConfig) RunBinDir() string {
 // ProfileDirs are the list of directories where we look for profiles.
 func (cc *CommonConfig) ProfileDirs() []string {
 	return []string{
-		VendorProfilesDir,
+		VendorProfilesDir(cc.UsrDir),
 		OemProfilesDir,
 		cc.UserProfileDir(),
 	}
@@ -92,7 +109,7 @@ func (cc *CommonConfig) NextProfile() string {
 // for the specific OS partition mounted at `usrMountpoint`.
 func VendorOsReleasePath(usrMountpoint string) string {
 	if usrMountpoint == "" {
-		usrMountpoint = "/usr"
+		usrMountpoint = VendorUsrDir
 	}
 	return filepath.Join(usrMountpoint, "lib", "os-release")
 }

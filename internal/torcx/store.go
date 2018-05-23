@@ -146,7 +146,7 @@ func (sc *StoreCache) ArchiveFor(im Image) (Archive, error) {
 
 // FilterStoreVersions filters out unversioned store based on the match between the
 // currently detected OS version (`curVersion`) and the one to filter for (`filterVersion`)
-func FilterStoreVersions(paths []string, curVersion string, filterVersion string) []string {
+func FilterStoreVersions(usrMountpoint string, paths []string, curVersion string, filterVersion string) []string {
 	if len(paths) <= 0 || filterVersion == "" {
 		return paths
 	}
@@ -157,7 +157,7 @@ func FilterStoreVersions(paths []string, curVersion string, filterVersion string
 	retPaths := make([]string, 0, len(paths))
 	for _, p := range paths {
 		// filter unversioned vendor store
-		if filepath.Clean(p) != filepath.Clean(VendorStoreDir) {
+		if filepath.Clean(p) != filepath.Clean(VendorStoreDir(usrMountpoint)) {
 			retPaths = append(retPaths, p)
 		}
 	}

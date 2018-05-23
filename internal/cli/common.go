@@ -31,30 +31,37 @@ import (
 func fillCommonRuntime(OsRelease string) (*torcx.CommonConfig, error) {
 	var err error
 
+	usrMountpoint := torcx.VendorUsrDir
+	path, ok := viper.Get("USR_MOUNTPOINT").(string)
+	if ok && filepath.IsAbs(path) {
+		usrMountpoint = path
+	}
+
 	// Default common config settings
 	commonCfg := torcx.CommonConfig{
 		BaseDir: torcx.DefaultBaseDir,
 		RunDir:  torcx.DefaultRunDir,
+		UsrDir:  usrMountpoint,
 		ConfDir: torcx.DefaultConfDir,
 		StorePaths: []string{
-			torcx.VendorStoreDir,
+			torcx.VendorStoreDir(usrMountpoint),
 		},
 	}
 
 	// Determine OS release ID
 	if OsRelease == "" {
-		osReleasePath := torcx.VendorOsReleasePath("/usr")
-		OsRelease, err = torcx.CurrentOsVersionID(osReleasePath)
+		path := torcx.VendorOsReleasePath(usrMountpoint)
+		OsRelease, err = torcx.CurrentOsVersionID(path)
 		if err != nil {
 			logrus.WithFields(logrus.Fields{
-				"path": osReleasePath,
+				"path": path,
 			}).Warn("unable to detect OS version-id")
 		}
 	}
 
 	// Add OEM store (versioned first)
 	if OsRelease != "" {
-		commonCfg.StorePaths = append(commonCfg.StorePaths, filepath.Join(torcx.OemStoreDir, OsRelease)+"/")
+		commonCfg.StorePaths = append(commonCfg.StorePaths, filepath.Join(torcx.OemStoreDir, OsRelease))
 	}
 	commonCfg.StorePaths = append(commonCfg.StorePaths, torcx.OemStoreDir)
 
@@ -77,9 +84,9 @@ func fillCommonRuntime(OsRelease string) (*torcx.CommonConfig, error) {
 
 	// Add user and runtime store paths (versioned first)
 	if OsRelease != "" {
-		commonCfg.StorePaths = append(commonCfg.StorePaths, filepath.Join(commonCfg.BaseDir, "store", OsRelease, "")+"/")
+		commonCfg.StorePaths = append(commonCfg.StorePaths, filepath.Join(commonCfg.BaseDir, "store", OsRelease, ""))
 	}
-	commonCfg.StorePaths = append(commonCfg.StorePaths, filepath.Join(commonCfg.BaseDir, "store")+"/")
+	commonCfg.StorePaths = append(commonCfg.StorePaths, filepath.Join(commonCfg.BaseDir, "store"))
 	extraStorePaths := viper.GetStringSlice("storepath")
 	if extraStorePaths != nil {
 		commonCfg.StorePaths = append(commonCfg.StorePaths, extraStorePaths...)

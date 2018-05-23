@@ -19,21 +19,35 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/spf13/viper"
 )
 
 func TestFillCommon(t *testing.T) {
-	vendorStore := "/usr/share/torcx/store/"
 	tests := []struct {
 		desc string
 
-		isErr   bool
-		basedir string
-		rundir  string
-		confdir string
+		isErr       bool
+		usrEnv      string
+		vendorStore string
+		basedir     string
+		rundir      string
+		confdir     string
 	}{
 		{
 			"basic",
 			false,
+			"",
+			"/usr/share/torcx/store",
+			"/var/lib/torcx/",
+			"/run/torcx/",
+			"/etc/torcx/",
+		},
+		{
+			"usrEnv",
+			false,
+			"/tmp/foo",
+			"/tmp/foo/share/torcx/store",
 			"/var/lib/torcx/",
 			"/run/torcx/",
 			"/etc/torcx/",
@@ -42,6 +56,18 @@ func TestFillCommon(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Logf("Testing %q", tt.desc)
+		if err := os.Unsetenv("TORCX_USR_MOUNTPOINT"); err != nil {
+			t.Fatalf("failed to unset env: %s", err)
+		}
+		if tt.usrEnv != "" {
+			if err := os.Setenv("TORCX_USR_MOUNTPOINT", tt.usrEnv); err != nil {
+				t.Fatalf("failed to set env: %s", err)
+			}
+			defer os.Unsetenv("TORCX_USR_MOUNTPOINT")
+		}
+		viper.SetEnvPrefix("TORCX")
+		viper.AutomaticEnv()
+
 		cfg, err := fillCommonRuntime("")
 		if tt.isErr {
 			if err == nil {
@@ -64,34 +90,36 @@ func TestFillCommon(t *testing.T) {
 		if cfg.ConfDir != tt.confdir {
 			t.Fatalf("wrong rundir: expected %q, got %q", tt.confdir, cfg.ConfDir)
 		}
+		if tt.usrEnv != "" && cfg.UsrDir != tt.usrEnv {
+			t.Fatalf("wrong usrdir: expected %q, got %q", tt.usrEnv, cfg.UsrDir)
+		}
 		if len(cfg.StorePaths) == 0 {
 			t.Fatal("no store paths")
 		}
 		foundVendor := false
 		for _, path := range cfg.StorePaths {
-			if path == vendorStore {
+			if path == tt.vendorStore {
 				foundVendor = true
 			}
 		}
 		if !foundVendor {
-			t.Fatalf("vendor store %q not found in %#v", vendorStore, cfg.StorePaths)
+			t.Fatalf("vendor store %q not found in %#v", tt.vendorStore, cfg.StorePaths)
 		}
 	}
 }
 
 func TestStorePaths(t *testing.T) {
-	//
 	cfg, err := fillCommonRuntime("999.9")
 	if err != nil {
 		t.Fatalf("expected no error, got %#v", err)
 	}
 
 	expectedStorePaths := []string{
-		"/usr/share/torcx/store/",
-		"/usr/share/oem/torcx/store/999.9/",
-		"/usr/share/oem/torcx/store/",
-		"/var/lib/torcx/store/999.9/",
-		"/var/lib/torcx/store/",
+		"/usr/share/torcx/store",
+		"/usr/share/oem/torcx/store/999.9",
+		"/usr/share/oem/torcx/store",
+		"/var/lib/torcx/store/999.9",
+		"/var/lib/torcx/store",
 	}
 
 	if !reflect.DeepEqual(cfg.StorePaths, expectedStorePaths) {

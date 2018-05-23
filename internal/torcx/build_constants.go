@@ -18,8 +18,8 @@ package torcx
 const (
 	// SealPath is the path where metadata are written once the system has been sealed.
 	SealPath = "/run/metadata/torcx"
-	// VendorDir contains (immutable) assets provided by the vendor.
-	VendorDir = "/usr/share/torcx/"
+	// VendorUsrDir is the standard mountpoint for vendor USR partition.
+	VendorUsrDir = "/usr"
 	// OemDir contains (mutable) assets provided by the oem.
 	OemDir = "/usr/share/oem/torcx/"
 	// DefaultTagRef is the default image reference looked up in archives.

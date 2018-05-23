@@ -47,6 +47,7 @@ type ConfigV0 struct {
 type CommonConfig struct {
 	BaseDir    string   `json:"base_dir,omitempty"`
 	RunDir     string   `json:"run_dir,omitempty"`
+	UsrDir     string   `json:"usr_dir,omitempty"`
 	ConfDir    string   `json:"conf_dir,omitempty"`
 	StorePaths []string `json:"store_paths,omitempty"`
 }
@@ -291,8 +292,8 @@ func RemoteVersionFromJSONV1(j RemoteVersionV1) RemoteVersion {
 	remoteVer := RemoteVersion{
 		format:   j.Format,
 		hash:     j.Hash,
-		version:  j.Version,
 		location: j.Location,
+		version:  j.Version,
 	}
 	return remoteVer
 }
