@@ -84,7 +84,7 @@ func fillCommonRuntime(OsRelease string) (*torcx.CommonConfig, error) {
 
 	// Add user and runtime store paths (versioned first)
 	if OsRelease != "" {
-		commonCfg.StorePaths = append(commonCfg.StorePaths, filepath.Join(commonCfg.BaseDir, "store", OsRelease, ""))
+		commonCfg.StorePaths = append(commonCfg.StorePaths, filepath.Join(commonCfg.BaseDir, "store", OsRelease))
 	}
 	commonCfg.StorePaths = append(commonCfg.StorePaths, filepath.Join(commonCfg.BaseDir, "store"))
 	extraStorePaths := viper.GetStringSlice("storepath")

@@ -63,12 +63,12 @@ func TestFillCommon(t *testing.T) {
 			if err := os.Setenv("TORCX_USR_MOUNTPOINT", tt.usrEnv); err != nil {
 				t.Fatalf("failed to set env: %s", err)
 			}
-			defer os.Unsetenv("TORCX_USR_MOUNTPOINT")
 		}
 		viper.SetEnvPrefix("TORCX")
 		viper.AutomaticEnv()
 
 		cfg, err := fillCommonRuntime("")
+		os.Unsetenv("TORCX_USR_MOUNTPOINT")
 		if tt.isErr {
 			if err == nil {
 				t.Fatal("expected error, got nil")
@@ -147,5 +147,6 @@ func TestHasExpFeature(t *testing.T) {
 			t.Errorf("Testcase %q failed, expected %t got %t", key, expFeat, gotFeat)
 
 		}
+		os.Unsetenv(envKey)
 	}
 }
