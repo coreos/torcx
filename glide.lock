@@ -1,5 +1,5 @@
-hash: 4ebe51236d69c62027d0f3a53a86af21002a8276a8c2a3b261d5306bf9d9aaac
-updated: 2018-05-14T14:36:59.663592638Z
+hash: 88fb3ea06466db07f3998bbd639e43353d1a8466a1295cbb959f7dce0f7133f9
+updated: 2018-06-21T12:20:25.313537496Z
 imports:
 - name: github.com/euank/gotmpl
   version: ed7fb72c02be28d65699e5fbfa6ddf8ee2d88f9a
@@ -19,7 +19,7 @@ imports:
 - name: github.com/inconshreveable/mousetrap
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/magiconair/properties
-  version: 2c9e9502788518c97fe44e8955cd069417ee89df
+  version: c2353362d570a7bfa228149c62842019201cfb71
 - name: github.com/mitchellh/mapstructure
   version: bb74f1db0675b241733089d5a1faa5dd8b0ef57b
 - name: github.com/northbright/ctx
@@ -29,7 +29,7 @@ imports:
 - name: github.com/opencontainers/go-digest
   version: 279bed98673dd5bef374d3b6e4b09e2af76183bf
 - name: github.com/pelletier/go-toml
-  version: 66540cf1fcd2c3aee6f6787dfa32a6ae9a870f12
+  version: c01d1270ff3e442a8a57cddc1c92dc1138598194
 - name: github.com/pkg/errors
   version: 645ef00459ed84a119197bfb8d8205042c6df63d
 - name: github.com/sirupsen/logrus
@@ -37,7 +37,7 @@ imports:
   subpackages:
   - hooks/syslog
 - name: github.com/spf13/afero
-  version: 63644898a8da0bc22138abf860edaf5277b6102e
+  version: 787d034dfe70e44075ccc060d346146ef53270ad
   subpackages:
   - mem
 - name: github.com/spf13/cast
@@ -51,7 +51,7 @@ imports:
 - name: github.com/spf13/viper
   version: 7538d73b4eb9511d85a9f1dfef202eeb8ac260f4
 - name: golang.org/x/crypto
-  version: d6449816ce06963d9d136eee5a56fca5b0616e7e
+  version: 7f39a6fea4fe9364fb61e1def6a268a51b4f3a06
   subpackages:
   - cast5
   - openpgp
@@ -72,7 +72,7 @@ imports:
   - unix
   - windows
 - name: golang.org/x/text
-  version: 5c1cf69b5978e5a34c5f9ba09a83e56acc4b7877
+  version: 5cec4b58c438bd98288aeb248bab2c1840713d21
   subpackages:
   - transform
   - unicode/norm
