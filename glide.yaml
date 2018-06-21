@@ -19,7 +19,7 @@ import:
   subpackages:
   - ctxcopy
 - package: golang.org/x/crypto
-  version: d6449816ce06963d9d136eee5a56fca5b0616e7e
+  version: 7f39a6fea4fe9364fb61e1def6a268a51b4f3a06 
   subpackages:
   - openpgp
   - openpgp/clearsign
