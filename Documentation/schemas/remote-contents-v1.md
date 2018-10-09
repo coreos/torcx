@@ -9,7 +9,7 @@ This is loosely based on the tectonic-torcx package list v0, which does not have
 
 Notable changes in v1 are:
  * JSON schema specification
- * manifest filename is now `torcx_manifest.json.asc`
+ * manifest filename is now `torcx_remote_contents.json.asc`
  * JSON content is now wrapped with an OpenPGP armored signature
  * more consistent use of "image" terminology
  * `kind` is no `torcx-remote-contents-v1`
@@ -17,7 +17,7 @@ Notable changes in v1 are:
 
 ## Manifest location and signature
 
-A remote contents manifest for a specific remote can be located by looking for a file called `torcx_manifest.json.asc` under the resolved remote `${base_url}`.
+A remote contents manifest for a specific remote can be located by looking for a file called `torcx_remote_contents.json.asc` under the resolved remote `${base_url}`.
 
 This file contains a JSON object (schema described below), wrapped in an OpenPGP armored clearsign signature.
 

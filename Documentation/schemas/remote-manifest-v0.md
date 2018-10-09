@@ -1,13 +1,14 @@
 # Remote Manifest - v0
 
 The configuration for a remote, locally stored on a node.
+This is stored in a file called `remote.json` and located within a directory with the same name as the Torcx remote name.
 
 ## Schema
 - kind (string, required)
 - value (object, required)
-  - base_url (string, required)
+  - base\_url (string, required)
   - keys (array, required, fixed-type, not-nil) - (object)
-    - armored_keyring (string)
+    - armored\_keyring (string)
 
 ## Entries
 
@@ -15,7 +16,7 @@ The configuration for a remote, locally stored on a node.
 - `value`: object containing a single typed key-value. Manifest content.
 - `value/base_url`: template with base URL for the remote. Supported protocols: "http", "https", "file".
 - `value/keys/#`: array of single-type objects, arbitrary length. It contains trusted keys for signature verification.
-- `value/keys/#/armored_keyring`: path to an ASCII-armored OpenPGP keyring, relative to `base_url`.
+- `value/keys/#/armored_keyring`: path to an ASCII-armored OpenPGP keyring, relative to the directory containing this remote manifest.
 
 NOTE: `file://` URLs should generally only be used by offline remotes distributed as part of `/usr`, and controlled by the OS vendor.
 

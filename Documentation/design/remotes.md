@@ -41,14 +41,14 @@ Schema:
 -   value (object, required)
     -   base\_url (string, required)
     -   keys (array, required, fixed-type, not-nil) - (object)
-        -   armored_keyring (string)
+        -   armored\_keyring (string)
 
 Entries:
 -   `kind`: hardcoded to `remote-manifest-v0` for this schema revision. The type+version of this JSON manifest.
 -   `value`: object containing a single typed key-value. Manifest content.
 -   `value/base_url`: template with base URL for the remote. Supported protocols: "http", "https".
 -   `value/keys/#`: array of single-type objects, arbitrary length. It contains trusted keys for signature verification.
--   `value/keys/#/armored_keyring`: path to an ASCII-armored OpenPGP keyring, relative to `base_url`.
+-   `value/keys/#/armored_keyring`: path to an ASCII-armored OpenPGP keyring, relative to the directory where this configuration is located.
 
 URL template is evaluated for simple variable substitution. Interpolated variables are:
  * `${COREOS_BOARD}`: board type (e.g. "amd64-usr")
@@ -105,9 +105,9 @@ Each remote has a specific base URL, which can be templated and locally reified 
 ### Serving a remote
 
 The entrypoint to a remote is its signed manifest. From a configured node, it can be located as follows:
- `manifest_url: ${base_url}/torcx_manifest.json.asc`
+ `manifest_url: ${base_url}/torcx_remote_contents.json.asc`
 
-Where `base_url` is the reified base URL of the remote, and `torcx_manifest.json.asc` is a fixed-name file containing an armor-signed JSON manifest of remote contents.
+Where `base_url` is the reified base URL of the remote, and `torcx_remote_contents.json.asc` is a fixed-name file containing a clear-signed JSON manifest of remote contents.
 
 A remote will typically contain multiple manifests, one per each supported OS board+version combination.
 
@@ -116,7 +116,7 @@ A remote will typically contain multiple manifests, one per each supported OS bo
 This is loosely based on the tectonic-torcx package list, which currently looks like https://tectonic-torcx.release.core-os.net/manifests/amd64-usr/1520.5.0/torcx_manifest.json
 
 Notable changes are:
- * manifest filename is now `torcx_manifest.json.asc`
+ * manifest filename is now `torcx_remote_contents.json.asc`
  * JSON content is now wrapped with an OpenPGP armored signature
  * s/packages/images/ (i.e. avoid "package" terminology, and align with other manifests)
  * `kind`: `torcx-remote-contents-v1`
