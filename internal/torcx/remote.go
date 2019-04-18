@@ -256,7 +256,7 @@ func NewRemotesCache(ctx context.Context, usrMountpoint string, baseDirs []strin
 		}
 		var manifest string
 		switch url.Scheme {
-		case "https":
+		case "https", "http":
 			tries := 0
 			for {
 				tries++
