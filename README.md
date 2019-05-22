@@ -1,5 +1,7 @@
 <img align="left" width="70px" src="Documentation/torcx.png" />
 
+**Note** torcx will be in less active use as development of Container Linux winds down.
+
 # torcx - a boot-time addon manager
 
 [![Apache](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
